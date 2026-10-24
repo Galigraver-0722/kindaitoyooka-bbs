@@ -1,6 +1,6 @@
 # Toyooka BBS
 
-[![CI](https://github.com/galigraver114514-dot/kindaitoyooka-bbs/actions/workflows/ci.yml/badge.svg)](https://github.com/galigraver114514-dot/kindaitoyooka-bbs/actions/workflows/ci.yml)
+[![CI](https://github.com/Galigraver-0722/kindaitoyooka-bbs/actions/workflows/ci.yml/badge.svg)](https://github.com/Galigraver-0722/kindaitoyooka-bbs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A school-run bulletin board for **Kindai University Toyooka Junior & Senior High School**.
