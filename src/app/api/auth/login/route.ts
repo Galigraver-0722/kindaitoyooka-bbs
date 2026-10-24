@@ -1,10 +1,11 @@
 import { createSession, SESSION_COOKIE, sessionCookieOptions, verifyPassword } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { checkRateLimit, RATE_LIMITS, requestIp } from "@/lib/rate-limit";
 import { safeNextPath } from "@/lib/validation";
 
-function failure(request: Request, next: string) {
-  const params = new URLSearchParams({ error: "invalid-credentials" });
+function failure(request: Request, next: string, code = "invalid-credentials") {
+  const params = new URLSearchParams({ error: code });
   if (next !== "/") {
     params.set("next", next);
   }
@@ -24,6 +25,15 @@ export async function POST(request: Request) {
 
   if (!username || !password) {
     return failure(request, next);
+  }
+
+  const limit = checkRateLimit(
+    `login:${requestIp(request)}:${username}`,
+    RATE_LIMITS.login.limit,
+    RATE_LIMITS.login.windowMs,
+  );
+  if (!limit.allowed) {
+    return failure(request, next, "rate-limited");
   }
 
   const user = await prisma.user.findUnique({

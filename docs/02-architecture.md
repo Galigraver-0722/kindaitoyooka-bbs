@@ -146,7 +146,9 @@ names) is stored once and never translated. Dates and numbers are formatted per 
 │   │   └── page.tsx
 │   ├── components/          # header, footer, role chip, share button
 │   └── lib/
+│       ├── audit.ts         # append-only moderation records
 │       ├── auth.ts          # hashing, sessions, current user
+│       ├── content-filter.ts # sensitive-word flags (advisory)
 │       ├── db.ts            # Prisma singleton
 │       ├── format.ts        # JST timestamps
 │       ├── hot.ts           # popularity score for hot sorting
@@ -155,6 +157,7 @@ names) is stored once and never translated. Dates and numbers are formatted per 
 │       ├── locales.ts       # en/ja dictionaries and typed keys
 │       ├── tags.ts          # hashtag parsing and tag links
 │       ├── messages.ts      # localized error codes and notices
+│       ├── rate-limit.ts    # in-memory fixed-window limits
 │       └── validation.ts    # length rules, safe redirect paths
 └── docs/                    # this documentation set
 ```
@@ -167,10 +170,10 @@ names) is stored once and never translated. Dates and numbers are formatted per 
 | SQL injection | Prisma parameterizes queries | — |
 | CSRF | `SameSite=Lax` + `Origin` header check on every POST | Add per-form tokens if a browser edge case appears |
 | Session theft | HttpOnly + Secure cookie, hashed tokens, expiry | Rotate on password change (no password change yet) |
-| Brute-force login | None | Rate limit by IP + username; log failures |
-| Spam / flood | None | Per-account and per-IP rate limits, new-account cooldown |
+| Brute-force login | Fixed window: 5 attempts per 10 minutes per IP + username | A shared store when more than one instance runs |
+| Spam / flood | Per-account limits on posts, reports, likes, and bookmarks; per-IP limits on registration | Tune from real beta traffic |
 | Open redirect | `safeNextPath()` only allows same-site paths | Tests for `//evil` and absolute URLs |
-| Privilege escalation | Server-side role checks on every moderation endpoint | Audit log with actor ids |
+| Privilege escalation | Server-side role checks; append-only `AuditLog` with actor ids for every moderation action | — |
 | PII leakage | Policy, no uploads, no real-name field, report button | Automated pattern warnings; moderator training |
 | Dependency risk | Small dependency tree, lockfile committed | `pnpm audit` in CI; Dependabot |
 

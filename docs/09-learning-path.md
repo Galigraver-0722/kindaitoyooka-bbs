@@ -191,6 +191,15 @@ owner and drive the `/bookmarks` page.
 **Hashtag.** A `#word` inside a title or reply. Hashtags are normalized and attached to the whole
 thread; they are not a separate field.
 
+**Rate limit.** A per-key counter that allows a fixed number of actions per time window. This
+project keeps the counters in memory, so a restart clears them.
+
+**Audit log.** An append-only record of moderation actions: actor, action, target, and time.
+It answers "who removed this, and when" without relying on memory.
+
+**Sensitive-word flag.** A queue entry created when a post matches the word lists. It is advisory;
+a human moderator still decides.
+
 **Hot score.** The transparent popularity formula `likes × 3 + bookmarks × 2 + replies +
 recency`. It ranks search and board results without tracking views.
 

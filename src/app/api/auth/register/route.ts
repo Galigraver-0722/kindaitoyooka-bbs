@@ -1,6 +1,7 @@
 import { createSession, hashPassword, SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { checkRateLimit, RATE_LIMITS, requestIp } from "@/lib/rate-limit";
 import { safeNextPath, validateEmail, validatePassword, validateUsername } from "@/lib/validation";
 
 function failure(request: Request, code: string, next: string) {
@@ -22,6 +23,15 @@ export async function POST(request: Request) {
   const passwordValue = data.get("password");
   const password = typeof passwordValue === "string" ? passwordValue : "";
   const next = safeNextPath(formText(data, "next"), "/");
+
+  const limit = checkRateLimit(
+    `register:${requestIp(request)}`,
+    RATE_LIMITS.register.limit,
+    RATE_LIMITS.register.windowMs,
+  );
+  if (!limit.allowed) {
+    return failure(request, "rate-limited", next);
+  }
 
   if (
     !validateUsername(username) ||

@@ -129,6 +129,17 @@ Before removing critical content, save a screenshot or a database row reference 
 log. Do not forward the content to group chats; that spreads the harm. Share only with the
 teacher advisor through an approved channel.
 
+### Automatic sensitive-word flags
+
+Posts and titles are checked on write against the CC BY 4.0 `naughty-words` lists for Japanese and
+English. The project keeps an ignore list for ordinary school words and adds a few Japanese
+threats. A match creates one `Report` with `source = AUTO` in the moderation queue, containing the
+matched terms. It never hides, blocks, or edits the post, and it is not a finding of guilt.
+
+Moderators treat automatic flags as tips, not verdicts. Dismiss false positives, and escalate
+real threats using the protocol below. The word lists live in `node_modules/naughty-words` and are
+not user data; no post content is sent to a third party.
+
 ## 6. Roles and separation of duties
 
 | Role | Can do | Cannot do |
@@ -194,6 +205,14 @@ Practical implications:
 - Do not promise anonymity you cannot deliver. Account data and server logs may be disclosable.
 - For requests from police or the school, involve the teacher advisor and the administration;
   do not hand over data on your own judgment.
+
+## 9.1 Automatic flags in the workflow
+
+Automatic flags enter the same queue as student reports. They are labelled `AUTO` and show the
+matched terms. A moderator can dismiss them or remove the post; both actions are written to the
+audit log. A false-positive rate is expected, especially around health and biology vocabulary.
+Do not tune the list by deleting words casually; record changes and test them against a sample of
+real posts.
 
 ## 10. Data protection
 

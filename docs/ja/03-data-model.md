@@ -99,8 +99,24 @@ erDiagram
 | `resolvedAt` | datetime? | `NULL` は未処理 |
 | `resolvedById` | string? | FK → User。処理したときに設定 |
 | `resolution` | string? | `removed` または `dismissed` |
+| `source` | enum | `USER`（既定）または `AUTO` |
 
 通報は書き換えない履歴です。処理の結果は記録しますが、キューからは何も消しません。
+自動フラグも同じテーブルを使い、`source = AUTO`、通報者なし、`reason` に一致した語を入れます。
+
+### AuditLog
+
+| カラム | 型 | 備考 |
+| --- | --- | --- |
+| `id` | string（cuid） | |
+| `actorId` | string? | FK → User。アカウント削除時は `NULL` |
+| `action` | string | `post.remove`、`thread.lock`、`thread.unlock`、`thread.remove`、`report.remove`、`report.dismiss` |
+| `targetType` | string | `post`、`thread`、`report` |
+| `targetId` | string | 対象の行 ID |
+| `details` | string? | 小さな JSON（スレッド ID、ボード slug、通報 ID） |
+| `createdAt` | datetime | |
+
+監査行は追記のみです。モデレーションページには直近 30 件を表示します。
 
 ### Tag
 
@@ -110,7 +126,7 @@ erDiagram
 | `name` | string、一意 | NFKC 正規化して小文字にした 1〜30 文字 |
 | `createdAt` | datetime | |
 
-タグは暗黙の多対多テーブルでスレッド間で共有します。タイトルや返信のハッシュタグから作られ、専用のタグ編集画面はありません。
+タグは暗黙の多対多テーブルでスレッド間で共有します。投稿・返信フォームの専用タグ欄から作られ、本文の `#` はタグになりません。スペースかカンマ区切りで、先頭の `#` は任意、1〜30 文字の有効な語を最大 5 個まで受け付けます。
 
 ### PostLike
 
@@ -145,6 +161,8 @@ erDiagram
 9. 1 人が同じ投稿に付けるいいねは 1 つ、同じスレッドに付ける保存も 1 つまでです。行を消すときは、同じトランザクションで件数を戻します。
 10. ハッシュタグは保存前に NFKC で正規化し、小文字にします。1 回の書き込みから最大 5 個まで拾い、同じタグは使ったスレッドすべてで共有します。
 11. 件数は派生データです。ずれたとしても、`PostLike` と `ThreadBookmark` から作り直せます。利用者が書いた内容には触れません。
+12. モデレーション操作は、変更と同じトランザクションで `AuditLog` を 1 行書きます。監査行がなければ、その変更はコミットされていません。
+13. 自動フラグは `source = AUTO`、通報者 `NULL`、一致語入りの `reason` を持つ `Report` です。助言であり、`isDeleted` を立てることはありません。
 
 ## 4. インデックス
 
@@ -160,6 +178,8 @@ erDiagram
 | `PostLike(postId)` | 投稿ごのいいね集計 |
 | `ThreadBookmark(threadId)` | スレッドごの保存集計 |
 | `Report(resolvedAt)` | 未処理キューの問い合わせ |
+| `AuditLog(createdAt)` | 最近のモデレーション履歴 |
+| `AuditLog(actorId)` | 特定のモデレーターの操作 |
 
 ## 5. 削除の意味
 
@@ -178,7 +198,6 @@ erDiagram
 
 | モデル | 必要になる理由 |
 | --- | --- |
-| `AuditLog` | 誰が、いつ、どの IP から何を削除したかの記録。説明責任を果たすために必要 |
 | `Ban` / `Mute` | 繰り返し違反する利用者への対応。理由と期限を付けて期間を区切る |
 | `EmailVerification`、`PasswordReset` | アカウントの復旧。メール送信事業者が必要 |
 | `Notification` | 自分のスレッドへの返信やメンションの通知 |
@@ -197,4 +216,5 @@ erDiagram
 | 論理削除された投稿 | 180 日後に本文を削除 | 有害なテキストを抱え込まずに、モデレーションを監査可能に保つ |
 | セッション行 | 期限切れから 30 日 | データベースが漏えいしたときの影響範囲を限定する |
 | 通報 | 処理から 1 年 | パターンの検出と異議申し立て |
+| 監査ログ | 1 年間 | 説明責任と事故調査 |
 | バックアップ | 日次 30 件 + 月次 3 件 | ストレージを無制限にせずに復旧できる |

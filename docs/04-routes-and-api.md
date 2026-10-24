@@ -17,10 +17,26 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/register` | Public | Registration form; first account becomes `ADMIN` |
 | `/bookmarks` | Signed-in | Threads the signed-in user saved |
 | `/search` | Public | Search title/body, filter by tag, sort newest or popular |
-| `/moderation` | Moderator / Admin | Open reports; others are redirected |
+| `/moderation` | Moderator / Admin | Open reports, automatic flags, and the recent audit log |
 | any unknown path | Public | Custom 404 |
 
 All pages are server-rendered per request. There is no client-side data fetching.
+
+### Rate limits
+
+All limits are in-process fixed windows, keyed by IP or account:
+
+| Action | Limit |
+| --- | --- |
+| Login | 5 attempts / 10 min per IP + username |
+| Registration | 5 / hour per IP |
+| New thread | 5 / hour per account |
+| Reply | 20 / hour per account |
+| Report | 20 / day per account |
+| Like / bookmark | 120 / hour per account |
+
+A blocked form submission redirects with `error=rate-limited`; `Retry-After` is not exposed because
+the responses are redirects, not API responses. A restart clears the counters.
 
 ### Search and sorting
 
@@ -83,6 +99,7 @@ success so the browser performs a `GET`.
 | `boardId` | yes | Existing, non-archived board |
 | `title` | yes | 3–120 chars |
 | `body` | yes | 1–10,000 chars |
+| `tags` | no | Space- or comma-separated, leading `#` optional, max 5 |
 
 - Auth: signed-in user.
 - Success: creates `Thread` + opening `Post` atomically, redirects to `/t/<id>`.
@@ -94,6 +111,7 @@ success so the browser performs a `GET`.
 | Field | Required | Rules |
 | --- | --- | --- |
 | `body` | yes | 1–10,000 chars |
+| `tags` | no | Space- or comma-separated, leading `#` optional, max 5 |
 
 - Auth: signed-in user.
 - Preconditions: thread exists, not deleted, not locked.
@@ -160,6 +178,9 @@ There is no JSON error format. User-facing failures redirect back to the relevan
 short code in the query string; `src/lib/messages.ts` maps codes to English sentences. Unknown
 codes fall back to a generic "check the form" message, so a hand-crafted URL cannot inject text
 into the page.
+
+Automatic flags appear in `/moderation` with the `AUTO` source and the matched terms. They do not
+hide or block the post; a moderator decides.
 
 Unexpected failures (database down, unhandled exception) return a 500 from Next.js. Add error
 monitoring before launch; see `docs/07-operations.md`.

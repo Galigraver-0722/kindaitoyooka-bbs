@@ -103,6 +103,20 @@ export default async function NewThreadPage({
           </div>
 
           <div>
+            <label htmlFor="tags" className="block text-sm font-medium text-slate-700">
+              {m.tagField.label}
+            </label>
+            <input
+              id="tags"
+              name="tags"
+              maxLength={150}
+              placeholder={m.tagField.placeholder}
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            />
+            <p className="mt-1 text-xs text-slate-500">{m.tagField.hint}</p>
+          </div>
+
+          <div>
             <label htmlFor="body" className="block text-sm font-medium text-slate-700">
               {m.newThread.message}
             </label>

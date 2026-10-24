@@ -35,7 +35,11 @@ Exit criteria: `pnpm build`, `pnpm lint`, and the end-to-end manual flow all pas
 - Post likes, thread bookmarks, a saved-threads page, and a share action.
 - Title/body search with newest and popularity sorting.
 - Hashtag parsing, tag pages through `/search?tag=`, and tag chips on threads.
-- These are not a substitute for Phase 1 safety work; they are additive.
+- Fixed-window rate limits on login, registration, posting, reporting, and reactions.
+- Append-only audit log for moderation actions, shown on `/moderation`.
+- Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, curated for school use.
+- Tags moved to a separate compose field instead of being parsed from the body.
+- These are not a substitute for the remaining Phase 1 work; they are additive.
 
 ## Phase 1 — Make it safe to open a beta (2 weeks)
 
@@ -45,9 +49,9 @@ Deliverables:
 
 1. Deploy to an HTTPS domain on a VPS with a persistent disk.
 2. Daily SQLite backup to a second location; perform one restore drill.
-3. Rate limiting: 5 login attempts per 10 minutes per IP+username; 10 posts per hour per
-   account; 20 reports per day per account.
-4. `AuditLog` table and writes for remove/lock/resolve, with actor and timestamp.
+3. Rate limiting: shipped as 5 login attempts per 10 minutes per IP+username, 5 new threads per
+   hour, 20 replies per hour, and 20 reports per day. Tune after the beta.
+4. `AuditLog` table and writes for remove/lock/resolve: shipped with actor, target, and timestamp.
 5. Pagination on board pages and recent activity (20 per page).
 6. Privacy notice, community rules, and a moderation policy page in plain English.
 7. A `GET /health` endpoint that checks the database connection.

@@ -13,6 +13,7 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "thread-locked": "This thread is locked and accepts no new replies.",
     "thread-deleted": "This thread has been removed.",
     "report-invalid": "Please describe the problem in 3 to 500 characters.",
+    "rate-limited": "Too many attempts. Please wait and try again.",
     "not-found": "We could not find what you were looking for.",
   },
   ja: {
@@ -27,6 +28,7 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "thread-locked": "このスレッドはロックされているため、返信できません。",
     "thread-deleted": "このスレッドは削除されました。",
     "report-invalid": "問題の内容を 3〜500 文字で書いてください。",
+    "rate-limited": "回数が多すぎます。しばらく待ってからお試しください。",
     "not-found": "お探しのページは見つかりませんでした。",
   },
 };

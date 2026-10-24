@@ -24,7 +24,8 @@ export default async function ModerationPage() {
     redirect("/");
   }
 
-  const reports = await prisma.report.findMany({
+  const [reports, auditLogs] = await Promise.all([
+    prisma.report.findMany({
     where: { resolvedAt: null },
     orderBy: { createdAt: "asc" },
     include: {
@@ -43,7 +44,13 @@ export default async function ModerationPage() {
         },
       },
     },
-  });
+    }),
+    prisma.auditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      include: { actor: { select: { username: true } } },
+    }),
+  ]);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
@@ -62,11 +69,18 @@ export default async function ModerationPage() {
             {reports.map((report) => (
               <li key={report.id} className="rounded-xl border border-slate-200 bg-white p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-                  <span>
-                    {m.moderation.reportedBy(
-                      report.reporter.username,
-                      formatDateTime(report.createdAt, locale),
-                    )}
+                  <span className="flex flex-wrap items-center gap-2">
+                    {report.source === "AUTO" ? (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800">
+                        {m.moderation.autoDetected}
+                      </span>
+                    ) : null}
+                    {report.source === "AUTO"
+                      ? formatDateTime(report.createdAt, locale)
+                      : m.moderation.reportedBy(
+                          report.reporter?.username ?? "",
+                          formatDateTime(report.createdAt, locale),
+                        )}
                   </span>
                   <Link
                     href={`/t/${report.post.thread.id}#p-${report.post.id}`}
@@ -128,6 +142,31 @@ export default async function ModerationPage() {
                     </button>
                   </form>
                 )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-lg font-semibold text-slate-900">{m.audit.title}</h2>
+        {auditLogs.length === 0 ? (
+          <p className="mt-3 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+            {m.audit.empty}
+          </p>
+        ) : (
+          <ul className="mt-3 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
+            {auditLogs.map((log) => (
+              <li key={log.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
+                <span className="text-slate-700">
+                  {m.audit.actions[log.action] ?? log.action}
+                  <span className="ml-2 text-xs text-slate-400">
+                    {log.targetType}:{log.targetId.slice(0, 8)}
+                  </span>
+                </span>
+                <span className="text-xs text-slate-500">
+                  {log.actor?.username ?? "system"} · {formatDateTime(log.createdAt, locale)}
+                </span>
               </li>
             ))}
           </ul>

@@ -31,6 +31,11 @@ const en = {
     latest: "Latest",
     hot: "Popular",
   },
+  tagField: {
+    label: "Tags",
+    placeholder: "#文化祭 #準備",
+    hint: "Space or comma separated, up to 5. Tags apply to the whole thread.",
+  },
   roles: {
     STUDENT: "Student",
     MODERATOR: "Moderator",
@@ -136,6 +141,7 @@ const en = {
       `Signed in as ${username}. Every action is attributed to your account in the database.`,
     openReports: "Open reports",
     empty: "Nothing needs review right now.",
+    autoDetected: "Auto-detected",
     reportedBy: (username: string, date: string) => `Reported by ${username} · ${date}`,
     openThread: "Open in thread",
     postContext: (author: string, thread: string, board: string) =>
@@ -167,6 +173,18 @@ const en = {
     empty: "You have not saved any threads yet.",
     savedAt: (date: string) => `Saved ${date}`,
   },
+  audit: {
+    title: "Recent moderation actions",
+    empty: "No moderation actions recorded yet.",
+    actions: {
+      "post.remove": "Removed a post",
+      "thread.lock": "Locked a thread",
+      "thread.unlock": "Unlocked a thread",
+      "thread.remove": "Removed a thread",
+      "report.remove": "Removed a reported post",
+      "report.dismiss": "Dismissed a report",
+    } as Record<string, string>,
+  },
   footer: {
     disclaimer:
       "A community-run student project. Not an official communication channel of Kindai University Toyooka Junior & Senior High School.",
@@ -195,6 +213,11 @@ const ja: typeof en = {
   sort: {
     latest: "新着",
     hot: "人気",
+  },
+  tagField: {
+    label: "タグ",
+    placeholder: "#文化祭 #準備",
+    hint: "スペースかカンマで区切って最大 5 個。タグはスレッド全体に付きます。",
   },
   roles: {
     STUDENT: "生徒",
@@ -298,6 +321,7 @@ const ja: typeof en = {
       `${username} としてログイン中です。すべての操作は、アカウントと一緒にデータベースへ記録されます。`,
     openReports: "未処理の通報",
     empty: "今のところ、確認が必要な通報はありません。",
+    autoDetected: "自動検出",
     reportedBy: (username: string, date: string) => `${username} が ${date} に通報`,
     openThread: "スレッドで開く",
     postContext: (author: string, thread: string, board: string) =>
@@ -327,6 +351,18 @@ const ja: typeof en = {
     title: "保存したスレッド",
     empty: "まだ保存したスレッドはありません。",
     savedAt: (date: string) => `${date} に保存`,
+  },
+  audit: {
+    title: "最近のモデレーション操作",
+    empty: "まだ操作の記録はありません。",
+    actions: {
+      "post.remove": "投稿を削除",
+      "thread.lock": "スレッドをロック",
+      "thread.unlock": "スレッドのロックを解除",
+      "thread.remove": "スレッドを削除",
+      "report.remove": "通報された投稿を削除",
+      "report.dismiss": "通報を却下",
+    } as Record<string, string>,
   },
   footer: {
     disclaimer:

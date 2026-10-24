@@ -1,4 +1,5 @@
 import { getCurrentUser, isModerator } from "@/lib/auth";
+import { recordAudit } from "@/lib/audit";
 import { prisma } from "@/lib/db";
 import { isSameOrigin, seeOther } from "@/lib/http";
 
@@ -26,9 +27,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return seeOther(request, "/?error=not-found");
   }
 
-  await prisma.post.update({
-    where: { id },
-    data: { isDeleted: true },
+  await prisma.$transaction(async (tx) => {
+    await tx.post.update({ where: { id }, data: { isDeleted: true } });
+    await recordAudit(tx, {
+      actorId: user.id,
+      action: "post.remove",
+      targetType: "post",
+      targetId: id,
+      details: { threadId: post.threadId },
+    });
   });
 
   return seeOther(request, `/t/${post.threadId}`);

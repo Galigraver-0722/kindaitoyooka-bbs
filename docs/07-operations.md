@@ -24,6 +24,10 @@ the deployment section but keep the backup and restore rules unchanged.
 | `PORT` | no | `3000` | Pass with `pnpm start -p 3000` |
 | `COOKIE_SECURE` | no | `true` | Defaults to secure in production; `false` only for plain HTTP on a LAN |
 
+Rate-limit counters live in process memory. A restart resets them, and a second app instance
+would keep its own counters. That is acceptable for one school server; move the counters to a
+shared store before scaling out.
+
 Never commit `.env`. `.env.example` documents the fields.
 
 ## 3. Local development
@@ -228,6 +232,7 @@ Minimum viable monitoring:
 | Disk space | `df -h` daily or node_exporter | > 80% used |
 | Application errors | `journalctl -u toyooka-bbs -f`; Sentry (phase 1) | Any 500 spike |
 | Backup created | Cron output to a log file | Missing file for 2 days |
+| Audit activity | `/moderation` recent actions | Unexpected bulk removals or role changes |
 | Database integrity | `sqlite3 prod.db "PRAGMA integrity_check;"` monthly | Anything other than `ok` |
 
 ## 8. Incident runbooks
@@ -276,6 +281,13 @@ Minimum viable monitoring:
 
 Follow `docs/06`, section 10. Remove the content, preserve evidence, notify the advisor,
 document who saw it, and avoid sharing it further.
+
+## 8.1 Sensitive-word list updates
+
+The lists ship in the `naughty-words` dependency (CC BY 4.0). Updates arrive with `pnpm update`;
+read the diff before deploying, because a new term can raise the false-positive rate. The local
+ignore list and added Japanese threats live in `src/lib/content-filter.ts` and are covered by
+tests. Never auto-delete a post because of a match; a human decides.
 
 ## 9. Launch checklist
 

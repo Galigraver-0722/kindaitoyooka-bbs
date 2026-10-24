@@ -18,7 +18,10 @@ alternatives considered.
 | ADR-0006 | Japanese-first bilingual interface with English as the source of truth | Accepted | 2026-10-24 |
 | ADR-0007 | Soft deletion for all user content | Accepted | 2026-10-24 |
 | ADR-0008 | Transparent weighted score for "hot" sorting | Accepted | 2026-10-24 |
-| ADR-0009 | Hashtags parsed from text into shared thread tags | Accepted | 2026-10-24 |
+| ADR-0009 | Tags come from a dedicated field, not body text | Accepted | 2026-10-24 |
+| ADR-0010 | In-process fixed-window rate limits | Accepted | 2026-10-24 |
+| ADR-0011 | Advisory automatic flags from an open word list | Accepted | 2026-10-24 |
+| ADR-0012 | Append-only audit log for moderation | Accepted | 2026-10-24 |
 
 ---
 
@@ -260,30 +263,105 @@ personalization. Then move to SQL-side scoring or a materialized score.
 
 ---
 
-## ADR-0009 — Hashtags parsed from text into shared thread tags
+## ADR-0009 — Tags come from a dedicated field, not body text
 
 **Context.** Users want topics without filling in another form, and the existing editor is plain
 text.
 
-**Decision.** Parse `#tag` from thread titles and reply bodies on write. Normalize with NFKC,
-lowercase, allow Unicode letters, numbers, and underscores, and read at most five tags per
-write. Connect or create shared `Tag` rows and attach them to the thread. Tag links open
-`/search?tag=...`.
+**Decision.** Tags come from a dedicated `tags` field on the compose and reply forms. The field
+is split on spaces, commas, and Japanese commas; a leading `#` is optional. Normalize with NFKC,
+lowercase, allow Unicode letters, numbers, and underscores, and keep at most five tags per write.
+Connect or create shared `Tag` rows and attach them to the thread. Tag links open
+`/search?tag=...`. Body text is never scanned for hashtags.
 
 **Consequences.**
 
-- No extra UI; a hashtag in a sentence is enough.
+- Tags are explicit: a `#` in the body stays body text and never creates a tag.
 - Typos create new tags, and there is no rename or merge screen yet. Moderators can merge them
   in the database if it becomes a problem.
 - A tag belongs to the whole thread, not to the individual post that mentioned it.
 - Tags are user content: report the post that introduced an abusive tag.
 
-**Alternatives considered.** A tag picker with autocomplete (cleaner data, more UI and client
-JavaScript), a separate tag field (duplicate input), per-post tags (more precise, but threads are
-the unit of discovery here).
+**Alternatives considered.** Parsing hashtags from the body (the first implementation; rejected
+because the reader cannot tell whether a `#` is content or metadata), a tag picker with
+autocomplete (cleaner data, more UI and client JavaScript), per-post tags (more precise, but
+threads are the unit of discovery here).
 
 **Revisit if.** Tag spam appears, or users need controlled vocabularies such as subjects and
 clubs.
+
+---
+
+## ADR-0010 — In-process fixed-window rate limits
+
+**Context.** The first real abuse risk is not a distributed botnet but a student holding down
+Enter, a shared password being guessed, or a report flood. The deployment is one Node process
+behind Caddy, with no Redis.
+
+**Decision.** Keep a `Map` of fixed-window counters in `src/lib/rate-limit.ts`. Apply limits to
+login (IP + username), registration (IP), thread creation, replies, reports, likes, and
+bookmarks. Reject with a redirect carrying `error=rate-limited`.
+
+**Consequences.**
+
+- No dependency, no extra service, and the limits are easy to read and tune.
+- Counters reset on restart and are not shared across instances.
+- A determined attacker can rotate IPs; this stops accidents and casual abuse, not a botnet.
+
+**Alternatives considered.** Redis token buckets (operational cost before there is traffic), a
+database counter (write contention on every request), proxy-only limits (cannot see accounts).
+
+**Revisit if.** More than one app instance runs, or a beta shows coordinated abuse.
+
+---
+
+## ADR-0011 — Advisory automatic flags from an open word list
+
+**Context.** Moderators cannot read every post, and the school wants an early warning for
+harassment, sexual content, and threats. Training a model is out of scope, and sending student
+text to a third-party API is not acceptable.
+
+**Decision.** Use the CC BY 4.0 `naughty-words` lists (LDNOOBW) for Japanese and English. Remove
+ordinary school words with a project ignore list, add a few Japanese threats, and match Japanese
+terms by substring and English terms by word boundary. A match creates a `Report` with
+`source = AUTO`; it never hides or blocks the post.
+
+**Consequences.**
+
+- No external service, no training data, and the list is replaceable.
+- False positives are expected, especially for health and biology vocabulary; moderators dismiss
+  them. The queue shows the matched terms.
+- The filter is a safety net for humans, not a decision maker.
+
+**Alternatives considered.** A hosted moderation API (privacy, cost, minors' data), a trained
+classifier (data and maintenance burden), blocking on match (false positives would silence
+legitimate questions).
+
+**Revisit if.** The false-positive rate is too high, or the school requires category-specific
+policies. Then add per-category lists and weights.
+
+---
+
+## ADR-0012 — Append-only audit log for moderation
+
+**Context.** Moderators remove posts and lock threads. Students and the teacher advisor need a
+record of who did what, and the maintainer needs it for incident review.
+
+**Decision.** Add an `AuditLog` table and write one row in the same transaction as every
+moderation change. Record actor, action, target, and a small JSON detail payload. Show the latest
+thirty entries on `/moderation`.
+
+**Consequences.**
+
+- Every change is accountable, and a failed audit write rolls back the change.
+- The log is append-only; there is no UI to edit or delete it.
+- The audit table contains no post body and no IP address; it records actions, not surveillance.
+
+**Alternatives considered.** Application logs only (not queryable, easy to lose), a full event
+sourcing design (far more than this scale needs).
+
+**Revisit if.** The school needs to export the audit log for an investigation; add a read-only
+export rather than editing rows.
 
 ---
 

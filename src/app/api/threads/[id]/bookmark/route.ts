@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isSameOrigin, sameHostPath, seeOther } from "@/lib/http";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!isSameOrigin(request)) {
@@ -20,6 +21,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const user = await getCurrentUser();
   if (!user) {
     return seeOther(request, `/login?next=${encodeURIComponent(`/t/${thread.id}`)}`);
+  }
+
+  const limit = checkRateLimit(
+    `bookmark:${user.id}`,
+    RATE_LIMITS.bookmark.limit,
+    RATE_LIMITS.bookmark.windowMs,
+  );
+  if (!limit.allowed) {
+    const back = sameHostPath(request, `/t/${thread.id}`);
+    const separator = back.includes("?") ? "&" : "?";
+    return seeOther(request, `${back}${separator}error=rate-limited`);
   }
 
   await prisma.$transaction(async (tx) => {

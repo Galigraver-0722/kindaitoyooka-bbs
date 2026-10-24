@@ -28,11 +28,15 @@ thread, and where students can report problems without confronting anyone. See
 - Moderator tools: remove post, lock/unlock thread, remove thread, dismiss reports.
 - Soft deletion: removed content leaves a visible placeholder instead of vanishing.
 - Japanese-first interface with a header switch to English; user content is never machine-translated.
+- Tags are a separate field when composing, not parsed out of the body.
+- Fixed-window rate limits on login, registration, posting, reporting, and reactions.
+- Audit log for every moderation action, shown on `/moderation`.
+- Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, with a project-specific ignore list; matches are reviewed by a human, never auto-hidden.
 - Responsive UI, plain-text content only, no uploads and no trackers.
 
 Not implemented yet: pagination, full-text indexing, quote reposts, user-created boards,
-email verification or password reset, notifications, rate limiting, audit log, account bans,
-profile pages, and image uploads.
+email verification or password reset, notifications, account bans, profile pages, and image
+uploads.
 The full list is in [MVP scope](docs/01-mvp-scope.md).
 
 ## Quick start
@@ -117,6 +121,11 @@ docs/              product, architecture, safety, operations
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Contributions must be in English, must keep
 student safety as the priority, and must not include personal data or secrets.
+
+## Third-party notices
+
+Sensitive-word detection uses the CC BY 4.0 `naughty-words` lists. See
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Security
 

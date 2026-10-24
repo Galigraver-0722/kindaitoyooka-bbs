@@ -1,4 +1,5 @@
 import { getCurrentUser, isModerator } from "@/lib/auth";
+import { recordAudit } from "@/lib/audit";
 import { prisma } from "@/lib/db";
 import { formText, isSameOrigin, seeOther } from "@/lib/http";
 
@@ -22,7 +23,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const report = await prisma.report.findUnique({
     where: { id },
-    select: { id: true, postId: true, post: { select: { isDeleted: true } } },
+    select: {
+      id: true,
+      postId: true,
+      post: { select: { isDeleted: true, threadId: true } },
+    },
   });
 
   if (!report) {
@@ -30,20 +35,36 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   if (action === "remove") {
-    await prisma.$transaction([
-      prisma.post.update({ where: { id: report.postId }, data: { isDeleted: true } }),
-      prisma.report.update({
+    await prisma.$transaction(async (tx) => {
+      await tx.post.update({ where: { id: report.postId }, data: { isDeleted: true } });
+      await tx.report.update({
         where: { id },
         data: { resolvedAt: new Date(), resolvedById: user.id, resolution: "removed" },
-      }),
-    ]);
+      });
+      await recordAudit(tx, {
+        actorId: user.id,
+        action: "report.remove",
+        targetType: "report",
+        targetId: id,
+        details: { postId: report.postId, threadId: report.post.threadId },
+      });
+    });
     return seeOther(request, "/moderation");
   }
 
   if (action === "dismiss") {
-    await prisma.report.update({
-      where: { id },
-      data: { resolvedAt: new Date(), resolvedById: user.id, resolution: "dismissed" },
+    await prisma.$transaction(async (tx) => {
+      await tx.report.update({
+        where: { id },
+        data: { resolvedAt: new Date(), resolvedById: user.id, resolution: "dismissed" },
+      });
+      await recordAudit(tx, {
+        actorId: user.id,
+        action: "report.dismiss",
+        targetType: "report",
+        targetId: id,
+        details: { postId: report.postId, threadId: report.post.threadId },
+      });
     });
     return seeOther(request, "/moderation");
   }

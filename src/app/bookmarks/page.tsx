@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { getLocale, t } from "@/lib/i18n";
+import { errorMessage } from "@/lib/messages";
 import { tagSearchHref } from "@/lib/tags";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,9 +15,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const dynamic = "force-dynamic";
 
-export default async function BookmarksPage() {
-  const [user, locale] = await Promise.all([getCurrentUser(), getLocale()]);
+export default async function BookmarksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const [{ error }, user, locale] = await Promise.all([
+    searchParams,
+    getCurrentUser(),
+    getLocale(),
+  ]);
   const m = t(locale);
+  const errorText = errorMessage(error, locale);
 
   if (!user) {
     redirect("/login?next=/bookmarks");
@@ -42,6 +52,12 @@ export default async function BookmarksPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-2xl font-bold tracking-tight text-slate-900">{m.bookmarks.title}</h1>
+
+      {errorText ? (
+        <p className="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-rose-200">
+          {errorText}
+        </p>
+      ) : null}
 
       {items.length === 0 ? (
         <p className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">

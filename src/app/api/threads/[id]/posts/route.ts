@@ -1,7 +1,9 @@
 import { getCurrentUser } from "@/lib/auth";
+import { detectSensitiveText } from "@/lib/content-filter";
 import { prisma } from "@/lib/db";
-import { isSameOrigin, seeOther } from "@/lib/http";
-import { parseHashtags } from "@/lib/tags";
+import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { parseTagInput } from "@/lib/tags";
 import { validateBody } from "@/lib/validation";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -14,6 +16,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const user = await getCurrentUser();
   if (!user) {
     return seeOther(request, `/login?next=${encodeURIComponent(`/t/${id}`)}`);
+  }
+
+  const limit = checkRateLimit(
+    `reply:${user.id}`,
+    RATE_LIMITS.reply.limit,
+    RATE_LIMITS.reply.windowMs,
+  );
+  if (!limit.allowed) {
+    return seeOther(request, `/t/${id}?error=rate-limited`);
   }
 
   const thread = await prisma.thread.findUnique({
@@ -31,12 +42,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const data = await request.formData();
   const bodyValue = data.get("body");
   const body = typeof bodyValue === "string" ? bodyValue.trim() : "";
+  const tags = parseTagInput(formText(data, "tags"));
 
   if (!validateBody(body)) {
     return seeOther(request, `/t/${id}?error=invalid-input`);
   }
 
-  const tags = parseHashtags(body);
+  const flagged = detectSensitiveText(body, tags.join(" "));
 
   const post = await prisma.$transaction(async (tx) => {
     const created = await tx.post.create({
@@ -57,6 +69,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           : {}),
       },
     });
+
+    if (flagged.length > 0) {
+      await tx.report.create({
+        data: {
+          postId: created.id,
+          reason: `Auto-detected: ${flagged.join(", ")}`,
+          source: "AUTO",
+        },
+      });
+    }
 
     return created;
   });

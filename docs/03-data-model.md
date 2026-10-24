@@ -102,8 +102,25 @@ reporting, and moderation uniform: every piece of user text is one row with the 
 | `resolvedAt` | datetime? | `NULL` means open |
 | `resolvedById` | string? | FK → User, set on resolution |
 | `resolution` | string? | `removed` or `dismissed` |
+| `source` | enum | `USER` (default) or `AUTO` |
 
 Reports are immutable history. Resolution is recorded; nothing is deleted from the queue.
+Automatic flags use the same table with `source = AUTO`, no reporter, and the matched terms in
+`reason`.
+
+### AuditLog
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | string (cuid) | |
+| `actorId` | string? | FK → User; `NULL` if the account is deleted |
+| `action` | string | `post.remove`, `thread.lock`, `thread.unlock`, `thread.remove`, `report.remove`, `report.dismiss` |
+| `targetType` | string | `post`, `thread`, or `report` |
+| `targetId` | string | Target row id |
+| `details` | string? | Small JSON payload (thread id, board slug, report ids) |
+| `createdAt` | datetime | |
+
+Audit rows are append-only. The moderation page shows the thirty most recent ones.
 
 ### Tag
 
@@ -113,8 +130,10 @@ Reports are immutable history. Resolution is recorded; nothing is deleted from t
 | `name` | string, unique | NFKC-normalized, lowercased, 1–30 chars |
 | `createdAt` | datetime | |
 
-Tags are shared across threads through an implicit many-to-many table. They are created from
-hashtags in titles and replies, not from a separate tag editor.
+Tags are shared across threads through an implicit many-to-many table. They come from the
+dedicated `tags` field on the compose and reply forms, not from hashtags in the body. The field
+accepts space- or comma-separated tokens, strips a leading `#`, and keeps the first five valid
+1–30 character tokens.
 
 ### PostLike
 
@@ -159,6 +178,10 @@ Primary key is `(userId, threadId)`. The `/bookmarks` page lists these rows, new
     from one write; a tag is shared by every thread that uses it.
 11. Counters are derived data. If they ever drift, they can be rebuilt from `PostLike` and
     `ThreadBookmark` without touching user content.
+12. Every moderation action writes an `AuditLog` row in the same transaction as the change. A
+    missing audit row means the change did not commit.
+13. An automatic flag is one `Report` with `source = AUTO`, a null reporter, and the matched
+    terms. It is advisory; it never sets `isDeleted`.
 
 ## 4. Indexes
 
@@ -174,6 +197,8 @@ Primary key is `(userId, threadId)`. The `/bookmarks` page lists these rows, new
 | `PostLike(postId)` | Counting likes for a post |
 | `ThreadBookmark(threadId)` | Counting saves for a thread |
 | `Report(resolvedAt)` | Open-queue query |
+| `AuditLog(createdAt)` | Recent moderation history |
+| `AuditLog(actorId)` | Actions by one moderator |
 
 ## 5. Delete semantics
 
@@ -197,7 +222,6 @@ Primary key is `(userId, threadId)`. The `/bookmarks` page lists these rows, new
 
 | Model | Why it will be needed |
 | --- | --- |
-| `AuditLog` | Who removed what, when, from which IP. Required for accountability. |
 | `Ban` / `Mute` | Repeat offenders; time-boxed with a reason and an expiry. |
 | `EmailVerification`, `PasswordReset` | Account recovery. Requires an email provider. |
 | `Notification` | Reply to my thread / mention. |
@@ -216,4 +240,5 @@ Not yet enforced in code; agree on this before launch.
 | Soft-deleted posts | 180 days, then purge body | Keeps moderation auditable without hoarding harmful text |
 | Session rows | 30 days after expiry | Limit the blast radius of a database leak |
 | Reports | 1 year after resolution | Pattern detection and appeals |
+| AuditLog | 1 year | Accountability and incident review |
 | Backups | 30 daily + 3 monthly | Recovery without unbounded storage |

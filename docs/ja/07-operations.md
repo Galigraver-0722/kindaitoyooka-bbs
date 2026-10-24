@@ -223,6 +223,7 @@ sudo systemctl restart toyooka-bbs
 | ディスク容量 | 毎日の `df -h`、または node_exporter | 使用率 80% 超 |
 | アプリケーションのエラー | `journalctl -u toyooka-bbs -f`、Sentry（フェーズ 1） | 500 の急増 |
 | バックアップの作成 | Cron の出力をログファイルへ | 2 日間ファイルがない |
+| 監査の動き | `/moderation` の最近の操作 | 予期しない一括削除やロール変更 |
 | データベースの整合性 | 毎月の `sqlite3 prod.db "PRAGMA integrity_check;"` | `ok` 以外 |
 
 ## 8. 障害対応ランブック
@@ -268,6 +269,10 @@ sudo systemctl restart toyooka-bbs
 ### 個人情報の誤公開
 
 `docs/ja/06` の第 10 節に従います。内容を削除して証拠を保全し、担当教員に連絡します。誰が見たかを記録し、それ以上広げないようにしてください。
+
+## 8.1 要注意語リストの更新
+
+語彙は `naughty-words` 依存パッケージ（CC BY 4.0）に含まれます。更新は `pnpm update` で入りますが、配備前に差分を読み、誤検出が増えないか確認してください。除外リストと追加した日本語の語は `src/lib/content-filter.ts` にあり、テストで守っています。一致しただけで投稿を自動削除しないでください。判断は人間が行います。
 
 ## 9. 公開チェックリスト
 

@@ -130,7 +130,9 @@ sequenceDiagram
 │   │   └── page.tsx
 │   ├── components/          # header, footer, role chip, share button
 │   └── lib/
+│       ├── audit.ts         # 追記のみのモデレーション記録
 │       ├── auth.ts          # hashing, sessions, current user
+│       ├── content-filter.ts # 要注意語のフラグ（助言）
 │       ├── db.ts            # Prisma singleton
 │       ├── format.ts        # JST timestamps
 │       ├── hot.ts           # 人気順のスコア
@@ -139,6 +141,7 @@ sequenceDiagram
 │       ├── locales.ts       # en/ja dictionaries and typed keys
 │       ├── tags.ts          # ハッシュタグの解析とタグリンク
 │       ├── messages.ts      # localized error codes and notices
+│       ├── rate-limit.ts    # プロセス内の固定ウィンドウ制限
 │       └── validation.ts    # length rules, safe redirect paths
 └── docs/                    # this documentation set
 ```
@@ -151,10 +154,10 @@ sequenceDiagram
 | SQL インジェクション | Prisma がクエリをパラメータ化する | — |
 | CSRF | `SameSite=Lax` と、すべての POST での `Origin` ヘッダー確認 | ブラウザの例外事例が出たらフォーム単位のトークンを追加 |
 | セッション盗難 | HttpOnly + Secure Cookie、トークンのハッシュ化、期限 | パスワード変更時のローテーション（変更機能は未実装） |
-| ログインの総当たり | なし | IP + ユーザー名単位のレート制限、失敗の記録 |
-| スパム／連投 | なし | アカウント単位・IP 単位のレート制限、新規アカウントのクールダウン |
+| ログインの総当たり | IP + ユーザー名ごとに 10 分 5 回の固定ウィンドウ制限 | 複数インスタンスにするなら共有ストアへ |
+| スパム／連投 | 投稿・通報・いいね・保存にアカウント単位の制限、登録に IP 単位の制限 | ベータの実測で調整 |
 | オープンリダイレクト | `safeNextPath()` が同一サイトのパスだけを許可 | `//evil` と絶対 URL のテスト |
-| 権限昇格 | すべてのモデレーション用エンドポイントでサーバー側のロール確認 | 行為者 ID 付きの監査ログ |
+| 権限昇格 | サーバー側のロール確認。モデレーション操作はすべて行為者 ID 付きで `AuditLog` に追記 | — |
 | 個人情報の漏えい | 方針、アップロードなし、本名欄なし、通報ボタン | パターン警告の自動化、モデレーター研修 |
 | 依存関係のリスク | 依存が少なく、lockfile をコミットしている | CI での `pnpm audit`、Dependabot |
 

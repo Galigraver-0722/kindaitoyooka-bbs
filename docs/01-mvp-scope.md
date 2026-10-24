@@ -19,7 +19,10 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 - Like posts, bookmark threads, share permalinks, and report posts from one action bar.
 - Saved-threads page and per-user reaction state.
 - Search titles and replies, with newest and popularity sorting.
-- Hashtags parsed from titles and replies, with tag-filtered search.
+- Tags entered in a separate field on the compose and reply forms, with tag-filtered search.
+- Fixed-window rate limits on authentication, posting, reporting, and reactions.
+- An audit log for every moderation action, visible on `/moderation`.
+- Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, reviewed by a human.
 - Report a post with a required reason.
 - Moderator queue: remove reported post or dismiss report.
 - Moderator actions: remove post, lock/unlock thread, remove thread.
@@ -48,6 +51,7 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 | Language switch | Every page opens in Japanese by default and can be switched to English; the choice survives navigation |
 | React | Signed-in users can like a post and bookmark a thread; counts update and toggling reverses the action |
 | Search and tags | Search matches titles and replies, filters by tag, and sorts by newest or popularity |
+| Abuse controls | Login, registration, posting, reporting, and reactions are rate-limited; moderation actions are audited |
 
 ### Should (before opening to the whole school)
 
@@ -55,8 +59,6 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 | --- | --- | --- |
 | Pagination or "load more" | A board with 500 threads is unusable | Cursor by `lastPostAt` |
 | Full-text indexing | `contains` is fine for a few thousand posts; ranking and Japanese tokenization need FTS5 or Postgres FTS | Add when search latency or precision becomes a complaint |
-| Rate limiting | Stops accidental and deliberate floods | Per-IP and per-account |
-| Audit log | Accountability for moderator actions | Append-only table |
 | Password reset | Otherwise locked-out users need manual help | Requires email delivery |
 | Ban / mute | Removing single posts is not enough for repeat offenders | Time-boxed, with reason |
 | Privacy notice and terms | Required before school approval | Plain-language pages |
