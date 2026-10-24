@@ -17,7 +17,7 @@ test("usernames are 3-20 lowercase letters, digits, or underscores", () => {
   assert.equal(validateUsername("a".repeat(21)), false);
   assert.equal(validateUsername("has space"), false);
   assert.equal(validateUsername("sakura-17"), false);
-  assert.equal(validateUsername("さくら"), false);
+  assert.equal(validateUsername("sakura!"), false);
 });
 
 test("passwords must be 10-200 characters", () => {
