@@ -1,5 +1,7 @@
 # Open Questions
 
+> 日本語版: [日本語](ja/10-open-questions.md)
+
 Decisions that are intentionally left to the project owner, the teacher advisor, or the school.
 Do not let the codebase answer them by accident.
 
@@ -12,7 +14,7 @@ Do not let the codebase answer them by accident.
 | Q5 | Who can register? | Open, invite code, school email domain | Spam and stranger risk vs adoption | Invite code for the beta, open with a school-domain hint for launch | Advisor | Phase 2 |
 | Q6 | Do we send email? | None, verification only, full notifications | Requires a provider, consent, and deliverability work | None in v0.1; verification before open registration | Maintainer | Phase 2 |
 | Q7 | Who moderates, and with what time commitment? | 2 student mods + teacher, a student committee, teachers only | Burnout and response time | At least 2 student moderators and 1 advisor; publish an SLA | Advisor | Phase 1 |
-| Q8 | Does the interface need Japanese? | English only, bilingual, Japanese only | Adoption and school approval | English v0.1; add Japanese if the advisor requires it | Advisor | Phase 3 |
+| Q8 | Does the interface need Japanese? | English only, bilingual, Japanese only | Adoption and school approval | English v0.1; the documentation already has a Japanese edition, and the UI can follow if the advisor requires it | Advisor | Phase 3 |
 | Q9 | What is the retention policy for removed content? | Keep forever, 180 days, 30 days | Privacy vs audit | 180 days for removed bodies, then purge with backup | Advisor + maintainer | Before launch |
 | Q10 | Will images be allowed? | Never, event posters only, general uploads | Safety, storage, moderation load | No images in the first year; revisit with a moderation plan | Advisor | Phase 5 at the earliest |
 | Q11 | Is anonymous posting allowed? | No, pseudonymous only, fully anonymous | Accountability vs willingness to ask | Pseudonymous accounts only | Advisor | Already decided: no |
@@ -31,7 +33,7 @@ Do not let the codebase answer them by accident.
 
 | Question | Answer | Where |
 | --- | --- | --- |
-| Which language for code, comments, and docs? | English | ADR-0006 |
+| Which language for code, UI, and docs? | Code, UI, and canonical docs in English; Japanese docs in `docs/ja/` | ADR-0006 |
 | Which license? | MIT | ADR-0002 |
 | Which framework? | Next.js 16 | ADR-0001 |
 | Which database? | SQLite + Prisma | ADR-0003 |

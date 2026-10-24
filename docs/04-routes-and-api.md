@@ -1,5 +1,7 @@
 # Routes and Form Endpoints
 
+> 日本語版: [日本語](ja/04-routes-and-api.md)
+
 These endpoints exist to serve the HTML forms in this application. They are **not** a versioned
 public API. A future mobile client would need a JSON API with explicit versioning.
 

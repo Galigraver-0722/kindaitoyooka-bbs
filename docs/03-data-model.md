@@ -1,5 +1,7 @@
 # Data Model
 
+> 日本語版: [日本語](ja/03-data-model.md)
+
 The schema lives in `prisma/schema.prisma` and is the source of truth. This document explains
 the intent behind it.
 

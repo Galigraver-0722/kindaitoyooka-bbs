@@ -5,8 +5,10 @@ the bar for safety and clarity is higher than for a typical side project.
 
 ## Ground rules
 
-1. **English only.** Code, comments, commit messages, issues, pull requests, documentation, and
-   user-facing strings are in English. This is a project decision (ADR-0006).
+1. **English for code and English as the documentation source of truth.** Code, comments, commit
+   messages, issues, pull requests, user-facing strings, and `docs/` are in English. A Japanese
+   translation lives in `docs/ja/`; when you change a document, update both editions in the same
+   pull request. This is a project decision (ADR-0006).
 2. **No personal data, ever.** Do not add real student names, photos, emails, or school records
    to fixtures, issues, or screenshots. Use the seeded demo data or invented examples.
 3. **No secrets.** Never commit `.env`, tokens, passwords, or database dumps.

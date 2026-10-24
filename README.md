@@ -69,6 +69,8 @@ Never run the seed on a public deployment, and never keep these passwords anywhe
 
 Start with the brief, then read the scope and the safety policy before writing code.
 
+**日本語版:** [docs/ja/README.md](docs/ja/README.md) — 日本語の文書一式です。英語版が正本です。
+
 | Document | What it answers |
 | --- | --- |
 | [00 · Product brief](docs/00-product-brief.md) | Why this exists, for whom, and how success is measured |

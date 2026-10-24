@@ -1,5 +1,7 @@
 # Roadmap
 
+> 日本語版: [日本語](ja/05-roadmap.md)
+
 Estimates assume one developer working 8–10 hours per week and a school calendar where exam
 weeks and the culture festival are unavailable. Treat them as ranges, not commitments.
 

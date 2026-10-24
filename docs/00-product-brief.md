@@ -1,5 +1,7 @@
 # Product Brief
 
+> 日本語版: [日本語](ja/00-product-brief.md)
+
 ## 1. The problem
 
 A school already has places to talk: a class group chat, a club chat, the staff room, the
@@ -55,8 +57,9 @@ that should survive the term.
    actions are attributed to a moderator account in the database.
 4. **Boring technology.** A small team must be able to read the whole codebase and recover the
    data with a file copy.
-5. **English-first, localizable later.** The interface, code, comments, and documents are in
-   English by project decision. Japanese localization is a planned phase, not a rewrite.
+5. **English source of truth, Japanese edition for readers.** Code, comments, the interface,
+   and the canonical documentation are in English. A full Japanese documentation edition lives
+   in `docs/ja/`; localizing the interface is a planned phase, not a rewrite.
 
 ## 6. Success metrics
 

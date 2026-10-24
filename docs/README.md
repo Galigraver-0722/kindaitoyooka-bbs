@@ -1,5 +1,7 @@
 # Documentation
 
+> 日本語版の一覧: [docs/ja/README.md](ja/README.md)
+
 Read in this order when you are new to the project.
 
 | Document | Summary |
@@ -18,7 +20,8 @@ Read in this order when you are new to the project.
 
 ## Conventions for these documents
 
-- English only (ADR-0006).
+- English is the source of truth, with a maintained Japanese edition in `docs/ja/`
+  (ADR-0006). Update both editions in the same pull request.
 - Numbers, limits, and field names must match the code. When they diverge, the code is wrong or
   the document is wrong; fix one in the same pull request.
 - Safety statements are written as requirements, not aspirations.

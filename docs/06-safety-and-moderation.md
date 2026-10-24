@@ -1,5 +1,7 @@
 # Safety and Moderation
 
+> 日本語版: [日本語](ja/06-safety-and-moderation.md)
+
 > This document is a working policy, not legal advice. Before launch, the teacher advisor and
 > the school administration must review it. Where Japanese law is mentioned, confirm the
 > current requirements with the school's legal contact.
@@ -178,7 +180,7 @@ keep them current.
 | Law / rule | Relevance |
 | --- | --- |
 | Act on the Protection of Personal Information (Kojin Joho Hogo Ho) | The school handles student data; collect the minimum, limit access, define retention, respond to disclosure requests |
-| Provider Liability Limitation Act (Provider Liability Limitation Act, Purobaida Sekinin Seigen Ho) | Defines takedown and sender-identification procedures; the operator may need a contact point and a response process |
+| Provider Liability Limitation Act (Purobaida Sekinin Seigen Ho) | Defines takedown and sender-identification procedures; the operator may need a contact point and a response process |
 | Penal Code Art. 230 (defamation) and Art. 231 (insult) | Posts can create criminal exposure for authors and, in some cases, for operators who fail to act |
 | Copyright Act (Chosakuken Ho) | Do not host scanned textbooks, manga, or copied articles |
 | Act on Development of an Environment Providing Safe Internet Use for Youth | School and operator responsibilities regarding minors' internet use |

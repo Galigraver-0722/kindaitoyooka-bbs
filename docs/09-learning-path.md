@@ -1,5 +1,7 @@
 # Learning Path
 
+> 日本語版: [日本語](ja/09-learning-path.md)
+
 This project is meant to be buildable by a student who has written some JavaScript but has never
 deployed a web application. The path below turns the codebase into a sequence of small,
 verifiable exercises. Each week has a deliverable you can commit and a test you can perform.

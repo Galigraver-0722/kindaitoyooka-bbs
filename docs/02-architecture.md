@@ -1,5 +1,7 @@
 # Architecture
 
+> 日本語版: [日本語](ja/02-architecture.md)
+
 ## 1. Shape of the system
 
 One Next.js application, one database, no separate backend service and no external SaaS in the

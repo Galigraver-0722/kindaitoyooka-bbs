@@ -1,5 +1,7 @@
 # MVP Scope
 
+> 日本語版: [日本語](ja/01-mvp-scope.md)
+
 ## Definition
 
 The MVP is a **walking skeleton**: every layer of the system is present and connected, even if

@@ -1,5 +1,7 @@
 # Decision Log
 
+> 日本語版: [日本語](ja/08-decision-log.md)
+
 Architecture decisions are recorded here so that future maintainers know what was chosen, why,
 and when to revisit it. Each entry states the context, the decision, the consequences, and the
 alternatives considered.
@@ -13,7 +15,7 @@ alternatives considered.
 | ADR-0003 | SQLite with Prisma | Accepted | 2026-10-24 |
 | ADR-0004 | Custom cookie sessions instead of an auth provider | Accepted | 2026-10-24 |
 | ADR-0005 | Plain HTML forms and route handlers, not server actions or an SPA | Accepted | 2026-10-24 |
-| ADR-0006 | English-only interface and documentation for v0.1 | Accepted | 2026-10-24 |
+| ADR-0006 | English source of truth with a Japanese documentation edition | Accepted | 2026-10-24 |
 | ADR-0007 | Soft deletion for all user content | Accepted | 2026-10-24 |
 
 ---
@@ -160,23 +162,30 @@ command line), GraphQL or tRPC (unnecessary indirection at this size), a separat
 
 ---
 
-## ADR-0006 — English-only interface and documentation for v0.1
+## ADR-0006 — English source of truth with a Japanese documentation edition
 
-**Context.** The project owner requires all text, comments, and documentation to be in English.
-The school is in Japan and most students read Japanese more comfortably.
+**Context.** The project owner requires code, comments, and documentation to be in English. The
+school is in Japan, most students read Japanese more comfortably, and the owner asked for a
+Japanese edition of the documentation. The interface itself is still English in v0.1.
 
-**Decision.** Ship v0.1 in English only. Keep user-facing strings in one place per page so that
-localization is a translation task, not a rewrite.
+**Decision.** English remains the source of truth for code, comments, the interface, commit
+messages, issues, and pull requests. `docs/` is the canonical documentation in English, and
+`docs/ja/` contains a full Japanese translation with the same file names and structure. When the
+two disagree, the English version wins. Both editions are updated in the same pull request.
 
 **Consequences.**
 
-- Simpler reviews and a codebase that outside contributors can read.
-- Some students will be slower to adopt; the moderation policy and rules must still be
-  explainable in Japanese by a teacher or moderator.
-- The error-code map (`src/lib/messages.ts`) is the natural seam for an i18n layer.
+- Japanese teachers, students, and the school administration can read the policy and the plan
+  without relying on a translator.
+- Every documentation change must be made twice; translation drift is a real maintenance cost.
+- Commands, code identifiers, URLs, and error codes stay in English inside the Japanese
+  edition, because translating them would break copy-paste and searches.
+- The error-code map (`src/lib/messages.ts`) remains the natural seam for translating the
+  interface itself later.
 
-**Revisit if.** The school requires Japanese for approval, or usage data shows English is a
-barrier. Plan: introduce a locale cookie and a message catalog; do not fork the app.
+**Revisit if.** The school requires a Japanese interface for approval, or usage data shows
+English is a barrier for students. Plan: introduce a locale cookie and a message catalog; do not
+fork the app.
 
 ---
 

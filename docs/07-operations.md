@@ -1,5 +1,7 @@
 # Operations Runbook
 
+> 日本語版: [日本語](ja/07-operations.md)
+
 This document assumes one small server and one maintainer. If the school provides hosting, adapt
 the deployment section but keep the backup and restore rules unchanged.
 
