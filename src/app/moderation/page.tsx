@@ -4,12 +4,18 @@ import { redirect } from "next/navigation";
 import { getCurrentUser, isModerator } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
+import { getLocale, t } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Moderation" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: t(locale).moderation.title };
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function ModerationPage() {
-  const user = await getCurrentUser();
+  const [user, locale] = await Promise.all([getCurrentUser(), getLocale()]);
+  const m = t(locale);
 
   if (!user) {
     redirect("/login?next=/moderation");
@@ -41,17 +47,15 @@ export default async function ModerationPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">Moderation</h1>
-      <p className="mt-1 text-sm text-slate-500">
-        Signed in as {user.username}. Every action is attributed to your account in the database.
-      </p>
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900">{m.moderation.title}</h1>
+      <p className="mt-1 text-sm text-slate-500">{m.moderation.signedInAs(user.username)}</p>
 
       <section className="mt-8">
-        <h2 className="text-lg font-semibold text-slate-900">Open reports</h2>
+        <h2 className="text-lg font-semibold text-slate-900">{m.moderation.openReports}</h2>
 
         {reports.length === 0 ? (
           <p className="mt-3 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
-            Nothing needs review right now.
+            {m.moderation.empty}
           </p>
         ) : (
           <ul className="mt-3 space-y-4">
@@ -59,15 +63,16 @@ export default async function ModerationPage() {
               <li key={report.id} className="rounded-xl border border-slate-200 bg-white p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
                   <span>
-                    Reported by <span className="font-medium text-slate-700">{report.reporter.username}</span>
-                    {" · "}
-                    {formatDateTime(report.createdAt)}
+                    {m.moderation.reportedBy(
+                      report.reporter.username,
+                      formatDateTime(report.createdAt, locale),
+                    )}
                   </span>
                   <Link
                     href={`/t/${report.post.thread.id}#p-${report.post.id}`}
                     className="text-indigo-600 hover:text-indigo-700"
                   >
-                    Open in thread
+                    {m.moderation.openThread}
                   </Link>
                 </div>
 
@@ -77,13 +82,17 @@ export default async function ModerationPage() {
 
                 <div className="mt-3 rounded-lg bg-slate-50 p-3">
                   <p className="text-xs text-slate-500">
-                    {report.post.author.username} in{" "}
-                    <span className="font-medium text-slate-700">{report.post.thread.title}</span> (
-                    {report.post.thread.board.name})
-                    {report.post.thread.isDeleted ? " — thread already removed" : ""}
+                    {m.moderation.postContext(
+                      report.post.author.username,
+                      report.post.thread.title,
+                      report.post.thread.board.name,
+                    )}
+                    {report.post.thread.isDeleted
+                      ? ` — ${m.moderation.removedThread}`
+                      : null}
                   </p>
                   <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-800">
-                    {report.post.isDeleted ? "This post was already removed." : report.post.body}
+                    {report.post.isDeleted ? m.moderation.removedPost : report.post.body}
                   </p>
                 </div>
 
@@ -95,7 +104,7 @@ export default async function ModerationPage() {
                         type="submit"
                         className="rounded-md bg-rose-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-rose-700"
                       >
-                        Remove post
+                        {m.moderation.removePost}
                       </button>
                     </form>
                     <form action={`/api/reports/${report.id}/resolve`} method="post">
@@ -104,7 +113,7 @@ export default async function ModerationPage() {
                         type="submit"
                         className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-50"
                       >
-                        Dismiss report
+                        {m.moderation.dismiss}
                       </button>
                     </form>
                   </div>
@@ -115,7 +124,7 @@ export default async function ModerationPage() {
                       type="submit"
                       className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-50"
                     >
-                      Close report
+                      {m.moderation.closeReport}
                     </button>
                   </form>
                 )}

@@ -4,6 +4,7 @@ import { RoleChip } from "@/components/role-chip";
 import { getCurrentUser, isModerator } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
+import { getLocale, t } from "@/lib/i18n";
 import { errorMessage, noticeMessage } from "@/lib/messages";
 import { LIMITS } from "@/lib/validation";
 
@@ -16,8 +17,12 @@ export default async function ThreadPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string; notice?: string }>;
 }) {
-  const { id } = await params;
-  const { error, notice } = await searchParams;
+  const [{ id }, { error, notice }, locale] = await Promise.all([
+    params,
+    searchParams,
+    getLocale(),
+  ]);
+  const m = t(locale);
 
   const [thread, user] = await Promise.all([
     prisma.thread.findUnique({
@@ -39,14 +44,14 @@ export default async function ThreadPage({
   }
 
   const canModerate = isModerator(user);
-  const errorText = errorMessage(error);
-  const noticeText = noticeMessage(notice);
+  const errorText = errorMessage(error, locale);
+  const noticeText = noticeMessage(notice, locale);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <nav className="text-sm text-slate-500">
         <Link href="/" className="hover:text-slate-800">
-          Boards
+          {m.board.breadcrumb}
         </Link>
         <span className="mx-2">/</span>
         <Link href={`/b/${thread.board.slug}`} className="hover:text-slate-800">
@@ -58,18 +63,18 @@ export default async function ThreadPage({
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {thread.isPinned ? (
             <span className="rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700">
-              Pinned
+              {m.board.pinned}
             </span>
           ) : null}
           {thread.isLocked ? (
             <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
-              Locked
+              {m.board.locked}
             </span>
           ) : null}
         </div>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{thread.title}</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Started by {thread.author.username} · {formatDateTime(thread.createdAt)}
+          {m.thread.startedBy(thread.author.username, formatDateTime(thread.createdAt, locale))}
         </p>
       </header>
 
@@ -80,7 +85,7 @@ export default async function ThreadPage({
               type="submit"
               className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-50"
             >
-              {thread.isLocked ? "Unlock thread" : "Lock thread"}
+              {thread.isLocked ? m.thread.unlockThread : m.thread.lockThread}
             </button>
           </form>
           <form action={`/api/threads/${thread.id}/delete`} method="post">
@@ -88,7 +93,7 @@ export default async function ThreadPage({
               type="submit"
               className="rounded-md border border-rose-300 px-3 py-1.5 text-sm text-rose-700 transition hover:bg-rose-50"
             >
-              Remove thread
+              {m.thread.removeThread}
             </button>
           </form>
         </div>
@@ -110,24 +115,30 @@ export default async function ThreadPage({
           <li key={post.id} id={`p-${post.id}`} className="scroll-mt-6">
             <article
               className={`rounded-xl border p-5 ${
-                post.isDeleted ? "border-dashed border-slate-300 bg-slate-50" : "border-slate-200 bg-white"
+                post.isDeleted
+                  ? "border-dashed border-slate-300 bg-slate-50"
+                  : "border-slate-200 bg-white"
               }`}
             >
               <header className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
                 <div className="text-slate-700">
                   <span className="font-medium">{post.author.username}</span>
-                  <RoleChip role={post.author.role} />
+                  <RoleChip role={post.author.role} locale={locale} />
                   {index === 0 ? (
-                    <span className="ml-2 text-xs text-slate-400">original post</span>
+                    <span className="ml-2 text-xs text-slate-400">{m.thread.originalPost}</span>
                   ) : (
-                    <span className="ml-2 text-xs text-slate-400">#{index + 1}</span>
+                    <span className="ml-2 text-xs text-slate-400">
+                      {m.thread.postNumber(index + 1)}
+                    </span>
                   )}
                 </div>
-                <time className="text-xs text-slate-400">{formatDateTime(post.createdAt)}</time>
+                <time className="text-xs text-slate-400">
+                  {formatDateTime(post.createdAt, locale)}
+                </time>
               </header>
 
               {post.isDeleted ? (
-                <p className="mt-3 text-sm italic text-slate-500">Removed by a moderator.</p>
+                <p className="mt-3 text-sm italic text-slate-500">{m.thread.removed}</p>
               ) : (
                 <p className="mt-3 whitespace-pre-wrap break-words text-slate-800">{post.body}</p>
               )}
@@ -137,7 +148,7 @@ export default async function ThreadPage({
                   {user ? (
                     <details className="group">
                       <summary className="cursor-pointer select-none hover:text-slate-800">
-                        Report
+                        {m.thread.report}
                       </summary>
                       <form
                         action="/api/reports"
@@ -150,14 +161,14 @@ export default async function ThreadPage({
                           required
                           minLength={LIMITS.reasonMin}
                           maxLength={LIMITS.reasonMax}
-                          placeholder="What is wrong with this post?"
+                          placeholder={m.thread.reportPlaceholder}
                           className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         />
                         <button
                           type="submit"
                           className="rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white transition hover:bg-slate-700"
                         >
-                          Send report
+                          {m.thread.sendReport}
                         </button>
                       </form>
                     </details>
@@ -166,7 +177,7 @@ export default async function ThreadPage({
                   {canModerate ? (
                     <form action={`/api/posts/${post.id}/delete`} method="post">
                       <button type="submit" className="hover:text-rose-700">
-                        Remove post
+                        {m.thread.removePost}
                       </button>
                     </form>
                   ) : null}
@@ -180,7 +191,7 @@ export default async function ThreadPage({
       <section className="mt-8">
         {thread.isLocked ? (
           <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-500">
-            This thread is locked. New replies are disabled.
+            {m.thread.lockedNotice}
           </p>
         ) : user ? (
           <form
@@ -189,7 +200,7 @@ export default async function ThreadPage({
             className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
           >
             <label htmlFor="body" className="block text-sm font-medium text-slate-700">
-              Reply as {user.username}
+              {m.thread.replyAs(user.username)}
             </label>
             <textarea
               id="body"
@@ -201,25 +212,26 @@ export default async function ThreadPage({
             />
             <div className="mt-3 flex items-center justify-between gap-3">
               <p className="text-xs text-slate-500">
-                Plain text. Up to {LIMITS.bodyMax.toLocaleString("en-US")} characters.
+                {m.thread.charLimit(LIMITS.bodyMax)}
               </p>
               <button
                 type="submit"
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
               >
-                Post reply
+                {m.thread.postReply}
               </button>
             </div>
           </form>
         ) : (
           <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
+            {m.thread.loginPromptPrefix}
             <Link
               href={`/login?next=${encodeURIComponent(`/t/${thread.id}`)}`}
               className="font-medium text-indigo-600 hover:text-indigo-700"
             >
-              Log in
-            </Link>{" "}
-            to reply to this thread.
+              {m.thread.loginLink}
+            </Link>
+            {m.thread.loginPromptSuffix}
           </p>
         )}
       </section>

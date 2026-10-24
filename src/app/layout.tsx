@@ -3,25 +3,30 @@ import "./globals.css";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
+import { getLocale, t } from "@/lib/i18n";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Toyooka BBS",
-    template: "%s · Toyooka BBS",
-  },
-  description:
-    "A community bulletin board for Kindai University Toyooka Junior & Senior High School.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const m = t(locale);
+
+  return {
+    title: {
+      default: m.meta.title,
+      template: `%s · ${m.meta.title}`,
+    },
+    description: m.meta.description,
+  };
+}
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const user = await getCurrentUser();
+  const [user, locale] = await Promise.all([getCurrentUser(), getLocale()]);
 
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased">
-        <SiteHeader user={user} />
+        <SiteHeader user={user} locale={locale} />
         <div className="flex-1">{children}</div>
-        <SiteFooter />
+        <SiteFooter locale={locale} />
       </body>
     </html>
   );

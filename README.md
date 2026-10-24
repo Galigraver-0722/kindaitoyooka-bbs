@@ -23,10 +23,11 @@ thread, and where students can report problems without confronting anyone. See
 - Report a post with a reason; moderators review the queue at `/moderation`.
 - Moderator tools: remove post, lock/unlock thread, remove thread, dismiss reports.
 - Soft deletion: removed content leaves a visible placeholder instead of vanishing.
-- Responsive English UI, plain-text content only, no uploads and no trackers.
+- Bilingual interface (English / Japanese) with a header switcher; user content is never machine-translated.
+- Responsive UI, plain-text content only, no uploads and no trackers.
 
 Not implemented yet: search, pagination, email verification or password reset, notifications,
-rate limiting, audit log, account bans, profile pages, image uploads, Japanese localization.
+rate limiting, audit log, account bans, profile pages, and image uploads.
 The full list is in [MVP scope](docs/01-mvp-scope.md).
 
 ## Quick start

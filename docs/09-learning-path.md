@@ -66,6 +66,9 @@ Goals: App Router, dynamic segments, server components, `params`.
 2. Open `/b/general` and `/t/<any-id>`. Find where `params` is awaited in
    `src/app/b/[slug]/page.tsx`.
 3. Add the board's thread count to the thread page breadcrumb using the existing query.
+4. Switch the header toggle to 日本語, then confirm that `<html lang>` and the dates change.
+   Add one new string to both dictionaries in `src/lib/locales.ts` and see the parity test fail
+   until both exist.
 
 **Deliverable:** `/rules` page and the updated breadcrumb.
 **Check:** a guest can read it, and the HTML already contains the content (view source).
@@ -178,6 +181,10 @@ must never be run against production with demo accounts.
 **Deployment.** Making the application reachable at a stable address with a production build,
 persistent storage, TLS, and a process manager. Running `pnpm dev` on your laptop is not a
 deployment.
+
+**Locale.** The language used for interface text and formatting, stored in the `locale` cookie
+as `en` or `ja`. A locale changes UI strings, dates, and number formatting; it never translates
+user-written content.
 
 **PII.** See `docs/06-safety-and-moderation.md`, section 2. The test is reasonable
 identifiability, not the presence of a name.

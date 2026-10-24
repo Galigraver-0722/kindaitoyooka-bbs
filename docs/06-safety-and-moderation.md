@@ -38,7 +38,8 @@ lock threads, and resolve reports.
 operation and the escalation contact for serious incidents. Required before launch.
 
 **Removal (soft delete).** The post body stays in the database for audit, but the UI replaces it
-with "Removed by a moderator." Removal is reversible by an administrator with database access.
+with a localized placeholder ("Removed by a moderator" in English, 「モデレーターが削除しました」
+in Japanese). Removal is reversible by an administrator with database access.
 
 **Escalation.** Handing a case to the teacher advisor or, for imminent danger, to the police or
 emergency services.

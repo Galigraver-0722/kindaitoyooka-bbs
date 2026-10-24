@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
+import { getLocale, t } from "@/lib/i18n";
 import { noticeMessage } from "@/lib/messages";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,8 @@ export default async function HomePage({
 }: {
   searchParams: Promise<{ notice?: string }>;
 }) {
-  const { notice } = await searchParams;
+  const [{ notice }, locale] = await Promise.all([searchParams, getLocale()]);
+  const m = t(locale);
 
   const [boards, recentThreads] = await Promise.all([
     prisma.board.findMany({
@@ -32,7 +34,7 @@ export default async function HomePage({
     }),
   ]);
 
-  const signedOutNotice = noticeMessage(notice);
+  const signedOutNotice = noticeMessage(notice, locale);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
@@ -44,41 +46,38 @@ export default async function HomePage({
 
       <section className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 px-6 py-10 text-white shadow-sm sm:px-10">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-200">
-          Student community
+          {m.home.eyebrow}
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-          A place for our school to talk.
-        </h1>
-        <p className="mt-3 max-w-2xl text-indigo-100">
-          Ask questions, share club news, and find study partners. Everything here is public,
-          so write as if the whole school is reading.
-        </p>
+        <h1 className="mt-2 text-balance text-3xl font-bold tracking-tight sm:text-4xl">{m.home.title}</h1>
+        <p className="mt-3 max-w-2xl text-indigo-100">{m.home.subtitle}</p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/new"
             className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50"
           >
-            Start a thread
+            {m.home.startThread}
           </Link>
           <Link
             href="#boards"
             className="rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
           >
-            Browse boards
+            {m.home.browseBoards}
           </Link>
         </div>
       </section>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[2fr_1fr]">
         <section>
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Recent activity</h2>
-            <span className="text-sm text-slate-500">8 newest threads</span>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-lg font-semibold text-slate-900">{m.home.recent}</h2>
+            <span className="shrink-0 text-sm text-slate-500">
+              {m.home.newestThreads(recentThreads.length)}
+            </span>
           </div>
 
           {recentThreads.length === 0 ? (
             <p className="mt-4 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
-              No threads yet. The first one is yours to start.
+              {m.home.empty}
             </p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -92,9 +91,9 @@ export default async function HomePage({
                       {thread.board.name}
                     </Link>
                     {thread.isPinned ? (
-                      <span className="font-medium text-indigo-600">Pinned</span>
+                      <span className="font-medium text-indigo-600">{m.board.pinned}</span>
                     ) : null}
-                    <span>{formatDateTime(thread.lastPostAt)}</span>
+                    <span>{formatDateTime(thread.lastPostAt, locale)}</span>
                   </div>
                   <Link
                     href={`/t/${thread.id}`}
@@ -103,7 +102,10 @@ export default async function HomePage({
                     {thread.title}
                   </Link>
                   <p className="mt-0.5 text-sm text-slate-500">
-                    by {thread.author.username} · {Math.max(thread._count.posts - 1, 0)} replies
+                    {m.home.byReplies(
+                      thread.author.username,
+                      Math.max(thread._count.posts - 1, 0),
+                    )}
                   </p>
                 </li>
               ))}
@@ -112,7 +114,7 @@ export default async function HomePage({
         </section>
 
         <section id="boards" className="scroll-mt-6">
-          <h2 className="text-lg font-semibold text-slate-900">Boards</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{m.home.boards}</h2>
           <div className="mt-4 space-y-3">
             {boards.map((board) => (
               <Link
@@ -122,7 +124,9 @@ export default async function HomePage({
               >
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="font-medium text-slate-900">{board.name}</h3>
-                  <span className="text-xs text-slate-500">{board._count.threads} threads</span>
+                  <span className="text-xs text-slate-500">
+                    {m.home.boardThreads(board._count.threads)}
+                  </span>
                 </div>
                 <p className="mt-1 text-sm text-slate-500">{board.description}</p>
               </Link>
@@ -132,11 +136,11 @@ export default async function HomePage({
       </div>
 
       <section className="mt-12 rounded-xl border border-amber-200 bg-amber-50 p-6">
-        <h2 className="text-base font-semibold text-amber-900">Before you post</h2>
+        <h2 className="text-base font-semibold text-amber-900">{m.home.rulesTitle}</h2>
         <ul className="mt-3 grid gap-2 text-sm text-amber-900 sm:grid-cols-3">
-          <li>Be kind. Disagree with ideas, never with people.</li>
-          <li>Never post names, addresses, photos, or contact details of others.</li>
-          <li>Use the Report button when something feels wrong.</li>
+          {m.home.rules.map((rule) => (
+            <li key={rule}>{rule}</li>
+          ))}
         </ul>
       </section>
     </main>

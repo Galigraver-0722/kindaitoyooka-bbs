@@ -20,8 +20,10 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 - Moderator queue: remove reported post or dismiss report.
 - Moderator actions: remove post, lock/unlock thread, remove thread.
 - Soft deletion with a visible placeholder instead of a silent disappearance.
-- Role display (`student`, `moderator`, `admin`) and server-side permission checks.
-- English UI, responsive layout, plain-text content only.
+- Localized role labels (English `student` / `moderator` / `admin`; Japanese 生徒 / モデレーター / 管理者)
+  and server-side permission checks.
+- English / Japanese interface switch stored in a cookie; dates and counts follow the locale.
+- Responsive layout, plain-text content only.
 
 ## MoSCoW
 
@@ -37,7 +39,8 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 | Report | Signed-in user can report any visible post with a 3–500 char reason |
 | Moderate | Moderator can remove a post, lock a thread, remove a thread, and resolve reports |
 | Permissions | Students cannot reach `/moderation` or call moderation endpoints |
-| Safety placeholder | Removed post remains in the thread as "Removed by a moderator" |
+| Safety placeholder | Removed post remains in the thread as a localized placeholder ("Removed by a moderator" / 「モデレーターが削除しました」) |
+| Language switch | Every page can be read in English or Japanese; the choice survives navigation |
 
 ### Should (before opening to the whole school)
 

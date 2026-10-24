@@ -56,6 +56,16 @@ success so the browser performs a `GET`.
 - Deletes the session row if a valid cookie exists, clears the cookie, redirects to
   `/?notice=signed-out`.
 
+### `POST /api/locale`
+
+| Field | Required | Values |
+| --- | --- | --- |
+| `locale` | yes | `en` or `ja` |
+
+- Sets the one-year `locale` cookie and redirects back to the referring page on the same host,
+  or to `/` when there is no usable `Referer`.
+- Unknown values are ignored; the current page is still reloaded.
+
 ### `POST /api/threads`
 
 | Field | Required | Rules |
@@ -142,6 +152,9 @@ monitoring before launch; see `docs/07-operations.md`.
 | `Secure` | true in production | Requires HTTPS |
 | `Path` | `/` | |
 | `Expires` | 30 days | |
+
+A second cookie, `locale`, stores the interface language (`en` or `ja`) for one year. It is
+`HttpOnly` and `SameSite=Lax` as well. It carries no identity and is safe to clear.
 
 `COOKIE_SECURE=false` exists only for a plain-HTTP school LAN. Do not use it on the public
 internet.

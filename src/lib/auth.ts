@@ -55,13 +55,21 @@ export async function createSession(userId: string): Promise<{ token: string; ex
   return { token, expiresAt };
 }
 
+export function cookieSecure(): boolean {
+  if (process.env.COOKIE_SECURE === "true") {
+    return true;
+  }
+  if (process.env.COOKIE_SECURE === "false") {
+    return false;
+  }
+  return process.env.NODE_ENV === "production";
+}
+
 export function sessionCookieOptions(expiresAt: Date) {
   return {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure:
-      process.env.COOKIE_SECURE === "true" ||
-      (process.env.COOKIE_SECURE !== "false" && process.env.NODE_ENV === "production"),
+    secure: cookieSecure(),
     path: "/",
     expires: expiresAt,
   };

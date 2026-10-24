@@ -100,6 +100,14 @@ future audit log and role-management screen can separate them without a data mig
 Every check is performed in the route handler with `getCurrentUser()` and `isModerator()`.
 Hiding a button is a UX decision, never a security control.
 
+### Language
+
+The interface locale is a `locale` cookie (`en` or `ja`). Each server component reads it through
+`getLocale()`, then pulls strings from a typed dictionary in `src/lib/i18n.ts`; there is no
+external i18n library and no client-side translation. A `POST /api/locale` form flips the cookie
+and redirects back to the page the reader came from. User content (thread titles, posts, board
+names) is stored once and never translated. Dates and numbers are formatted per locale in JST.
+
 ## 5. Rendering and caching model
 
 - Root layout reads cookies → routes are rendered per request.
@@ -121,6 +129,7 @@ Hiding a button is a UX decision, never a security control.
 │   ├── app/
 │   │   ├── api/             # form endpoints (writes)
 │   │   │   ├── auth/
+│   │   │   ├── locale/
 │   │   │   ├── posts/
 │   │   │   ├── reports/
 │   │   │   └── threads/
@@ -138,7 +147,9 @@ Hiding a button is a UX decision, never a security control.
 │       ├── db.ts            # Prisma singleton
 │       ├── format.ts        # JST timestamps
 │       ├── http.ts          # redirects, origin check, form parsing
-│       ├── messages.ts      # user-facing error codes
+│       ├── i18n.ts          # locale cookie + request-scoped resolution
+│       ├── locales.ts       # en/ja dictionaries and typed keys
+│       ├── messages.ts      # localized error codes and notices
 │       └── validation.ts    # length rules, safe redirect paths
 └── docs/                    # this documentation set
 ```

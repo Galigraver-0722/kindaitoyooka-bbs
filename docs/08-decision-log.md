@@ -15,7 +15,7 @@ alternatives considered.
 | ADR-0003 | SQLite with Prisma | Accepted | 2026-10-24 |
 | ADR-0004 | Custom cookie sessions instead of an auth provider | Accepted | 2026-10-24 |
 | ADR-0005 | Plain HTML forms and route handlers, not server actions or an SPA | Accepted | 2026-10-24 |
-| ADR-0006 | English source of truth with a Japanese documentation edition | Accepted | 2026-10-24 |
+| ADR-0006 | Bilingual interface with English as the source of truth | Accepted | 2026-10-24 |
 | ADR-0007 | Soft deletion for all user content | Accepted | 2026-10-24 |
 
 ---
@@ -162,30 +162,46 @@ command line), GraphQL or tRPC (unnecessary indirection at this size), a separat
 
 ---
 
-## ADR-0006 — English source of truth with a Japanese documentation edition
+## ADR-0006 — Bilingual interface with English as the source of truth
 
-**Context.** The project owner requires code, comments, and documentation to be in English. The
-school is in Japan, most students read Japanese more comfortably, and the owner asked for a
-Japanese edition of the documentation. The interface itself is still English in v0.1.
+**Context.** The project owner requires code, comments, and documentation in English. The school
+is in Japan, most students read Japanese more comfortably, and the owner asked for both a
+Japanese documentation edition and an in-app language switch. The interface must stay simple,
+work without client JavaScript, and add no paid service.
 
-**Decision.** English remains the source of truth for code, comments, the interface, commit
-messages, issues, and pull requests. `docs/` is the canonical documentation in English, and
-`docs/ja/` contains a full Japanese translation with the same file names and structure. When the
-two disagree, the English version wins. Both editions are updated in the same pull request.
+**Decision.** English stays the source of truth for code, comments, the interface's source
+strings, commit messages, issues, and pull requests. The interface ships in English and Japanese:
+every user-facing string lives in a typed dictionary (`src/lib/locales.ts`), the chosen language
+is stored in a one-year `locale` cookie, and a `POST /api/locale` form flips it and redirects
+back. `docs/` remains the canonical documentation and `docs/ja/` holds a full Japanese
+translation. When the editions disagree, English wins, and both are updated in the same pull
+request. Commands, identifiers, URLs, and error codes stay in English inside the Japanese
+edition.
 
 **Consequences.**
 
-- Japanese teachers, students, and the school administration can read the policy and the plan
-  without relying on a translator.
-- Every documentation change must be made twice; translation drift is a real maintenance cost.
-- Commands, code identifiers, URLs, and error codes stay in English inside the Japanese
-  edition, because translating them would break copy-paste and searches.
-- The error-code map (`src/lib/messages.ts`) remains the natural seam for translating the
-  interface itself later.
+- No i18n dependency, no locale-prefixed routes, and no client-side translation flash: the
+  server renders the right language on the first byte.
+- A unit test compares the shape of both dictionaries, so a missing Japanese string fails CI.
+- User-written content (thread titles, posts, board names) is never translated automatically;
+  the switch changes interface text, dates, and number formatting only.
+- Every new UI string must be added twice, and documentation changes must be made twice.
+  Translation drift is a real maintenance cost.
+- The error-code map remains the seam for translating server-side messages.
 
-**Revisit if.** The school requires a Japanese interface for approval, or usage data shows
-English is a barrier for students. Plan: introduce a locale cookie and a message catalog; do not
-fork the app.
+**Alternatives considered.**
+
+- *next-intl or next-i18next*: mature, but adds a dependency and routing conventions for an app
+  with two languages and no localized URLs.
+- *Locale-prefixed routes (`/ja/...`)*: better for search-engine indexing, which this school
+  forum deliberately does not optimize for; it also complicates every redirect and cookie path.
+- *Client-side translation*: simpler to add, but causes a flash of the wrong language and breaks
+  the no-JavaScript promise.
+- *English only*: the original decision; rejected after the owner asked for Japanese readers.
+
+**Revisit if.** The school wants a third language, search engines must index localized pages, or
+transactional email needs translation. The migration path is another dictionary object and,
+only if needed, locale-prefixed routes.
 
 ---
 
