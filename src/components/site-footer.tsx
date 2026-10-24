@@ -9,11 +9,11 @@ export function SiteFooter({ locale }: { locale: Locale }) {
       <div className="shell grid gap-10 py-12 md:grid-cols-12">
         <div className="md:col-span-6">
           <p className="eyebrow">Toyooka BBS</p>
-          <p className="mt-4 max-w-[52ch] text-[12px] leading-[1.8] text-muted">{m.disclaimer}</p>
+          <p className="mt-4 max-w-[52ch] text-[13px] leading-[1.8] text-muted">{m.disclaimer}</p>
         </div>
 
         <nav
-          className="flex flex-col gap-2.5 text-[12px] md:col-span-3"
+          className="flex flex-col gap-2.5 text-[13px] md:col-span-3"
           aria-label={m.policies}
         >
           <Link href="/rules" className="text-muted transition-colors hover:text-ink">

@@ -9,7 +9,7 @@ export function PolicyPage({ document }: { document: PolicyDocument }) {
             <p className="eyebrow">Toyooka BBS</p>
             <h1 className="title-page mt-4">{document.title}</h1>
             <p className="meta mt-4">{document.updated}</p>
-            <p className="mt-6 text-[14px] leading-[1.95] text-muted">{document.intro}</p>
+            <p className="mt-6 text-[15.5px] leading-[1.9] text-muted">{document.intro}</p>
           </header>
 
           <div className="mt-10 space-y-10">
@@ -17,12 +17,12 @@ export function PolicyPage({ document }: { document: PolicyDocument }) {
               <section key={section.heading} id={`section-${index + 1}`} className="scroll-mt-24">
                 <h2 className="title-section">{section.heading}</h2>
                 {section.paragraphs?.map((paragraph) => (
-                  <p key={paragraph} className="mt-3 text-[14px] leading-[1.95] text-ink/85">
+                  <p key={paragraph} className="mt-3 text-[15.5px] leading-[1.9] text-ink/85">
                     {paragraph}
                   </p>
                 ))}
                 {section.bullets ? (
-                  <ul className="mt-3 list-disc space-y-2 pl-5 text-[14px] leading-[1.9] text-ink/85 marker:text-line">
+                  <ul className="mt-3 list-disc space-y-2 pl-5 text-[15.5px] leading-[1.9] text-ink/85 marker:text-line">
                     {section.bullets.map((bullet) => (
                       <li key={bullet} className="pl-1">
                         {bullet}
@@ -43,7 +43,7 @@ export function PolicyPage({ document }: { document: PolicyDocument }) {
                 <li key={section.heading}>
                   <a
                     href={`#section-${index + 1}`}
-                    className="text-[11px] leading-snug text-muted transition-colors hover:text-ink"
+                    className="text-[12px] leading-snug text-muted transition-colors hover:text-ink"
                   >
                     {section.heading}
                   </a>

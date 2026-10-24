@@ -67,19 +67,19 @@
   }
 
   .page {
-    @apply py-12 sm:py-16 lg:py-20;
+    @apply py-9 sm:py-12 lg:py-14;
   }
 
   .eyebrow {
-    @apply font-mono text-[10.5px] uppercase leading-none tracking-[0.16em] text-muted;
+    @apply font-mono text-[11.5px] uppercase leading-none tracking-[0.13em] text-muted;
   }
 
   .meta {
-    @apply font-mono text-[11px] tabular-nums leading-relaxed text-muted;
+    @apply font-mono text-[13px] tabular-nums leading-relaxed text-muted;
   }
 
   .num {
-    @apply font-mono text-[11px] tabular-nums leading-none text-muted;
+    @apply font-mono text-[13px] tabular-nums leading-none text-muted;
   }
 
   .display {
@@ -88,16 +88,22 @@
     line-break: strict;
   }
 
+  .hero-title {
+    @apply text-[1.9rem] font-semibold leading-[1.2] tracking-[-0.04em] text-ink sm:text-[2.2rem] lg:text-[2.4rem];
+    word-break: auto-phrase;
+    line-break: strict;
+  }
+
   .title-page {
-    @apply text-[1.85rem] font-semibold leading-[1.14] tracking-[-0.035em] text-ink sm:text-[2.3rem];
+    @apply text-[2rem] font-semibold leading-[1.14] tracking-[-0.035em] text-ink sm:text-[2.4rem];
   }
 
   .title-section {
-    @apply text-[1.05rem] font-semibold leading-snug tracking-[-0.015em] text-ink;
+    @apply text-[1.15rem] font-semibold leading-snug tracking-[-0.015em] text-ink;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-[2px] border px-4 py-2.5 text-[13px] font-medium tracking-[0.01em] transition-colors duration-150 active:translate-y-px;
+    @apply inline-flex items-center justify-center gap-2 rounded-[2px] border px-4 py-2.5 text-[14px] font-medium tracking-[0.01em] transition-colors duration-150 active:translate-y-px;
   }
 
   .btn-primary {
@@ -113,7 +119,7 @@
   }
 
   .btn-quiet {
-    @apply inline-flex items-center gap-2 border-b border-transparent py-0.5 text-[12px] text-muted transition-colors duration-150 hover:border-line hover:text-ink active:translate-y-px;
+    @apply inline-flex items-center gap-2 border-b border-transparent py-0.5 text-[14px] text-muted transition-colors duration-150 hover:border-line hover:text-ink active:translate-y-px;
   }
 
   .text-link {
@@ -121,23 +127,23 @@
   }
 
   .field {
-    @apply w-full rounded-[2px] border border-line bg-surface px-3.5 py-2.5 text-[15px] leading-relaxed text-ink transition-colors duration-150 placeholder:text-muted focus:border-accent;
+    @apply w-full rounded-[2px] border border-line bg-surface px-3.5 py-2.5 text-[16px] leading-relaxed text-ink transition-colors duration-150 placeholder:text-muted focus:border-accent;
   }
 
   .field-label {
-    @apply block font-mono text-[10.5px] uppercase tracking-[0.12em] text-muted;
+    @apply block font-mono text-[11.5px] uppercase tracking-[0.12em] text-muted;
   }
 
   .hint {
-    @apply mt-1.5 text-[12px] leading-relaxed text-muted;
+    @apply mt-1.5 text-[13px] leading-relaxed text-muted;
   }
 
   .tag {
-    @apply inline-flex items-center rounded-[2px] border border-line px-2 py-0.5 font-mono text-[10.5px] text-muted transition-colors duration-150 hover:border-accent/40 hover:text-accent;
+    @apply inline-flex items-center rounded-[2px] border border-line bg-surface px-2 py-0.5 font-mono text-[12.5px] text-muted transition-colors duration-150 hover:border-accent/40 hover:text-accent;
   }
 
   .notice {
-    @apply border-l-2 py-2.5 pl-4 text-[13px] leading-relaxed;
+    @apply border-l-2 py-2.5 pl-4 text-[14px] leading-relaxed;
   }
 
   .notice-error {
@@ -150,6 +156,21 @@
 
   .row-hover {
     @apply transition-colors duration-150 hover:bg-accent/[0.035];
+  }
+
+  .page-enter {
+    animation: page-enter 220ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

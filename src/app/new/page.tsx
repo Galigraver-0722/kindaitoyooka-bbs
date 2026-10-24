@@ -54,7 +54,7 @@ export default async function NewThreadPage({
         <div className="max-w-md">
           <p className="eyebrow">{m.newThread.title}</p>
           <h1 className="title-page mt-3">{m.newThread.title}</h1>
-          <p className="mt-4 text-[13px] leading-[1.85] text-muted">{m.newThread.subtitle}</p>
+          <p className="mt-4 text-[14px] leading-[1.85] text-muted">{m.newThread.subtitle}</p>
 
           <div className="mt-10 border-t border-line pt-6">
             <p className="eyebrow">{m.home.rulesTitle}</p>
@@ -62,7 +62,7 @@ export default async function NewThreadPage({
               {m.home.rules.map((rule, index) => (
                 <li key={rule} className="grid grid-cols-[1.5rem_1fr] gap-3">
                   <span className="num pt-0.5">{String(index + 1).padStart(2, "0")}</span>
-                  <p className="text-[12px] leading-[1.8] text-muted">{rule}</p>
+                  <p className="text-[13px] leading-[1.8] text-muted">{rule}</p>
                 </li>
               ))}
             </ol>
@@ -118,7 +118,7 @@ export default async function NewThreadPage({
                   name="tags"
                   maxLength={150}
                   placeholder={m.tagField.placeholder}
-                  className="field mt-2 py-2 text-[13px]"
+                  className="field mt-2 py-2 text-[14px]"
                 />
                 <p className="hint">{m.tagField.hint}</p>
                 {suggestedTags.length > 0 ? (

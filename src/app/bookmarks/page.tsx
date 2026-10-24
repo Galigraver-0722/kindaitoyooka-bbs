@@ -1,12 +1,11 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { ThreadRow } from "@/components/thread-row";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { getLocale, t } from "@/lib/i18n";
 import { errorMessage } from "@/lib/messages";
-import { tagSearchHref } from "@/lib/tags";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -60,46 +59,25 @@ export default async function BookmarksPage({
       {errorText ? <p className="notice notice-error mt-6">{errorText}</p> : null}
 
       {items.length === 0 ? (
-        <p className="mt-8 border-t border-line pt-8 text-[13px] text-muted">
+        <p className="mt-6 border-t border-line pt-6 text-[14px] text-muted">
           {m.bookmarks.empty}
         </p>
       ) : (
-        <ol className="mt-2 divide-y divide-line">
+        <ol className="mt-4 border-t border-line">
           {items.map(({ thread, createdAt }, index) => (
-            <li key={thread.id} className="grid grid-cols-[2.2rem_1fr] gap-4 py-5 sm:grid-cols-[2.75rem_1fr_auto]">
-              <span className="num pt-1">{String(index + 1).padStart(2, "0")}</span>
-              <div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <Link href={`/b/${thread.board.slug}`} className="eyebrow hover:text-ink">
-                    {thread.board.name}
-                  </Link>
-                  <span className="meta">{m.bookmarks.savedAt(formatDateTime(createdAt, locale))}</span>
-                </div>
-                <Link
-                  href={`/t/${thread.id}`}
-                  className="mt-2 block text-[17px] font-medium leading-snug tracking-[-0.012em] text-ink transition-colors hover:text-accent"
-                >
-                  {thread.title}
-                </Link>
-                <p className="mt-1 text-[12px] text-muted">
-                  {thread.author.username} / {m.thread.replies(Math.max(thread._count.posts - 1, 0))}
-                </p>
-                {thread.tags.length > 0 ? (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {thread.tags.map((tag) => (
-                      <Link key={tag.name} href={tagSearchHref(tag.name)} className="tag">
-                        #{tag.name}
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-              <form action={`/api/threads/${thread.id}/bookmark`} method="post" className="col-start-2 self-start sm:col-start-3">
-                <button type="submit" className="btn-quiet">
-                  {m.thread.unsave}
-                </button>
-              </form>
-            </li>
+            <ThreadRow
+              key={thread.id}
+              index={index + 1}
+              date={thread.lastPostAt}
+              dateLabel={m.bookmarks.savedAt(formatDateTime(createdAt, locale))}
+              locale={locale}
+              hideWhenInactive
+              thread={{
+                ...thread,
+                replyCount: Math.max(thread._count.posts - 1, 0),
+                bookmarked: true,
+              }}
+            />
           ))}
         </ol>
       )}

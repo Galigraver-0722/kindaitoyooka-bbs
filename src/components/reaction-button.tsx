@@ -1,42 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { BookmarkIcon, HeartIcon } from "@/components/icons";
 
 type ReactionIcon = "heart" | "bookmark";
 
 function Icon({ type, active }: { type: ReactionIcon; active: boolean }) {
-  const filled = active ? "currentColor" : "none";
-
-  if (type === "heart") {
-    return (
-      <svg
-        aria-hidden="true"
-        width="14"
-        height="14"
-        viewBox="0 0 16 16"
-        fill={filled}
-        stroke="currentColor"
-        strokeWidth="1.35"
-        strokeLinejoin="round"
-      >
-        <path d="M8 13.1S2.6 9.8 2.6 5.9A2.85 2.85 0 0 1 8 4.05a2.85 2.85 0 0 1 5.4 1.85C13.4 9.8 8 13.1 8 13.1Z" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg
-      aria-hidden="true"
-      width="13"
-      height="14"
-      viewBox="0 0 16 16"
-      fill={filled}
-      stroke="currentColor"
-      strokeWidth="1.35"
-      strokeLinejoin="round"
-    >
-      <path d="M3.6 2.4h8.8v11.2L8 10.5l-4.4 3.1V2.4Z" />
-    </svg>
+  return type === "heart" ? (
+    <HeartIcon filled={active} size={16} />
+  ) : (
+    <BookmarkIcon filled={active} size={16} />
   );
 }
 
@@ -53,6 +26,9 @@ export function ReactionButton({
   inactiveLabel,
   errorLabel,
   icon,
+  compact = false,
+  showCount = true,
+  hideRowWhenInactive = false,
 }: {
   action: string;
   initialActive: boolean;
@@ -61,6 +37,9 @@ export function ReactionButton({
   inactiveLabel: string;
   errorLabel: string;
   icon: ReactionIcon;
+  compact?: boolean;
+  showCount?: boolean;
+  hideRowWhenInactive?: boolean;
 }) {
   const [active, setActive] = useState(initialActive);
   const [count, setCount] = useState(initialCount);
@@ -72,6 +51,7 @@ export function ReactionButton({
     if (pending) {
       return;
     }
+    const form = event.currentTarget;
 
     const next = !active;
     setActive(next);
@@ -98,6 +78,9 @@ export function ReactionButton({
       if (typeof data.count === "number") {
         setCount(data.count);
       }
+      if (hideRowWhenInactive && data.active === false) {
+        form.closest("li")?.classList.add("hidden");
+      }
     } catch {
       setActive(!next);
       setCount((value) => Math.max(0, value + (next ? -1 : 1)));
@@ -115,11 +98,16 @@ export function ReactionButton({
         disabled={pending}
         aria-pressed={active}
         aria-label={active ? activeLabel : inactiveLabel}
-        className={`btn-quiet ${active ? "text-accent" : ""} ${pending ? "opacity-60" : ""}`}
+        title={active ? activeLabel : inactiveLabel}
+        className={`btn-quiet ${compact ? "justify-center px-1.5" : ""} ${
+          active ? "text-accent" : ""
+        } ${pending ? "opacity-60" : ""}`}
       >
         <Icon type={icon} active={active} />
-        <span>{active ? activeLabel : inactiveLabel}</span>
-        <span className="font-mono text-[11px] tabular-nums text-muted">{count}</span>
+        {compact ? null : <span>{active ? activeLabel : inactiveLabel}</span>}
+        {showCount ? (
+          <span className="font-mono text-[12px] tabular-nums text-muted">{count}</span>
+        ) : null}
       </button>
       <span role="alert" className={`text-[10px] leading-snug text-error ${failed ? "" : "sr-only"}`}>
         {failed ? errorLabel : ""}

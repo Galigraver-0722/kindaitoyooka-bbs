@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@prisma/client";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { ThreadRow } from "@/components/thread-row";
 import { getCurrentUser } from "@/lib/auth";
+import { getBookmarkedThreadIds } from "@/lib/bookmarks";
 import { prisma } from "@/lib/db";
-import { formatDateTime } from "@/lib/format";
 import { sortByHot } from "@/lib/hot";
 import { getLocale, t } from "@/lib/i18n";
 import { errorMessage } from "@/lib/messages";
@@ -19,7 +20,9 @@ import { getUnreadThreadIds } from "@/lib/read-state";
 export const dynamic = "force-dynamic";
 
 const THREAD_INCLUDE = {
+  board: { select: { slug: true, name: true } },
   author: { select: { username: true } },
+  tags: { select: { name: true } },
   _count: { select: { posts: true } },
 } satisfies Prisma.ThreadInclude;
 
@@ -99,7 +102,10 @@ export default async function BoardPage({
     });
   }
 
-  const unread = await getUnreadThreadIds(user?.id, threads);
+  const [unread, bookmarked] = await Promise.all([
+    getUnreadThreadIds(user?.id, threads),
+    getBookmarkedThreadIds(user?.id, threads.map((thread) => thread.id)),
+  ]);
   const errorText = errorMessage(error, locale);
 
   return (
@@ -138,7 +144,7 @@ export default async function BoardPage({
         <div className="flex gap-6">
           <Link
             href={`/b/${board.slug}?sort=latest`}
-            className={`-mb-px border-b-2 pb-3 text-[12px] transition-colors ${
+            className={`-mb-px border-b-2 pb-3 text-[13.5px] transition-colors ${
               order === "latest"
                 ? "border-accent text-ink"
                 : "border-transparent text-muted hover:text-ink"
@@ -148,7 +154,7 @@ export default async function BoardPage({
           </Link>
           <Link
             href={`/b/${board.slug}?sort=hot`}
-            className={`-mb-px border-b-2 pb-3 text-[12px] transition-colors ${
+            className={`-mb-px border-b-2 pb-3 text-[13.5px] transition-colors ${
               order === "hot"
                 ? "border-accent text-ink"
                 : "border-transparent text-muted hover:text-ink"
@@ -165,52 +171,24 @@ export default async function BoardPage({
       {errorText ? <p className="notice notice-error mt-6">{errorText}</p> : null}
 
       {totalCount === 0 ? (
-        <p className="mt-10 border-t border-line pt-10 text-[13px] text-muted">
+        <p className="mt-6 border-t border-line pt-6 text-[14px] text-muted">
           {m.board.empty}
         </p>
       ) : (
-        <ol className="mt-2 divide-y divide-line">
+        <ol className="mt-4 border-t border-line">
           {threads.map((thread, index) => (
-            <li key={thread.id}>
-              <Link
-                href={`/t/${thread.id}`}
-                className="group row-hover -mx-3 grid grid-cols-[2.2rem_1fr] gap-4 px-3 py-5 sm:grid-cols-[2.75rem_1fr]"
-              >
-                <span className="num pt-1">
-                  {String((currentPage - 1) * THREADS_PER_PAGE + index + 1).padStart(2, "0")}
-                </span>
-                <div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    {thread.isPinned ? (
-                      <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-accent">
-                        {m.board.pinned}
-                      </span>
-                    ) : null}
-                    {thread.isLocked ? (
-                      <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
-                        {m.board.locked}
-                      </span>
-                    ) : null}
-                    {unread.has(thread.id) ? (
-                      <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-accent">
-                        <span className="h-1 w-1 rounded-full bg-accent" />
-                        {m.board.unread}
-                      </span>
-                    ) : null}
-                    <time className="meta">{formatDateTime(thread.lastPostAt, locale)}</time>
-                  </div>
-                  <h2 className="mt-2 text-[17px] font-medium leading-snug tracking-[-0.012em] text-ink transition-colors duration-150 group-hover:text-accent">
-                    {thread.title}
-                  </h2>
-                  <p className="mt-1 text-[12px] text-muted">
-                    {m.board.threadMeta(
-                      thread.author.username,
-                      Math.max(thread._count.posts - 1, 0),
-                    )}
-                  </p>
-                </div>
-              </Link>
-            </li>
+            <ThreadRow
+              key={thread.id}
+              index={(currentPage - 1) * THREADS_PER_PAGE + index + 1}
+              date={thread.lastPostAt}
+              locale={locale}
+              thread={{
+                ...thread,
+                replyCount: Math.max(thread._count.posts - 1, 0),
+                isUnread: unread.has(thread.id),
+                bookmarked: user ? bookmarked.has(thread.id) : undefined,
+              }}
+            />
           ))}
         </ol>
       )}

@@ -67,7 +67,7 @@ export default async function ModerationPage() {
         </div>
 
         {reports.length === 0 ? (
-          <p className="mt-4 border-t border-line pt-6 text-[13px] text-muted">
+          <p className="mt-4 border-t border-line pt-6 text-[14px] text-muted">
             {m.moderation.empty}
           </p>
         ) : (
@@ -98,7 +98,7 @@ export default async function ModerationPage() {
                   </Link>
                 </div>
 
-                <p className="mt-4 border-l-2 border-accent pl-4 text-[13px] leading-[1.85] text-ink">
+                <p className="mt-4 border-l-2 border-accent pl-4 text-[14.5px] leading-[1.85] text-ink">
                   {report.reason}
                 </p>
 
@@ -113,7 +113,7 @@ export default async function ModerationPage() {
                       ? ` — ${m.moderation.removedThread}`
                       : null}
                   </p>
-                  <p className="mt-2 whitespace-pre-wrap break-words text-[13px] leading-[1.9] text-ink/80">
+                  <p className="mt-2 whitespace-pre-wrap break-words text-[14.5px] leading-[1.9] text-ink/80">
                     {report.post.isDeleted ? m.moderation.removedPost : report.post.body}
                   </p>
                 </div>
@@ -122,13 +122,13 @@ export default async function ModerationPage() {
                   <div className="mt-4 flex flex-wrap gap-3">
                     <form action={`/api/reports/${report.id}/resolve`} method="post">
                       <input type="hidden" name="action" value="remove" />
-                      <button type="submit" className="btn btn-danger px-3 py-2 text-[12px]">
+                      <button type="submit" className="btn btn-danger px-3 py-2 text-[13px]">
                         {m.moderation.removePost}
                       </button>
                     </form>
                     <form action={`/api/reports/${report.id}/resolve`} method="post">
                       <input type="hidden" name="action" value="dismiss" />
-                      <button type="submit" className="btn btn-secondary px-3 py-2 text-[12px]">
+                      <button type="submit" className="btn btn-secondary px-3 py-2 text-[13px]">
                         {m.moderation.dismiss}
                       </button>
                     </form>
@@ -136,7 +136,7 @@ export default async function ModerationPage() {
                 ) : (
                   <form action={`/api/reports/${report.id}/resolve`} method="post" className="mt-4">
                     <input type="hidden" name="action" value="dismiss" />
-                    <button type="submit" className="btn btn-secondary px-3 py-2 text-[12px]">
+                    <button type="submit" className="btn btn-secondary px-3 py-2 text-[13px]">
                       {m.moderation.closeReport}
                     </button>
                   </form>
@@ -153,7 +153,7 @@ export default async function ModerationPage() {
           <span className="num">{String(auditLogs.length).padStart(2, "0")}</span>
         </div>
         {auditLogs.length === 0 ? (
-          <p className="mt-4 border-t border-line pt-6 text-[13px] text-muted">{m.audit.empty}</p>
+          <p className="mt-4 border-t border-line pt-6 text-[14px] text-muted">{m.audit.empty}</p>
         ) : (
           <ul className="mt-2">
             {auditLogs.map((log) => (
@@ -161,9 +161,9 @@ export default async function ModerationPage() {
                 key={log.id}
                 className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-line py-3"
               >
-                <span className="text-[13px] text-ink">
+                <span className="text-[14px] text-ink">
                   {m.audit.actions[log.action] ?? log.action}
-                  <span className="ml-3 font-mono text-[10px] text-muted">
+                  <span className="ml-3 font-mono text-[11px] text-muted">
                     {log.targetType}:{log.targetId.slice(0, 8)}
                   </span>
                 </span>

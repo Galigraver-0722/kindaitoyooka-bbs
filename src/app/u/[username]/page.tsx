@@ -2,6 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { RoleChip } from "@/components/role-chip";
+import { ThreadRow } from "@/components/thread-row";
+import { getCurrentUser } from "@/lib/auth";
+import { getBookmarkedThreadIds } from "@/lib/bookmarks";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { getLocale, t } from "@/lib/i18n";
@@ -43,7 +46,11 @@ export default async function ProfilePage({
         id: true,
         title: true,
         createdAt: true,
+        likeCount: true,
+        bookmarkCount: true,
         board: { select: { slug: true, name: true } },
+        author: { select: { username: true } },
+        tags: { select: { name: true } },
         _count: { select: { posts: true } },
       },
     }),
@@ -67,6 +74,12 @@ export default async function ProfilePage({
       where: { authorId: profile.id, isDeleted: false, thread: { isDeleted: false } },
     }),
   ]);
+
+  const viewer = await getCurrentUser();
+  const bookmarked = await getBookmarkedThreadIds(
+    viewer?.id,
+    threads.map((thread) => thread.id),
+  );
 
   return (
     <main className="shell page">
@@ -99,29 +112,23 @@ export default async function ProfilePage({
       <section className="mt-12">
         <h2 className="title-section">{m.profile.recentThreads}</h2>
         {threads.length === 0 ? (
-          <p className="mt-4 border-t border-line pt-6 text-[13px] text-muted">
+          <p className="mt-4 border-t border-line pt-4 text-[14px] text-muted">
             {m.profile.noThreads}
           </p>
         ) : (
-          <ol className="mt-4 divide-y divide-line border-t border-line">
-            {threads.map((thread) => (
-              <li key={thread.id}>
-                <Link
-                  href={`/t/${thread.id}`}
-                  className="group row-hover -mx-3 block px-3 py-4"
-                >
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span className="eyebrow">{thread.board.name}</span>
-                    <time className="meta">{formatDateTime(thread.createdAt, locale)}</time>
-                  </div>
-                  <h3 className="mt-1.5 text-[15px] font-medium leading-snug text-ink transition-colors group-hover:text-accent">
-                    {thread.title}
-                  </h3>
-                  <p className="mt-1 text-[12px] text-muted">
-                    {m.board.threadMeta(profile.username, Math.max(thread._count.posts - 1, 0))}
-                  </p>
-                </Link>
-              </li>
+          <ol className="mt-4 border-t border-line">
+            {threads.map((thread, index) => (
+              <ThreadRow
+                key={thread.id}
+                index={index + 1}
+                date={thread.createdAt}
+                locale={locale}
+                thread={{
+                  ...thread,
+                  replyCount: Math.max(thread._count.posts - 1, 0),
+                  bookmarked: viewer ? bookmarked.has(thread.id) : undefined,
+                }}
+              />
             ))}
           </ol>
         )}
@@ -140,13 +147,13 @@ export default async function ProfilePage({
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <Link
                     href={`/t/${post.thread.id}#p-${post.id}`}
-                    className="text-[12px] font-medium text-ink transition-colors hover:text-accent"
+                    className="text-[13px] font-medium text-ink transition-colors hover:text-accent"
                   >
                     {m.profile.inThread(post.thread.title)}
                   </Link>
                   <time className="meta">{formatDateTime(post.createdAt, locale)}</time>
                 </div>
-                <p className="mt-2 line-clamp-4 whitespace-pre-wrap break-words text-[13px] leading-[1.9] text-ink/80">
+                <p className="mt-2 line-clamp-4 whitespace-pre-wrap break-words text-[14.5px] leading-[1.9] text-ink/80">
                   {post.body}
                 </p>
               </li>

@@ -69,7 +69,7 @@ export default async function EditThreadPage({
         <div className="max-w-md">
           <p className="eyebrow">{m.editing.title}</p>
           <h1 className="title-page mt-3">{m.editing.title}</h1>
-          <p className="mt-4 text-[13px] leading-[1.85] text-muted">{m.editing.subtitle}</p>
+          <p className="mt-4 text-[14px] leading-[1.85] text-muted">{m.editing.subtitle}</p>
         </div>
 
         <div className="w-full max-w-xl lg:justify-self-end">
@@ -101,7 +101,7 @@ export default async function EditThreadPage({
                 maxLength={150}
                 defaultValue={thread.tags.map((tag) => `#${tag.name}`).join(" ")}
                 placeholder={m.tagField.placeholder}
-                className="field mt-2 py-2 text-[13px]"
+                className="field mt-2 py-2 text-[14px]"
               />
               <p className="hint">{m.tagField.hint}</p>
             </div>

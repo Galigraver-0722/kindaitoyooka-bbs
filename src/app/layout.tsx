@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ComposeFab } from "@/components/compose-fab";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
@@ -20,6 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const [user, locale] = await Promise.all([getCurrentUser(), getLocale()]);
+  const m = t(locale);
 
   return (
     <html lang={locale}>
@@ -27,6 +29,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <SiteHeader user={user} locale={locale} />
         <div className="flex-1">{children}</div>
         <SiteFooter locale={locale} />
+
+        {user ? <ComposeFab label={m.nav.newThread} /> : null}
       </body>
     </html>
   );

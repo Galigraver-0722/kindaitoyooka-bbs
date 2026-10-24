@@ -1,8 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
+import { ThreadRow } from "@/components/thread-row";
+import { getCurrentUser } from "@/lib/auth";
+import { getBookmarkedThreadIds } from "@/lib/bookmarks";
 import { prisma } from "@/lib/db";
-import { formatDateTime } from "@/lib/format";
 import { sortByHot } from "@/lib/hot";
 import { getLocale, t } from "@/lib/i18n";
 import { tagSearchHref } from "@/lib/tags";
@@ -64,7 +66,7 @@ export default async function SearchPage({
     },
   });
 
-  const threads =
+  const [threads, user] = await Promise.all([
     order === "hot"
       ? sortByHot(
           rows.map((thread) => ({
@@ -72,7 +74,13 @@ export default async function SearchPage({
             replyCount: Math.max(thread._count.posts - 1, 0),
           })),
         )
-      : rows;
+      : rows,
+    getCurrentUser(),
+  ]);
+  const bookmarked = await getBookmarkedThreadIds(
+    user?.id,
+    threads.map((thread) => thread.id),
+  );
 
   return (
     <main className="shell page">
@@ -100,7 +108,7 @@ export default async function SearchPage({
         <div className="flex gap-6">
           <Link
             href={searchHref({ q: query || undefined, tag: tagName || undefined, sort: "latest" })}
-            className={`-mb-px border-b-2 pb-3 text-[12px] transition-colors ${
+            className={`-mb-px border-b-2 pb-3 text-[13.5px] transition-colors ${
               order === "latest"
                 ? "border-accent text-ink"
                 : "border-transparent text-muted hover:text-ink"
@@ -110,7 +118,7 @@ export default async function SearchPage({
           </Link>
           <Link
             href={searchHref({ q: query || undefined, tag: tagName || undefined, sort: "hot" })}
-            className={`-mb-px border-b-2 pb-3 text-[12px] transition-colors ${
+            className={`-mb-px border-b-2 pb-3 text-[13.5px] transition-colors ${
               order === "hot"
                 ? "border-accent text-ink"
                 : "border-transparent text-muted hover:text-ink"
@@ -135,46 +143,21 @@ export default async function SearchPage({
       <p className="meta mt-5">{m.search.resultCount(threads.length)}</p>
 
       {threads.length === 0 ? (
-        <p className="mt-8 border-t border-line pt-8 text-[13px] text-muted">{m.search.empty}</p>
+        <p className="mt-6 border-t border-line pt-6 text-[14px] text-muted">{m.search.empty}</p>
       ) : (
-        <ol className="mt-2 divide-y divide-line">
+        <ol className="mt-4 border-t border-line">
           {threads.map((thread, index) => (
-            <li
+            <ThreadRow
               key={thread.id}
-              className="group row-hover -mx-3 grid grid-cols-[2.2rem_1fr] gap-4 px-3 py-5 sm:grid-cols-[2.75rem_1fr]"
-            >
-              <span className="num pt-1">{String(index + 1).padStart(2, "0")}</span>
-              <div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span className="eyebrow">{thread.board.name}</span>
-                  <time className="meta">{formatDateTime(thread.lastPostAt, locale)}</time>
-                </div>
-                <h2 className="mt-2 text-[17px] font-medium leading-snug tracking-[-0.012em]">
-                  <Link
-                    href={`/t/${thread.id}`}
-                    className="text-ink transition-colors duration-150 group-hover:text-accent"
-                  >
-                    {thread.title}
-                  </Link>
-                </h2>
-                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted">
-                  <span>{thread.author.username}</span>
-                  <span aria-hidden="true">/</span>
-                  <span>♡ {thread.likeCount}</span>
-                  <span aria-hidden="true">/</span>
-                  <span>{m.thread.replies(Math.max(thread._count.posts - 1, 0))}</span>
-                </div>
-                {thread.tags.length > 0 ? (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {thread.tags.map((tag) => (
-                      <Link key={tag.name} href={tagSearchHref(tag.name)} className="tag">
-                        #{tag.name}
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </li>
+              index={index + 1}
+              date={thread.lastPostAt}
+              locale={locale}
+              thread={{
+                ...thread,
+                replyCount: Math.max(thread._count.posts - 1, 0),
+                bookmarked: user ? bookmarked.has(thread.id) : undefined,
+              }}
+            />
           ))}
         </ol>
       )}

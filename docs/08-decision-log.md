@@ -530,8 +530,10 @@ than a school publication.
 accent, and hairline rules instead of cards. Interface and body text use one system sans stack;
 numbers, dates, labels, and code use a system monospace stack. Layouts follow a 12-column grid
 with generous vertical spacing, numbered lists, and left-aligned type. Hover states change color
-and a barely visible row tint; nothing lifts, scales, or casts a shadow. Muted text is one step
-darker than the reference palette so 11–12px metadata reaches WCAG AA.
+and a barely visible row tint; content rows do not lift, scale, or cast a shadow. The one raised
+element is the floating compose button, which needs separation from the page. Route changes use a
+220ms fade-and-rise transition, disabled under `prefers-reduced-motion`. Muted text is one step
+darker than the reference palette so 12–13px metadata reaches WCAG AA.
 
 **Consequences.**
 
@@ -540,6 +542,8 @@ darker than the reference palette so 11–12px metadata reaches WCAG AA.
 - Every new screen has to reuse the same primitives; adding a second accent or a card requires a
   deliberate decision rather than a new utility class.
 - The look is intentionally quiet. It will not impress through decoration, and that is the point.
+- Interaction is icon-led where an icon is unambiguous (bookmark, search, reply counts); labels
+  remain for actions that need explanation.
 
 **Alternatives considered.** A component library (fast, but produces the same dashboard look),
 pure black-and-white Swiss styling (colder and harder to signal actions), more accent colors

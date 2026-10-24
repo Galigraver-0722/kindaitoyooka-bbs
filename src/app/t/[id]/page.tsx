@@ -141,7 +141,7 @@ export default async function ThreadPage({
                 icon="bookmark"
               />
             ) : (
-              <span className="text-[12px] text-muted">
+              <span className="text-[14px] text-muted">
                 {m.thread.save} {thread.bookmarkCount}
               </span>
             )}
@@ -196,7 +196,7 @@ export default async function ThreadPage({
                     <span className="num">#{String(index + 1).padStart(2, "0")}</span>
                     <Link
                       href={`/u/${post.author.username}`}
-                      className="text-[13px] font-medium text-ink transition-colors hover:text-accent"
+                      className="text-[14px] font-medium text-ink transition-colors hover:text-accent"
                     >
                       {post.author.username}
                     </Link>
@@ -209,11 +209,11 @@ export default async function ThreadPage({
                 </header>
 
                 {post.isDeleted ? (
-                  <p className="mt-4 text-[13px] italic text-muted">{m.thread.removed}</p>
+                  <p className="mt-4 text-[14px] italic text-muted">{m.thread.removed}</p>
                 ) : (
                   <p
-                    className={`mt-4 whitespace-pre-wrap break-words leading-[1.95] text-ink ${
-                      index === 0 ? "text-[15.5px]" : "text-[15px]"
+                    className={`mt-4 whitespace-pre-wrap break-words leading-[1.9] text-ink ${
+                      index === 0 ? "text-[16.5px]" : "text-[16px]"
                     }`}
                   >
                     {post.body}
@@ -233,7 +233,7 @@ export default async function ThreadPage({
                         icon="heart"
                       />
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-[12px] text-muted">
+                      <span className="inline-flex items-center gap-1.5 text-[14px] text-muted">
                         ♡ {post.likeCount}
                       </span>
                     )}
@@ -245,14 +245,14 @@ export default async function ThreadPage({
                     />
 
                     {user ? (
-                      <details className="w-full">
+                      <details className="min-w-0">
                         <summary className="btn-quiet cursor-pointer list-none select-none">
                           {m.thread.report}
                         </summary>
                         <form
                           action="/api/reports"
                           method="post"
-                          className="mt-3 flex max-w-xl flex-col gap-2 sm:flex-row"
+                          className="mt-3 flex w-[min(80vw,34rem)] flex-col gap-2 sm:flex-row"
                         >
                           <input type="hidden" name="postId" value={post.id} />
                           <input
@@ -261,9 +261,9 @@ export default async function ThreadPage({
                             minLength={LIMITS.reasonMin}
                             maxLength={LIMITS.reasonMax}
                             placeholder={m.thread.reportPlaceholder}
-                            className="field flex-1 py-2 text-[13px]"
+                            className="field flex-1 py-2 text-[14px]"
                           />
-                          <button type="submit" className="btn btn-primary px-3 py-2 text-[12px]">
+                          <button type="submit" className="btn btn-primary px-3 py-2 text-[13px]">
                             {m.thread.sendReport}
                           </button>
                         </form>
@@ -287,7 +287,7 @@ export default async function ThreadPage({
 
       <section className="mt-10 border-t border-line pt-8">
         {thread.isLocked ? (
-          <p className="text-[13px] text-muted">{m.thread.lockedNotice}</p>
+          <p className="text-[14px] text-muted">{m.thread.lockedNotice}</p>
         ) : user ? (
           <>
             <h2 className="title-section">{m.thread.replyAs(user.username)}</h2>
@@ -320,7 +320,7 @@ export default async function ThreadPage({
                   name="tags"
                   maxLength={150}
                   placeholder={m.tagField.placeholder}
-                  className="field mt-2 py-2 text-[13px]"
+                  className="field mt-2 py-2 text-[14px]"
                 />
                 <p className="hint">{m.tagField.hint}</p>
                 {suggestedTags.length > 0 ? (
@@ -339,7 +339,7 @@ export default async function ThreadPage({
             </form>
           </>
         ) : (
-          <p className="text-[13px] text-muted">
+          <p className="text-[14px] text-muted">
             {m.thread.loginPromptPrefix}
             <Link
               href={`/login?next=${encodeURIComponent(`/t/${thread.id}`)}`}

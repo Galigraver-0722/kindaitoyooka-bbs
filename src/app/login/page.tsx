@@ -33,7 +33,7 @@ export default async function LoginPage({
         <div className="max-w-md">
           <p className="eyebrow">Toyooka BBS</p>
           <h1 className="title-page mt-4">{m.auth.loginTitle}</h1>
-          <p className="mt-4 text-[13px] leading-[1.85] text-muted">{m.auth.loginSubtitle}</p>
+          <p className="mt-4 text-[14px] leading-[1.85] text-muted">{m.auth.loginSubtitle}</p>
         </div>
 
         <div className="w-full max-w-md lg:justify-self-end">
@@ -75,7 +75,7 @@ export default async function LoginPage({
             </button>
           </form>
 
-          <p className="mt-7 text-[12px] text-muted">
+          <p className="mt-7 text-[13px] text-muted">
             {m.auth.noAccount}{" "}
             <Link href="/register" className="text-link">
               {m.auth.registerLink}
