@@ -57,10 +57,11 @@ that should survive the term.
    actions are attributed to a moderator account in the database.
 4. **Boring technology.** A small team must be able to read the whole codebase and recover the
    data with a file copy.
-5. **English source of truth, bilingual interface.** Code, comments, and the canonical
-   documentation are in English. The interface can be switched between English and Japanese
-   from the header, and a full Japanese documentation edition lives in `docs/ja/`. When the
-   two disagree, English wins. User-written content is never translated automatically.
+5. **Japanese-first interface, English source of truth.** Code, comments, and the canonical
+   documentation are in English. The interface opens in Japanese for readers without a saved
+   preference and can be switched to English from the header. A full Japanese documentation
+   edition lives in `docs/ja/`. When the two disagree, English wins. User-written content is
+   never translated automatically.
 
 ## 6. Success metrics
 

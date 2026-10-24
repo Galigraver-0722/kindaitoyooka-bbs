@@ -66,9 +66,9 @@ Goals: App Router, dynamic segments, server components, `params`.
 2. Open `/b/general` and `/t/<any-id>`. Find where `params` is awaited in
    `src/app/b/[slug]/page.tsx`.
 3. Add the board's thread count to the thread page breadcrumb using the existing query.
-4. Switch the header toggle to 日本語, then confirm that `<html lang>` and the dates change.
-   Add one new string to both dictionaries in `src/lib/locales.ts` and see the parity test fail
-   until both exist.
+4. The site opens in Japanese. Switch the header toggle to EN, then confirm that `<html lang>`
+   and the dates change, and switch back. Add one new string to both dictionaries in
+   `src/lib/locales.ts` and see the parity test fail until both exist.
 
 **Deliverable:** `/rules` page and the updated breadcrumb.
 **Check:** a guest can read it, and the HTML already contains the content (view source).

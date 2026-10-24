@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { formatDateTime } from "../src/lib/format";
-import { dictionaries, isLocale, t } from "../src/lib/locales";
+import { DEFAULT_LOCALE, dictionaries, isLocale, t } from "../src/lib/locales";
 
 function shape(value: unknown): unknown {
   if (typeof value === "function") {
@@ -24,6 +24,10 @@ test("English and Japanese expose the same structure", () => {
   assert.deepEqual(shape(dictionaries.ja), shape(dictionaries.en));
 });
 
+test("Japanese is the default locale", () => {
+  assert.equal(DEFAULT_LOCALE, "ja");
+});
+
 test("locale values are validated", () => {
   assert.equal(isLocale("en"), true);
   assert.equal(isLocale("ja"), true);
@@ -34,6 +38,7 @@ test("locale values are validated", () => {
 
 test("interpolated strings differ by locale", () => {
   assert.equal(t("en").board.threadMeta("sakura", 2), "by sakura · 2 replies");
+  assert.equal(t("en").board.threadMeta("sakura", 1), "by sakura · 1 reply");
   assert.equal(t("ja").board.threadMeta("sakura", 2), "sakura・返信 2 件");
 });
 

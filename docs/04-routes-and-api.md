@@ -62,8 +62,9 @@ success so the browser performs a `GET`.
 | --- | --- | --- |
 | `locale` | yes | `en` or `ja` |
 
-- Sets the one-year `locale` cookie and redirects back to the referring page on the same host,
-  or to `/` when there is no usable `Referer`.
+- The interface is Japanese until a reader chooses otherwise. Sets the one-year `locale`
+  cookie and redirects back to the referring page on the same host, or to `/` when there is no
+  usable `Referer`.
 - Unknown values are ignored; the current page is still reloaded.
 
 ### `POST /api/threads`
@@ -153,8 +154,9 @@ monitoring before launch; see `docs/07-operations.md`.
 | `Path` | `/` | |
 | `Expires` | 30 days | |
 
-A second cookie, `locale`, stores the interface language (`en` or `ja`) for one year. It is
-`HttpOnly` and `SameSite=Lax` as well. It carries no identity and is safe to clear.
+A second cookie, `locale`, stores the interface language (`en` or `ja`) for one year. When it
+is absent, the interface is Japanese. It is `HttpOnly` and `SameSite=Lax` as well. It carries no
+identity and is safe to clear.
 
 `COOKIE_SECURE=false` exists only for a plain-HTTP school LAN. Do not use it on the public
 internet.

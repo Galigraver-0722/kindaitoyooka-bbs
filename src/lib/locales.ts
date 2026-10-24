@@ -2,7 +2,7 @@ import type { Role } from "@prisma/client";
 
 export const LOCALE_COOKIE = "locale";
 export type Locale = "en" | "ja";
-export const DEFAULT_LOCALE: Locale = "en";
+export const DEFAULT_LOCALE: Locale = "ja";
 
 export function isLocale(value: string | null | undefined): value is Locale {
   return value === "en" || value === "ja";
@@ -38,11 +38,12 @@ const en = {
     startThread: "Start a thread",
     browseBoards: "Browse boards",
     recent: "Recent activity",
-    newestThreads: (count: number) => `${count} newest threads`,
+    newestThreads: (count: number) => `${count} newest ${count === 1 ? "thread" : "threads"}`,
     empty: "No threads yet. The first one is yours to start.",
-    byReplies: (author: string, replies: number) => `by ${author} · ${replies} replies`,
+    byReplies: (author: string, replies: number) =>
+      `by ${author} · ${replies} ${replies === 1 ? "reply" : "replies"}`,
     boards: "Boards",
-    boardThreads: (count: number) => `${count} threads`,
+    boardThreads: (count: number) => `${count} ${count === 1 ? "thread" : "threads"}`,
     rulesTitle: "Before you post",
     rules: [
       "Be kind. Disagree with ideas, never with people.",
@@ -52,12 +53,14 @@ const en = {
   },
   board: {
     breadcrumb: "Boards",
-    visibleThreads: (count: number) => `${count} visible threads`,
+    visibleThreads: (count: number) =>
+      `${count} visible ${count === 1 ? "thread" : "threads"}`,
     newThread: "New thread",
     empty: "Nothing here yet. Start the first thread.",
     pinned: "Pinned",
     locked: "Locked",
-    threadMeta: (author: string, replies: number) => `by ${author} · ${replies} replies`,
+    threadMeta: (author: string, replies: number) =>
+      `by ${author} · ${replies} ${replies === 1 ? "reply" : "replies"}`,
   },
   thread: {
     startedBy: (author: string, date: string) => `Started by ${author} · ${date}`,

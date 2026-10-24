@@ -22,7 +22,8 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 - Soft deletion with a visible placeholder instead of a silent disappearance.
 - Localized role labels (English `student` / `moderator` / `admin`; Japanese 生徒 / モデレーター / 管理者)
   and server-side permission checks.
-- English / Japanese interface switch stored in a cookie; dates and counts follow the locale.
+- Japanese-first interface with an English switch stored in a cookie; dates and counts
+  follow the locale.
 - Responsive layout, plain-text content only.
 
 ## MoSCoW
@@ -40,7 +41,7 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 | Moderate | Moderator can remove a post, lock a thread, remove a thread, and resolve reports |
 | Permissions | Students cannot reach `/moderation` or call moderation endpoints |
 | Safety placeholder | Removed post remains in the thread as a localized placeholder ("Removed by a moderator" / 「モデレーターが削除しました」) |
-| Language switch | Every page can be read in English or Japanese; the choice survives navigation |
+| Language switch | Every page opens in Japanese by default and can be switched to English; the choice survives navigation |
 
 ### Should (before opening to the whole school)
 

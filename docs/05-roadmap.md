@@ -25,7 +25,7 @@ Deliverables:
 - Product brief, scope, architecture, data model, route contract, safety plan, operations
   runbook, decision log, learning path, open questions.
 - Working Next.js application: register, login, boards, threads, replies, reports, moderation,
-  lock/remove, seed data, and a bilingual (English / Japanese) interface.
+  lock/remove, Japanese seed data, and a Japanese-first interface with an English switch.
 - Public GitHub repository, MIT license, CI that builds the app.
 
 Exit criteria: `pnpm build`, `pnpm lint`, and the end-to-end manual flow all pass.
@@ -87,7 +87,8 @@ Deliverables:
 - Incident and escalation procedure signed by the advisor.
 - Accessibility pass: keyboard navigation, focus states, contrast, screen-reader labels.
 - Japanese localization of the remaining content (email templates, seed board names) if the
-  school requires it; the interface and documentation are already bilingual.
+  school requires it; the interface is already bilingual and the documentation is complete in
+  both languages.
 - Load test at 3× expected peak (for example 100 concurrent readers).
 - Launch plan: assembly announcement, poster with QR code, seeded "ask me anything" thread with
   teachers or club leaders.

@@ -58,32 +58,32 @@ async function main() {
   const boards = [
     {
       slug: "general",
-      name: "General",
-      description: "Anything that does not fit elsewhere. Say hello and introduce yourself.",
+      name: "雑談",
+      description: "なんでも話す場所です。自己紹介もどうぞ。",
       sortOrder: 1,
     },
     {
       slug: "study",
-      name: "Study Hall",
-      description: "Homework help, exam preparation, and study groups.",
+      name: "勉強",
+      description: "宿題の質問、試験対策、勉強会の連絡に。",
       sortOrder: 2,
     },
     {
       slug: "clubs",
-      name: "Clubs & Events",
-      description: "Club announcements, sign-ups, and event planning.",
+      name: "部活・行事",
+      description: "部活動の連絡、参加申し込み、行事の相談。",
       sortOrder: 3,
     },
     {
       slug: "lost-found",
-      name: "Lost & Found",
-      description: "Report a lost item or hand in something you found on campus.",
+      name: "落とし物",
+      description: "落とし物の連絡と、拾った物の報告。",
       sortOrder: 4,
     },
     {
       slug: "meta",
-      name: "Site Feedback",
-      description: "Bugs, suggestions, and questions about this bulletin board.",
+      name: "サイトへの意見",
+      description: "不具合、要望、この掲示板についての質問。",
       sortOrder: 5,
     },
   ];
@@ -111,21 +111,21 @@ async function main() {
     data: {
       boardId: general.id,
       authorId: admin.id,
-      title: "Welcome to the Toyooka BBS",
+      title: "Toyooka BBS へようこそ",
       isPinned: true,
       posts: {
         create: {
           authorId: admin.id,
           body: [
-            "This is the first public discussion space for our school community.",
+            "ここは、学校のみんなが質問や連絡を残しておける掲示板です。",
             "",
-            "A few ground rules:",
-            "1. Be kind. Disagree with ideas, never with people.",
-            "2. Never post someone else's name, address, photo, or contact details.",
-            "3. Keep exam answers, private conversations, and staff matters out of public threads.",
-            "4. Use the Report button when something feels wrong. Moderators will review it.",
+            "投稿する前に、次のルールを確認してください。",
+            "1. 人を攻撃しない。意見が違っても、相手ではなく考え方について話す。",
+            "2. 他の人の名前、住所、写真、連絡先は書かない。",
+            "3. 試験の解答や、先生との個人的なやり取りは公開しない。",
+            "4. おかしいと思ったら、通報ボタンを使ってください。モデレーターが確認します。",
             "",
-            "This site is a student project, not an official communication channel of the school.",
+            "このサイトは生徒が運営する試作版で、学校の公式な連絡手段ではありません。",
           ].join("\n"),
         },
       },
@@ -136,20 +136,20 @@ async function main() {
     data: {
       boardId: general.id,
       authorId: student.id,
-      title: "What should we add to the school festival this year?",
+      title: "今年の文化祭、何を追加したい？",
       posts: {
         create: [
           {
             authorId: student.id,
-            body: "Every year the festival feels a little the same. What is one small thing we could add that would make people stay longer?",
+            body: "毎年、文化祭の内容が少し似たり寄ったりに感じます。人がもう少し長くいてくれるような、小さな工夫を一つ挙げるとしたら何でしょう？",
           },
           {
             authorId: moderator.id,
-            body: "A quiet room with board games would help people who get overwhelmed by the crowds. We could run it in an empty classroom.",
+            body: "人が多いのが苦手な人のために、空き教室でボードゲームを置く「静かな部屋」はどうでしょう。",
           },
           {
             authorId: student.id,
-            body: "I like that. Maybe a stamp rally that sends people to the quieter corners of the building?",
+            body: "いいですね。建物の落ち着いた場所を回るスタンプラリーにしたら、人の流れも散らばりそうです。",
           },
         ],
       },
@@ -160,16 +160,16 @@ async function main() {
     data: {
       boardId: study.id,
       authorId: student.id,
-      title: "Math study group before the midterms",
+      title: "中間テスト前の数学勉強会",
       posts: {
         create: [
           {
             authorId: student.id,
-            body: "I am stuck on quadratic inequalities. Would anyone like to meet in the library after class on Wednesday? Two hours, no phones.",
+            body: "二次不等式で止まっています。水曜の放課後に図書館で2時間ほど集まりませんか。スマホは置いていきましょう。",
           },
           {
             authorId: admin.id,
-            body: "Count me in. Bring the problem set from last week and we can work through the hard ones together.",
+            body: "参加します。先週の問題プリントを持っていくので、難しい問題を一緒に解きましょう。",
           },
         ],
       },
@@ -180,11 +180,11 @@ async function main() {
     data: {
       boardId: clubs.id,
       authorId: moderator.id,
-      title: "Photography club: weekend photo walk",
+      title: "写真部：週末のフォトウォーク",
       posts: {
         create: {
           authorId: moderator.id,
-          body: "We are walking along the river this Saturday at 9:00. Bring any camera, including your phone. The theme is shadows. Sign up by replying here.",
+          body: "土曜の9時に川沿いを歩きます。カメラはスマホでもかまいません。今週のテーマは「影」です。参加する人はこのスレッドに返信してください。",
         },
       },
     },
@@ -194,18 +194,18 @@ async function main() {
     data: {
       boardId: meta.id,
       authorId: admin.id,
-      title: "Known limitations of this prototype",
+      title: "この試作版でまだできないこと",
       posts: {
         create: {
           authorId: admin.id,
           body: [
-            "This first version is intentionally small. It is missing:",
-            "- Email verification and password reset",
-            "- Search",
-            "- Image uploads",
-            "- Notifications",
+            "この最初の版は、わざと小さく作っています。まだできないことは次のとおりです。",
+            "- メール確認とパスワードの再設定",
+            "- 検索",
+            "- 画像のアップロード",
+            "- 通知",
             "",
-            "Moderators can remove posts, lock threads, and review reports. If you find a bug, post it here.",
+            "モデレーターは投稿の削除、スレッドのロック、通報の確認ができます。不具合を見つけたら、このボードに書いてください。",
           ].join("\n"),
         },
       },

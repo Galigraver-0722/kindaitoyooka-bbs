@@ -23,7 +23,7 @@ thread, and where students can report problems without confronting anyone. See
 - Report a post with a reason; moderators review the queue at `/moderation`.
 - Moderator tools: remove post, lock/unlock thread, remove thread, dismiss reports.
 - Soft deletion: removed content leaves a visible placeholder instead of vanishing.
-- Bilingual interface (English / Japanese) with a header switcher; user content is never machine-translated.
+- Japanese-first interface with a header switch to English; user content is never machine-translated.
 - Responsive UI, plain-text content only, no uploads and no trackers.
 
 Not implemented yet: search, pagination, email verification or password reset, notifications,
@@ -50,7 +50,8 @@ Demo accounts created by the seed (development only):
 | `moderator` | Moderator | `toyooka-demo-123` |
 | `student` | Student | `toyooka-demo-123` |
 
-Never run the seed on a public deployment, and never keep these passwords anywhere real.
+The seeded boards, threads, and replies are in Japanese. Never run the seed on a public
+deployment, and never keep these passwords anywhere real.
 
 ### Useful commands
 

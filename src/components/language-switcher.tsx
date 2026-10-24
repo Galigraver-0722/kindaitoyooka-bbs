@@ -16,18 +16,6 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
       aria-label={m.label}
     >
       <form action="/api/locale" method="post">
-        <input type="hidden" name={LOCALE_COOKIE} value="en" />
-        <button
-          type="submit"
-          aria-pressed={locale === "en"}
-          className={`${base} ${
-            locale === "en" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
-          }`}
-        >
-          EN
-        </button>
-      </form>
-      <form action="/api/locale" method="post">
         <input type="hidden" name={LOCALE_COOKIE} value="ja" />
         <button
           type="submit"
@@ -37,6 +25,18 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
           }`}
         >
           日本語
+        </button>
+      </form>
+      <form action="/api/locale" method="post">
+        <input type="hidden" name={LOCALE_COOKIE} value="en" />
+        <button
+          type="submit"
+          aria-pressed={locale === "en"}
+          className={`${base} ${
+            locale === "en" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          EN
         </button>
       </form>
     </div>
