@@ -38,7 +38,8 @@ export function ShareButton({
     <button
       type="button"
       onClick={handleShare}
-      className="transition hover:text-slate-800"
+      className={`btn-quiet ${copied ? "text-accent" : ""}`}
+      aria-live="polite"
     >
       {copied ? copiedLabel : label}
     </button>

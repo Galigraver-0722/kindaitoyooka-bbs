@@ -50,65 +50,58 @@ export default async function BookmarksPage({
   const items = rows.filter((row) => !row.thread.isDeleted);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">{m.bookmarks.title}</h1>
+    <main className="shell page">
+      <header className="border-b border-line pb-8">
+        <p className="eyebrow">{m.bookmarks.title}</p>
+        <h1 className="title-page mt-3">{m.bookmarks.title}</h1>
+        <p className="meta mt-3">{m.search.resultCount(items.length)}</p>
+      </header>
 
-      {errorText ? (
-        <p className="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-rose-200">
-          {errorText}
-        </p>
-      ) : null}
+      {errorText ? <p className="notice notice-error mt-6">{errorText}</p> : null}
 
       {items.length === 0 ? (
-        <p className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
+        <p className="mt-8 border-t border-line pt-8 text-[13px] text-muted">
           {m.bookmarks.empty}
         </p>
       ) : (
-        <ul className="mt-6 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
-          {items.map(({ thread, createdAt }) => (
-            <li key={thread.id} className="px-4 py-4 transition hover:bg-slate-50">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                <Link
-                  href={`/b/${thread.board.slug}`}
-                  className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600 hover:bg-slate-200"
-                >
-                  {thread.board.name}
-                </Link>
-                <span>{m.bookmarks.savedAt(formatDateTime(createdAt, locale))}</span>
-              </div>
-              <Link
-                href={`/t/${thread.id}`}
-                className="mt-1 block text-base font-medium text-slate-900 hover:text-indigo-700"
-              >
-                {thread.title}
-              </Link>
-              <p className="mt-0.5 text-sm text-slate-500">
-                {thread.author.username} · {m.thread.replies(Math.max(thread._count.posts - 1, 0))}
-              </p>
-              {thread.tags.length > 0 ? (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {thread.tags.map((tag) => (
-                    <Link
-                      key={tag.name}
-                      href={tagSearchHref(tag.name)}
-                      className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-200"
-                    >
-                      #{tag.name}
-                    </Link>
-                  ))}
+        <ol className="mt-2 divide-y divide-line">
+          {items.map(({ thread, createdAt }, index) => (
+            <li key={thread.id} className="grid grid-cols-[2.2rem_1fr] gap-4 py-5 sm:grid-cols-[2.75rem_1fr_auto]">
+              <span className="num pt-1">{String(index + 1).padStart(2, "0")}</span>
+              <div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <Link href={`/b/${thread.board.slug}`} className="eyebrow hover:text-ink">
+                    {thread.board.name}
+                  </Link>
+                  <span className="meta">{m.bookmarks.savedAt(formatDateTime(createdAt, locale))}</span>
                 </div>
-              ) : null}
-              <form action={`/api/threads/${thread.id}/bookmark`} method="post" className="mt-3">
-                <button
-                  type="submit"
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-600 transition hover:bg-slate-50"
+                <Link
+                  href={`/t/${thread.id}`}
+                  className="mt-2 block text-[17px] font-medium leading-snug tracking-[-0.012em] text-ink transition-colors hover:text-accent"
                 >
+                  {thread.title}
+                </Link>
+                <p className="mt-1 text-[12px] text-muted">
+                  {thread.author.username} / {m.thread.replies(Math.max(thread._count.posts - 1, 0))}
+                </p>
+                {thread.tags.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {thread.tags.map((tag) => (
+                      <Link key={tag.name} href={tagSearchHref(tag.name)} className="tag">
+                        #{tag.name}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <form action={`/api/threads/${thread.id}/bookmark`} method="post" className="col-start-2 self-start sm:col-start-3">
+                <button type="submit" className="btn-quiet">
                   {m.thread.unsave}
                 </button>
               </form>
             </li>
           ))}
-        </ul>
+        </ol>
       )}
     </main>
   );

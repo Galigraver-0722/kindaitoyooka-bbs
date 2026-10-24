@@ -26,24 +26,24 @@ export default async function ModerationPage() {
 
   const [reports, auditLogs] = await Promise.all([
     prisma.report.findMany({
-    where: { resolvedAt: null },
-    orderBy: { createdAt: "asc" },
-    include: {
-      reporter: { select: { username: true } },
-      post: {
-        include: {
-          author: { select: { username: true } },
-          thread: {
-            select: {
-              id: true,
-              title: true,
-              isDeleted: true,
-              board: { select: { slug: true, name: true } },
+      where: { resolvedAt: null },
+      orderBy: { createdAt: "asc" },
+      include: {
+        reporter: { select: { username: true } },
+        post: {
+          include: {
+            author: { select: { username: true } },
+            thread: {
+              select: {
+                id: true,
+                title: true,
+                isDeleted: true,
+                board: { select: { slug: true, name: true } },
+              },
             },
           },
         },
       },
-    },
     }),
     prisma.auditLog.findMany({
       orderBy: { createdAt: "desc" },
@@ -53,49 +53,57 @@ export default async function ModerationPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">{m.moderation.title}</h1>
-      <p className="mt-1 text-sm text-slate-500">{m.moderation.signedInAs(user.username)}</p>
+    <main className="shell page">
+      <header className="border-b border-line pb-8">
+        <p className="eyebrow">{m.moderation.title}</p>
+        <h1 className="title-page mt-3">{m.moderation.title}</h1>
+        <p className="meta mt-3">{m.moderation.signedInAs(user.username)}</p>
+      </header>
 
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold text-slate-900">{m.moderation.openReports}</h2>
+      <section className="mt-10">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="title-section">{m.moderation.openReports}</h2>
+          <span className="num">{String(reports.length).padStart(2, "0")}</span>
+        </div>
 
         {reports.length === 0 ? (
-          <p className="mt-3 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+          <p className="mt-4 border-t border-line pt-6 text-[13px] text-muted">
             {m.moderation.empty}
           </p>
         ) : (
-          <ul className="mt-3 space-y-4">
+          <ul className="mt-2">
             {reports.map((report) => (
-              <li key={report.id} className="rounded-xl border border-slate-200 bg-white p-5">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-                  <span className="flex flex-wrap items-center gap-2">
+              <li key={report.id} className="border-t border-line py-7">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     {report.source === "AUTO" ? (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800">
+                      <span className="border border-accent/35 px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.12em] text-accent">
                         {m.moderation.autoDetected}
                       </span>
                     ) : null}
-                    {report.source === "AUTO"
-                      ? formatDateTime(report.createdAt, locale)
-                      : m.moderation.reportedBy(
-                          report.reporter?.username ?? "",
-                          formatDateTime(report.createdAt, locale),
-                        )}
-                  </span>
+                    <span className="meta">
+                      {report.source === "AUTO"
+                        ? formatDateTime(report.createdAt, locale)
+                        : m.moderation.reportedBy(
+                            report.reporter?.username ?? "",
+                            formatDateTime(report.createdAt, locale),
+                          )}
+                    </span>
+                  </div>
                   <Link
                     href={`/t/${report.post.thread.id}#p-${report.post.id}`}
-                    className="text-indigo-600 hover:text-indigo-700"
+                    className="btn-quiet"
                   >
                     {m.moderation.openThread}
                   </Link>
                 </div>
 
-                <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                <p className="mt-4 border-l-2 border-accent pl-4 text-[13px] leading-[1.85] text-ink">
                   {report.reason}
                 </p>
 
-                <div className="mt-3 rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs text-slate-500">
+                <div className="mt-4 border border-line bg-surface p-4">
+                  <p className="meta">
                     {m.moderation.postContext(
                       report.post.author.username,
                       report.post.thread.title,
@@ -105,28 +113,22 @@ export default async function ModerationPage() {
                       ? ` — ${m.moderation.removedThread}`
                       : null}
                   </p>
-                  <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-800">
+                  <p className="mt-2 whitespace-pre-wrap break-words text-[13px] leading-[1.9] text-ink/80">
                     {report.post.isDeleted ? m.moderation.removedPost : report.post.body}
                   </p>
                 </div>
 
                 {!report.post.isDeleted ? (
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-4 flex flex-wrap gap-3">
                     <form action={`/api/reports/${report.id}/resolve`} method="post">
                       <input type="hidden" name="action" value="remove" />
-                      <button
-                        type="submit"
-                        className="rounded-md bg-rose-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-rose-700"
-                      >
+                      <button type="submit" className="btn btn-danger px-3 py-2 text-[12px]">
                         {m.moderation.removePost}
                       </button>
                     </form>
                     <form action={`/api/reports/${report.id}/resolve`} method="post">
                       <input type="hidden" name="action" value="dismiss" />
-                      <button
-                        type="submit"
-                        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-50"
-                      >
+                      <button type="submit" className="btn btn-secondary px-3 py-2 text-[12px]">
                         {m.moderation.dismiss}
                       </button>
                     </form>
@@ -134,10 +136,7 @@ export default async function ModerationPage() {
                 ) : (
                   <form action={`/api/reports/${report.id}/resolve`} method="post" className="mt-4">
                     <input type="hidden" name="action" value="dismiss" />
-                    <button
-                      type="submit"
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-50"
-                    >
+                    <button type="submit" className="btn btn-secondary px-3 py-2 text-[12px]">
                       {m.moderation.closeReport}
                     </button>
                   </form>
@@ -148,24 +147,28 @@ export default async function ModerationPage() {
         )}
       </section>
 
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold text-slate-900">{m.audit.title}</h2>
+      <section className="mt-14">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="title-section">{m.audit.title}</h2>
+          <span className="num">{String(auditLogs.length).padStart(2, "0")}</span>
+        </div>
         {auditLogs.length === 0 ? (
-          <p className="mt-3 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
-            {m.audit.empty}
-          </p>
+          <p className="mt-4 border-t border-line pt-6 text-[13px] text-muted">{m.audit.empty}</p>
         ) : (
-          <ul className="mt-3 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <ul className="mt-2">
             {auditLogs.map((log) => (
-              <li key={log.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-                <span className="text-slate-700">
+              <li
+                key={log.id}
+                className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-line py-3"
+              >
+                <span className="text-[13px] text-ink">
                   {m.audit.actions[log.action] ?? log.action}
-                  <span className="ml-2 text-xs text-slate-400">
+                  <span className="ml-3 font-mono text-[10px] text-muted">
                     {log.targetType}:{log.targetId.slice(0, 8)}
                   </span>
                 </span>
-                <span className="text-xs text-slate-500">
-                  {log.actor?.username ?? "system"} · {formatDateTime(log.createdAt, locale)}
+                <span className="meta">
+                  {log.actor?.username ?? "system"} / {formatDateTime(log.createdAt, locale)}
                 </span>
               </li>
             ))}

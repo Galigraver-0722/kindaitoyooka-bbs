@@ -109,6 +109,7 @@ const en = {
     edit: "Edit thread",
     editedAt: (date: string) => `Edited ${date}`,
     exportText: "Download as text",
+    actionFailed: "Could not save. Please try again.",
   },
   editing: {
     title: "Edit thread",
@@ -122,6 +123,8 @@ const en = {
     joined: (date: string) => `Joined ${date}`,
     threadCount: (count: number) => `${count} ${count === 1 ? "thread" : "threads"}`,
     postCount: (count: number) => `${count} ${count === 1 ? "post" : "posts"}`,
+    threadsLabel: "Threads",
+    postsLabel: "Posts",
     recentThreads: "Recent threads",
     recentPosts: "Recent posts",
     noThreads: "No threads yet.",
@@ -332,6 +335,7 @@ const ja: typeof en = {
     edit: "スレッドを編集",
     editedAt: (date: string) => `${date} に編集`,
     exportText: "テキストで保存",
+    actionFailed: "保存できませんでした。もう一度お試しください。",
   },
   editing: {
     title: "スレッドを編集",
@@ -345,6 +349,8 @@ const ja: typeof en = {
     joined: (date: string) => `${date} に登録`,
     threadCount: (count: number) => `スレッド ${count} 件`,
     postCount: (count: number) => `投稿 ${count} 件`,
+    threadsLabel: "スレッド",
+    postsLabel: "投稿",
     recentThreads: "最近のスレッド",
     recentPosts: "最近の投稿",
     noThreads: "まだスレッドを立てていません。",

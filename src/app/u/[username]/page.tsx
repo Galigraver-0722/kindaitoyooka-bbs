@@ -69,87 +69,89 @@ export default async function ProfilePage({
   ]);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
-      <header className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{profile.username}</h1>
+    <main className="shell page">
+      <header className="border-b border-line pb-8">
+        <p className="eyebrow">{m.profile.title}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <h1 className="text-[2.2rem] font-semibold leading-none tracking-[-0.04em] text-ink sm:text-[2.8rem]">
+            {profile.username}
+          </h1>
           <RoleChip role={profile.role} locale={locale} />
         </div>
-        <p className="mt-1 text-sm text-slate-500">
-          {m.profile.joined(formatDateTime(profile.createdAt, locale))}
-        </p>
-        <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-600">
-          <span className="rounded-full bg-slate-100 px-3 py-1">
-            {m.profile.threadCount(threadCount)}
-          </span>
-          <span className="rounded-full bg-slate-100 px-3 py-1">
-            {m.profile.postCount(postCount)}
-          </span>
-        </div>
+        <p className="meta mt-3">{m.profile.joined(formatDateTime(profile.createdAt, locale))}</p>
+
+        <dl className="mt-8 flex gap-10 border-t border-line pt-5">
+          <div>
+            <dt className="eyebrow">{m.profile.threadsLabel}</dt>
+            <dd className="mt-1 font-mono text-[24px] leading-none tabular-nums">
+              {String(threadCount).padStart(2, "0")}
+            </dd>
+          </div>
+          <div>
+            <dt className="eyebrow">{m.profile.postsLabel}</dt>
+            <dd className="mt-1 font-mono text-[24px] leading-none tabular-nums">
+              {String(postCount).padStart(2, "0")}
+            </dd>
+          </div>
+        </dl>
       </header>
 
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold text-slate-900">{m.profile.recentThreads}</h2>
+      <section className="mt-12">
+        <h2 className="title-section">{m.profile.recentThreads}</h2>
         {threads.length === 0 ? (
-          <p className="mt-3 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+          <p className="mt-4 border-t border-line pt-6 text-[13px] text-muted">
             {m.profile.noThreads}
           </p>
         ) : (
-          <ul className="mt-3 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <ol className="mt-4 divide-y divide-line border-t border-line">
             {threads.map((thread) => (
-              <li key={thread.id} className="px-4 py-3 transition hover:bg-slate-50">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                  <Link
-                    href={`/b/${thread.board.slug}`}
-                    className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600 hover:bg-slate-200"
-                  >
-                    {thread.board.name}
-                  </Link>
-                  <span>{formatDateTime(thread.createdAt, locale)}</span>
-                </div>
+              <li key={thread.id}>
                 <Link
                   href={`/t/${thread.id}`}
-                  className="mt-1 block text-base font-medium text-slate-900 hover:text-indigo-700"
+                  className="group row-hover -mx-3 block px-3 py-4"
                 >
-                  {thread.title}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="eyebrow">{thread.board.name}</span>
+                    <time className="meta">{formatDateTime(thread.createdAt, locale)}</time>
+                  </div>
+                  <h3 className="mt-1.5 text-[15px] font-medium leading-snug text-ink transition-colors group-hover:text-accent">
+                    {thread.title}
+                  </h3>
+                  <p className="mt-1 text-[12px] text-muted">
+                    {m.board.threadMeta(profile.username, Math.max(thread._count.posts - 1, 0))}
+                  </p>
                 </Link>
-                <p className="mt-0.5 text-sm text-slate-500">
-                  {m.board.threadMeta(profile.username, Math.max(thread._count.posts - 1, 0))}
-                </p>
               </li>
             ))}
-          </ul>
+          </ol>
         )}
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold text-slate-900">{m.profile.recentPosts}</h2>
+      <section className="mt-12">
+        <h2 className="title-section">{m.profile.recentPosts}</h2>
         {posts.length === 0 ? (
-          <p className="mt-3 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+          <p className="mt-4 border-t border-line pt-6 text-[13px] text-muted">
             {m.profile.noPosts}
           </p>
         ) : (
-          <ul className="mt-3 space-y-3">
+          <ol className="mt-4 divide-y divide-line border-t border-line">
             {posts.map((post) => (
-              <li
-                key={post.id}
-                className="rounded-xl border border-slate-200 bg-white p-4 text-sm"
-              >
-                <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs text-slate-500">
+              <li key={post.id} className="py-5">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <Link
                     href={`/t/${post.thread.id}#p-${post.id}`}
-                    className="font-medium text-slate-700 hover:text-indigo-700"
+                    className="text-[12px] font-medium text-ink transition-colors hover:text-accent"
                   >
                     {m.profile.inThread(post.thread.title)}
                   </Link>
-                  <time>{formatDateTime(post.createdAt, locale)}</time>
+                  <time className="meta">{formatDateTime(post.createdAt, locale)}</time>
                 </div>
-                <p className="mt-2 line-clamp-4 whitespace-pre-wrap break-words text-slate-800">
+                <p className="mt-2 line-clamp-4 whitespace-pre-wrap break-words text-[13px] leading-[1.9] text-ink/80">
                   {post.body}
                 </p>
               </li>
             ))}
-          </ul>
+          </ol>
         )}
       </section>
     </main>

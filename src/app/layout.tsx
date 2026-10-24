@@ -23,7 +23,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
 
   return (
     <html lang={locale}>
-      <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased">
+      <body className="flex min-h-screen flex-col bg-bg text-ink antialiased">
         <SiteHeader user={user} locale={locale} />
         <div className="flex-1">{children}</div>
         <SiteFooter locale={locale} />

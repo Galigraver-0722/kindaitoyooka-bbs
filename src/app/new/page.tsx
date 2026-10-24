@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getLocale, t } from "@/lib/i18n";
@@ -41,124 +42,125 @@ export default async function NewThreadPage({
   const errorText = errorMessage(error, locale);
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
-      <nav className="text-sm text-slate-500">
-        <Link href="/" className="hover:text-slate-800">
-          {m.board.breadcrumb}
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-slate-700">{m.newThread.title}</span>
-      </nav>
+    <main className="shell page">
+      <Breadcrumbs
+        items={[
+          { href: "/", label: m.board.breadcrumb },
+          { label: m.newThread.title },
+        ]}
+      />
 
-      <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-        {m.newThread.title}
-      </h1>
-      <p className="mt-1 text-sm text-slate-500">{m.newThread.subtitle}</p>
+      <div className="mt-8 grid gap-10 border-t border-line pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-20">
+        <div className="max-w-md">
+          <p className="eyebrow">{m.newThread.title}</p>
+          <h1 className="title-page mt-3">{m.newThread.title}</h1>
+          <p className="mt-4 text-[13px] leading-[1.85] text-muted">{m.newThread.subtitle}</p>
 
-      {errorText ? (
-        <p className="mt-6 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-rose-200">
-          {errorText}
-        </p>
-      ) : null}
-
-      {boards.length === 0 || !selectedBoard ? (
-        <p className="mt-8 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
-          {m.newThread.noBoards}
-        </p>
-      ) : (
-        <form
-          action="/api/threads"
-          method="post"
-          className="mt-6 space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <div>
-            <label htmlFor="boardId" className="block text-sm font-medium text-slate-700">
-              {m.newThread.board}
-            </label>
-            <select
-              id="boardId"
-              name="boardId"
-              defaultValue={selectedBoard.id}
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-            >
-              {boards.map((board) => (
-                <option key={board.id} value={board.id}>
-                  {board.name}
-                </option>
+          <div className="mt-10 border-t border-line pt-6">
+            <p className="eyebrow">{m.home.rulesTitle}</p>
+            <ol className="mt-4 space-y-4">
+              {m.home.rules.map((rule, index) => (
+                <li key={rule} className="grid grid-cols-[1.5rem_1fr] gap-3">
+                  <span className="num pt-0.5">{String(index + 1).padStart(2, "0")}</span>
+                  <p className="text-[12px] leading-[1.8] text-muted">{rule}</p>
+                </li>
               ))}
-            </select>
+            </ol>
           </div>
+        </div>
 
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-slate-700">
-              {m.newThread.titleLabel}
-            </label>
-            <input
-              id="title"
-              name="title"
-              required
-              minLength={LIMITS.titleMin}
-              maxLength={LIMITS.titleMax}
-              placeholder={m.newThread.titlePlaceholder}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-            />
-          </div>
+        <div className="w-full max-w-xl lg:justify-self-end">
+          {errorText ? <p className="notice notice-error mb-6">{errorText}</p> : null}
 
-          <div>
-            <label htmlFor="tags" className="block text-sm font-medium text-slate-700">
-              {m.tagField.label}
-            </label>
-            <input
-              id="tags"
-              name="tags"
-              maxLength={150}
-              placeholder={m.tagField.placeholder}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-            />
-            <p className="mt-1 text-xs text-slate-500">{m.tagField.hint}</p>
-            {suggestedTags.length > 0 ? (
-              <p className="mt-0.5 text-xs text-slate-400">
-                {m.tagField.suggested(
-                  selectedBoard.name,
-                  suggestedTags.map((tag) => `#${tag}`).join(" "),
-                )}
-              </p>
-            ) : null}
-          </div>
+          {boards.length === 0 || !selectedBoard ? (
+            <p className="text-[13px] text-muted">{m.newThread.noBoards}</p>
+          ) : (
+            <form action="/api/threads" method="post" className="space-y-7">
+              <div>
+                <label htmlFor="boardId" className="field-label">
+                  {m.newThread.board}
+                </label>
+                <select
+                  id="boardId"
+                  name="boardId"
+                  defaultValue={selectedBoard.id}
+                  className="field mt-2"
+                >
+                  {boards.map((board) => (
+                    <option key={board.id} value={board.id}>
+                      {board.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div>
-            <label htmlFor="body" className="block text-sm font-medium text-slate-700">
-              {m.newThread.message}
-            </label>
-            <textarea
-              id="body"
-              name="body"
-              required
-              rows={8}
-              maxLength={LIMITS.bodyMax}
-              className="mt-1 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-            />
-            <p className="mt-1 text-xs text-slate-500">
-              {m.newThread.charLimit(LIMITS.bodyMax)}
-            </p>
-          </div>
+              <div>
+                <label htmlFor="title" className="field-label">
+                  {m.newThread.titleLabel}
+                </label>
+                <input
+                  id="title"
+                  name="title"
+                  required
+                  minLength={LIMITS.titleMin}
+                  maxLength={LIMITS.titleMax}
+                  placeholder={m.newThread.titlePlaceholder}
+                  className="field mt-2"
+                />
+              </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              className="rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white transition hover:bg-indigo-700"
-            >
-              {m.newThread.submit}
-            </button>
-            <Link
-              href={preferredSlug ? `/b/${preferredSlug}` : "/"}
-              className="text-sm text-slate-600 hover:text-slate-900"
-            >
-              {m.newThread.cancel}
-            </Link>
-          </div>
-        </form>
-      )}
+              <div>
+                <label htmlFor="tags" className="field-label">
+                  {m.tagField.label}
+                </label>
+                <input
+                  id="tags"
+                  name="tags"
+                  maxLength={150}
+                  placeholder={m.tagField.placeholder}
+                  className="field mt-2 py-2 text-[13px]"
+                />
+                <p className="hint">{m.tagField.hint}</p>
+                {suggestedTags.length > 0 ? (
+                  <p className="hint">
+                    {m.tagField.suggested(
+                      selectedBoard.name,
+                      suggestedTags.map((tag) => `#${tag}`).join(" "),
+                    )}
+                  </p>
+                ) : null}
+              </div>
+
+              <div>
+                <label htmlFor="body" className="field-label">
+                  {m.newThread.message}
+                </label>
+                <textarea
+                  id="body"
+                  name="body"
+                  required
+                  rows={9}
+                  maxLength={LIMITS.bodyMax}
+                  className="field mt-2 min-h-[14rem] resize-y"
+                />
+                <p className="hint">{m.newThread.charLimit(LIMITS.bodyMax)}</p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-5 border-t border-line pt-6">
+                <button type="submit" className="btn btn-primary">
+                  {m.newThread.submit}
+                </button>
+                <Link
+                  href={preferredSlug ? `/b/${preferredSlug}` : "/"}
+                  className="text-[12px] text-muted transition-colors hover:text-ink"
+                >
+                  {m.newThread.cancel}
+                </Link>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
     </main>
   );
 }

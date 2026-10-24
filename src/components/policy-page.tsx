@@ -2,31 +2,56 @@ import type { PolicyDocument } from "@/lib/policies";
 
 export function PolicyPage({ document }: { document: PolicyDocument }) {
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{document.title}</h1>
-        <p className="mt-1 text-xs text-slate-400">{document.updated}</p>
-        <p className="mt-4 text-slate-600">{document.intro}</p>
-      </header>
+    <main className="shell page">
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_14rem] lg:gap-20">
+        <article className="max-w-[68ch]">
+          <header className="border-b border-line pb-8">
+            <p className="eyebrow">Toyooka BBS</p>
+            <h1 className="title-page mt-4">{document.title}</h1>
+            <p className="meta mt-4">{document.updated}</p>
+            <p className="mt-6 text-[14px] leading-[1.95] text-muted">{document.intro}</p>
+          </header>
 
-      <div className="mt-8 space-y-8">
-        {document.sections.map((section) => (
-          <section key={section.heading}>
-            <h2 className="text-lg font-semibold text-slate-900">{section.heading}</h2>
-            {section.paragraphs?.map((paragraph) => (
-              <p key={paragraph} className="mt-2 text-slate-700">
-                {paragraph}
-              </p>
-            ))}
-            {section.bullets ? (
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
-                {section.bullets.map((bullet) => (
-                  <li key={bullet}>{bullet}</li>
+          <div className="mt-10 space-y-10">
+            {document.sections.map((section, index) => (
+              <section key={section.heading} id={`section-${index + 1}`} className="scroll-mt-24">
+                <h2 className="title-section">{section.heading}</h2>
+                {section.paragraphs?.map((paragraph) => (
+                  <p key={paragraph} className="mt-3 text-[14px] leading-[1.95] text-ink/85">
+                    {paragraph}
+                  </p>
                 ))}
-              </ul>
-            ) : null}
-          </section>
-        ))}
+                {section.bullets ? (
+                  <ul className="mt-3 list-disc space-y-2 pl-5 text-[14px] leading-[1.9] text-ink/85 marker:text-line">
+                    {section.bullets.map((bullet) => (
+                      <li key={bullet} className="pl-1">
+                        {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </section>
+            ))}
+          </div>
+        </article>
+
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 border-l border-line pl-6">
+            <p className="eyebrow">Contents</p>
+            <ol className="mt-4 space-y-2.5">
+              {document.sections.map((section, index) => (
+                <li key={section.heading}>
+                  <a
+                    href={`#section-${index + 1}`}
+                    className="text-[11px] leading-snug text-muted transition-colors hover:text-ink"
+                  >
+                    {section.heading}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </aside>
       </div>
     </main>
   );

@@ -1,87 +1,82 @@
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import type { Role } from "@prisma/client";
+import { RoleChip } from "@/components/role-chip";
 import type { SessionUser } from "@/lib/auth";
 import { type Locale, t } from "@/lib/i18n";
 
-const ROLE_STYLES: Record<Role, string> = {
-  ADMIN: "bg-rose-100 text-rose-700 ring-rose-200",
-  MODERATOR: "bg-amber-100 text-amber-800 ring-amber-200",
-  STUDENT: "bg-slate-100 text-slate-600 ring-slate-200",
-};
+const linkClass = "text-muted transition-colors duration-150 hover:text-ink";
 
 export function SiteHeader({ user, locale }: { user: SessionUser | null; locale: Locale }) {
   const m = t(locale);
   const canModerate = user?.role === "MODERATOR" || user?.role === "ADMIN";
 
   return (
-    <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="text-lg font-semibold tracking-tight text-slate-900">
-          Toyooka <span className="text-indigo-600">BBS</span>
+    <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-sm">
+      <div className="shell flex flex-wrap items-center gap-x-8 gap-y-3 py-3.5">
+        <Link href="/" className="flex items-baseline gap-1.5">
+          <span className="text-[15px] font-semibold tracking-[-0.03em] text-ink">
+            Toyooka <span className="text-accent">BBS</span>
+          </span>
         </Link>
 
-        <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-          <Link href="/" className="text-slate-600 transition hover:text-slate-900">
+        <nav
+          className="order-3 flex w-full items-center gap-x-5 gap-y-2 border-t border-line pt-3 text-[12px] sm:order-none sm:w-auto sm:border-0 sm:pt-0"
+        >
+          <Link href="/" className={linkClass}>
             {m.nav.boards}
           </Link>
-          <Link href="/new" className="text-slate-600 transition hover:text-slate-900">
+          <Link href="/new" className={linkClass}>
             {m.nav.newThread}
           </Link>
-          <Link href="/search" className="text-slate-600 transition hover:text-slate-900">
+          <Link href="/search" className={linkClass}>
             {m.nav.search}
           </Link>
           {user ? (
-            <Link href="/bookmarks" className="text-slate-600 transition hover:text-slate-900">
+            <Link href="/bookmarks" className={linkClass}>
               {m.nav.bookmarks}
             </Link>
           ) : null}
           {canModerate ? (
-            <Link href="/moderation" className="text-slate-600 transition hover:text-slate-900">
+            <Link href="/moderation" className={linkClass}>
               {m.nav.moderation}
             </Link>
           ) : null}
+        </nav>
+
+        <div className="ml-auto flex items-center gap-4">
+          <LanguageSwitcher locale={locale} />
 
           {user ? (
             <div className="flex items-center gap-3">
-              <span className="flex items-center gap-2 text-slate-700">
-                <Link href={`/u/${user.username}`} className="hover:text-indigo-700">
+              <span className="flex items-center gap-2">
+                <Link
+                  href={`/u/${user.username}`}
+                  className="font-mono text-[11px] text-ink transition-colors duration-150 hover:text-accent"
+                >
                   {user.username}
                 </Link>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${ROLE_STYLES[user.role]}`}
-                >
-                  {m.roles[user.role]}
-                </span>
+                <RoleChip role={user.role} locale={locale} />
               </span>
               <form action="/api/auth/logout" method="post">
                 <button
                   type="submit"
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 transition hover:bg-slate-50"
+                  className="text-[11px] text-muted transition-colors duration-150 hover:text-ink"
                 >
                   {m.nav.logOut}
                 </button>
               </form>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <Link
-                href="/login"
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 transition hover:bg-slate-50"
-              >
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="text-[12px] text-muted hover:text-ink">
                 {m.nav.logIn}
               </Link>
-              <Link
-                href="/register"
-                className="rounded-md bg-indigo-600 px-3 py-1.5 font-medium text-white transition hover:bg-indigo-700"
-              >
+              <Link href="/register" className="btn btn-primary px-3 py-2 text-[12px]">
                 {m.nav.register}
               </Link>
             </div>
           )}
-
-          <LanguageSwitcher locale={locale} />
-        </nav>
+        </div>
       </div>
     </header>
   );

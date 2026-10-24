@@ -5,23 +5,32 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   const m = t(locale).footer;
 
   return (
-    <footer className="mt-16 border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-slate-500">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="max-w-xl">{m.disclaimer}</p>
-          <p>{m.license}</p>
+    <footer className="mt-24 border-t border-line">
+      <div className="shell grid gap-10 py-12 md:grid-cols-12">
+        <div className="md:col-span-6">
+          <p className="eyebrow">Toyooka BBS</p>
+          <p className="mt-4 max-w-[52ch] text-[12px] leading-[1.8] text-muted">{m.disclaimer}</p>
         </div>
-        <nav className="mt-3 flex flex-wrap gap-x-4 gap-y-1" aria-label={m.policies}>
-          <Link href="/rules" className="transition hover:text-slate-800">
+
+        <nav
+          className="flex flex-col gap-2.5 text-[12px] md:col-span-3"
+          aria-label={m.policies}
+        >
+          <Link href="/rules" className="text-muted transition-colors hover:text-ink">
             {m.rules}
           </Link>
-          <Link href="/privacy" className="transition hover:text-slate-800">
+          <Link href="/privacy" className="text-muted transition-colors hover:text-ink">
             {m.privacy}
           </Link>
-          <Link href="/moderation-policy" className="transition hover:text-slate-800">
+          <Link href="/moderation-policy" className="text-muted transition-colors hover:text-ink">
             {m.moderation}
           </Link>
         </nav>
+
+        <div className="md:col-span-3 md:text-right">
+          <p className="meta">{m.license}</p>
+          <p className="meta mt-2">MIT / 2026</p>
+        </div>
       </div>
     </footer>
   );

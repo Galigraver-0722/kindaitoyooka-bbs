@@ -41,116 +41,120 @@ export default async function HomePage({
   const signedOutNotice = noticeMessage(notice, locale);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
+    <main className="shell page">
       {signedOutNotice ? (
-        <p className="mb-6 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200">
-          {signedOutNotice}
-        </p>
+        <p className="notice notice-success mb-10">{signedOutNotice}</p>
       ) : null}
 
-      <section className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 px-6 py-10 text-white shadow-sm sm:px-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-200">
-          {m.home.eyebrow}
-        </p>
-        <h1 className="mt-2 text-balance text-3xl font-bold tracking-tight sm:text-4xl">{m.home.title}</h1>
-        <p className="mt-3 max-w-2xl text-indigo-100">{m.home.subtitle}</p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/new"
-            className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50"
-          >
-            {m.home.startThread}
-          </Link>
-          <Link
-            href="#boards"
-            className="rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
-          >
-            {m.home.browseBoards}
-          </Link>
+      <section className="grid gap-10 lg:grid-cols-12 lg:gap-12">
+        <div className="lg:col-span-8">
+          <p className="eyebrow">{m.home.eyebrow}</p>
+          <h1 className="display mt-5 max-w-[15ch]">{m.home.title}</h1>
+          <p className="mt-7 max-w-[52ch] text-[15px] leading-[1.95] text-muted">
+            {m.home.subtitle}
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-3">
+            <Link href="/new" className="btn btn-primary">
+              {m.home.startThread}
+            </Link>
+            <Link href="#boards" className="btn btn-secondary">
+              {m.home.browseBoards}
+            </Link>
+          </div>
         </div>
+
+        <aside
+          id="boards"
+          className="border-t border-line pt-8 lg:col-span-4 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0"
+        >
+          <div className="flex items-baseline justify-between">
+            <h2 className="eyebrow">{m.home.boards}</h2>
+            <span className="num">{String(boards.length).padStart(2, "0")}</span>
+          </div>
+
+          <ol className="mt-4">
+            {boards.map((board) => (
+              <li key={board.id} className="border-t border-line first:border-t-0">
+                <Link href={`/b/${board.slug}`} className="group block py-3.5">
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className="text-[13px] font-medium text-ink transition-colors group-hover:text-accent">
+                      {board.name}
+                    </span>
+                    <span className="num">{String(board._count.threads).padStart(2, "0")}</span>
+                  </span>
+                  <span className="mt-1 block line-clamp-1 text-[11px] text-muted">
+                    {board.description}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </aside>
       </section>
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-[2fr_1fr]">
-        <section>
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">{m.home.recent}</h2>
-            <span className="shrink-0 text-sm text-slate-500">
-              {m.home.newestThreads(recentThreads.length)}
-            </span>
-          </div>
+      <section className="mt-16 border-t border-line pt-8 sm:mt-20">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 className="title-section">{m.home.recent}</h2>
+          <span className="meta">{m.home.newestThreads(recentThreads.length)}</span>
+        </div>
 
-          {recentThreads.length === 0 ? (
-            <p className="mt-4 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
-              {m.home.empty}
-            </p>
-          ) : (
-            <ul className="mt-4 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
-              {recentThreads.map((thread) => (
-                <li key={thread.id} className="px-4 py-3 transition hover:bg-slate-50">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <Link
-                      href={`/b/${thread.board.slug}`}
-                      className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600 hover:bg-slate-200"
-                    >
-                      {thread.board.name}
-                    </Link>
-                    {thread.isPinned ? (
-                      <span className="font-medium text-indigo-600">{m.board.pinned}</span>
-                    ) : null}
-                    {unread.has(thread.id) ? (
-                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
-                        {m.board.unread}
-                      </span>
-                    ) : null}
-                    <span>{formatDateTime(thread.lastPostAt, locale)}</span>
+        {recentThreads.length === 0 ? (
+          <p className="mt-8 border-t border-line pt-8 text-[13px] text-muted">{m.home.empty}</p>
+        ) : (
+          <ol className="mt-6 divide-y divide-line border-t border-line">
+            {recentThreads.map((thread, index) => (
+              <li key={thread.id}>
+                <Link
+                  href={`/t/${thread.id}`}
+                  className="group row-hover -mx-3 grid grid-cols-[2rem_1fr] gap-4 px-3 py-5 sm:grid-cols-[2.75rem_1fr]"
+                >
+                  <span className="num pt-1">{String(index + 1).padStart(2, "0")}</span>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="eyebrow">{thread.board.name}</span>
+                      {thread.isPinned ? (
+                        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-accent">
+                          {m.board.pinned}
+                        </span>
+                      ) : null}
+                      {unread.has(thread.id) ? (
+                        <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-accent">
+                          <span className="h-1 w-1 rounded-full bg-accent" />
+                          {m.board.unread}
+                        </span>
+                      ) : null}
+                      <time className="meta">{formatDateTime(thread.lastPostAt, locale)}</time>
+                    </div>
+                    <h3 className="mt-2 text-[17px] font-medium leading-snug tracking-[-0.012em] text-ink transition-colors duration-150 group-hover:text-accent">
+                      {thread.title}
+                    </h3>
+                    <p className="mt-1 text-[12px] text-muted">
+                      {m.home.byReplies(
+                        thread.author.username,
+                        Math.max(thread._count.posts - 1, 0),
+                      )}
+                    </p>
                   </div>
-                  <Link
-                    href={`/t/${thread.id}`}
-                    className="mt-1 block text-base font-medium text-slate-900 hover:text-indigo-700"
-                  >
-                    {thread.title}
-                  </Link>
-                  <p className="mt-0.5 text-sm text-slate-500">
-                    {m.home.byReplies(
-                      thread.author.username,
-                      Math.max(thread._count.posts - 1, 0),
-                    )}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section id="boards" className="scroll-mt-6">
-          <h2 className="text-lg font-semibold text-slate-900">{m.home.boards}</h2>
-          <div className="mt-4 space-y-3">
-            {boards.map((board) => (
-              <Link
-                key={board.id}
-                href={`/b/${board.slug}`}
-                className="block rounded-xl border border-slate-200 bg-white p-4 transition hover:border-indigo-300 hover:shadow-sm"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-medium text-slate-900">{board.name}</h3>
-                  <span className="text-xs text-slate-500">
-                    {m.home.boardThreads(board._count.threads)}
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-slate-500">{board.description}</p>
-              </Link>
+                </Link>
+              </li>
             ))}
-          </div>
-        </section>
-      </div>
+          </ol>
+        )}
+      </section>
 
-      <section className="mt-12 rounded-xl border border-amber-200 bg-amber-50 p-6">
-        <h2 className="text-base font-semibold text-amber-900">{m.home.rulesTitle}</h2>
-        <ul className="mt-3 grid gap-2 text-sm text-amber-900 sm:grid-cols-3">
-          {m.home.rules.map((rule) => (
-            <li key={rule}>{rule}</li>
+      <section className="mt-16 border-t border-line pt-8 sm:mt-20">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="title-section">{m.home.rulesTitle}</h2>
+          <span className="eyebrow">01—03</span>
+        </div>
+        <ol className="mt-6 grid gap-6 sm:grid-cols-3">
+          {m.home.rules.map((rule, index) => (
+            <li key={rule} className="border-t border-line pt-4">
+              <span className="num">{String(index + 1).padStart(2, "0")}</span>
+              <p className="mt-3 text-[13px] leading-[1.85] text-ink/80">{rule}</p>
+            </li>
           ))}
-        </ul>
+        </ol>
       </section>
     </main>
   );

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { ReactionButton } from "@/components/reaction-button";
 import { RoleChip } from "@/components/role-chip";
 import { ShareButton } from "@/components/share-button";
 import { getCurrentUser, isModerator } from "@/lib/auth";
@@ -76,180 +78,165 @@ export default async function ThreadPage({
   const noticeText = noticeMessage(notice, locale);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
-      <nav className="text-sm text-slate-500">
-        <Link href="/" className="hover:text-slate-800">
-          {m.board.breadcrumb}
-        </Link>
-        <span className="mx-2">/</span>
-        <Link href={`/b/${thread.board.slug}`} className="hover:text-slate-800">
-          {thread.board.name}
-        </Link>
-      </nav>
+    <main className="shell page">
+      <Breadcrumbs
+        items={[
+          { href: "/", label: m.board.breadcrumb },
+          { href: `/b/${thread.board.slug}`, label: thread.board.name },
+          { label: thread.title },
+        ]}
+      />
 
-      <header className="mt-4">
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          {thread.isPinned ? (
-            <span className="rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700">
-              {m.board.pinned}
-            </span>
-          ) : null}
-          {thread.isLocked ? (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
-              {m.board.locked}
-            </span>
-          ) : null}
-        </div>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{thread.title}</h1>
-        <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-          <span>
-            {m.thread.startedBy(thread.author.username, formatDateTime(thread.createdAt, locale))}
-          </span>
-          {thread.editedAt ? (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
-              {m.thread.editedAt(formatDateTime(thread.editedAt, locale))}
-            </span>
-          ) : null}
-        </p>
+      <header className="mt-8 border-b border-line pb-8">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_14rem]">
+          <div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="eyebrow">{thread.board.name}</span>
+              {thread.isPinned ? (
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-accent">
+                  {m.board.pinned}
+                </span>
+              ) : null}
+              {thread.isLocked ? (
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                  {m.board.locked}
+                </span>
+              ) : null}
+            </div>
 
-        {thread.tags.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {thread.tags.map((tag) => (
-              <Link
-                key={tag.name}
-                href={tagSearchHref(tag.name)}
-                className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 transition hover:bg-slate-200"
-              >
-                #{tag.name}
-              </Link>
-            ))}
+            <h1 className="title-page mt-3 max-w-[24ch]">{thread.title}</h1>
+
+            <p className="meta mt-4 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span>{m.thread.startedBy(thread.author.username, formatDateTime(thread.createdAt, locale))}</span>
+              <span aria-hidden="true">·</span>
+              <span>♡ {thread.likeCount}</span>
+              {thread.editedAt ? (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>{m.thread.editedAt(formatDateTime(thread.editedAt, locale))}</span>
+                </>
+              ) : null}
+            </p>
+
+            {thread.tags.length > 0 ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {thread.tags.map((tag) => (
+                  <Link key={tag.name} href={tagSearchHref(tag.name)} className="tag">
+                    #{tag.name}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
           </div>
-        ) : null}
 
-        <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-500">
-          <span aria-label={m.thread.like}>♡ {thread.likeCount}</span>
-          <span>
-            {m.thread.save} {thread.bookmarkCount}
-          </span>
-          <a href={`/t/${thread.id}/export`} className="transition hover:text-slate-800">
-            {m.thread.exportText}
-          </a>
-          {canEdit ? (
-            <Link
-              href={`/t/${thread.id}/edit`}
-              className="transition hover:text-slate-800"
-            >
-              {m.thread.edit}
-            </Link>
-          ) : null}
+          <div className="flex flex-wrap items-start gap-x-6 gap-y-3 lg:flex-col lg:border-l lg:border-line lg:pl-6">
+            {user ? (
+              <ReactionButton
+                action={`/api/threads/${thread.id}/bookmark`}
+                initialActive={bookmarked}
+                initialCount={thread.bookmarkCount}
+                activeLabel={m.thread.saved}
+                inactiveLabel={m.thread.save}
+                errorLabel={m.thread.actionFailed}
+                icon="bookmark"
+              />
+            ) : (
+              <span className="text-[12px] text-muted">
+                {m.thread.save} {thread.bookmarkCount}
+              </span>
+            )}
+
+            <a href={`/t/${thread.id}/export`} className="btn-quiet">
+              {m.thread.exportText}
+            </a>
+
+            {canEdit ? (
+              <Link href={`/t/${thread.id}/edit`} className="btn-quiet">
+                {m.thread.edit}
+              </Link>
+            ) : null}
+
+            {canModerate ? (
+              <div className="mt-2 w-full border-t border-line pt-3">
+                <p className="eyebrow">{m.nav.moderation}</p>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
+                  <form action={`/api/threads/${thread.id}/lock`} method="post">
+                    <button type="submit" className="btn-quiet">
+                      {thread.isLocked ? m.thread.unlockThread : m.thread.lockThread}
+                    </button>
+                  </form>
+                  <form action={`/api/threads/${thread.id}/delete`} method="post">
+                    <button type="submit" className="btn-quiet text-error hover:text-error">
+                      {m.thread.removeThread}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       </header>
 
-      {canModerate ? (
-        <div className="mt-4 flex flex-wrap gap-2 border-y border-slate-200 py-3">
-          <form action={`/api/threads/${thread.id}/lock`} method="post">
-            <button
-              type="submit"
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-50"
-            >
-              {thread.isLocked ? m.thread.unlockThread : m.thread.lockThread}
-            </button>
-          </form>
-          <form action={`/api/threads/${thread.id}/delete`} method="post">
-            <button
-              type="submit"
-              className="rounded-md border border-rose-300 px-3 py-1.5 text-sm text-rose-700 transition hover:bg-rose-50"
-            >
-              {m.thread.removeThread}
-            </button>
-          </form>
-        </div>
-      ) : null}
+      {errorText ? <p className="notice notice-error mt-6">{errorText}</p> : null}
+      {noticeText ? <p className="notice notice-success mt-6">{noticeText}</p> : null}
 
-      {errorText ? (
-        <p className="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-rose-200">
-          {errorText}
-        </p>
-      ) : null}
-      {noticeText ? (
-        <p className="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200">
-          {noticeText}
-        </p>
-      ) : null}
-
-      <ol className="mt-6 space-y-4">
+      <ol className="mt-2">
         {thread.posts.map((post, index) => {
           const liked = likedPostIds.has(post.id);
 
           return (
-            <li key={post.id} id={`p-${post.id}`} className="scroll-mt-6">
-              <article
-                className={`rounded-xl border p-5 ${
-                  post.isDeleted
-                    ? "border-dashed border-slate-300 bg-slate-50"
-                    : "border-slate-200 bg-white"
-                }`}
-              >
-                <header className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
-                  <div className="text-slate-700">
+            <li
+              key={post.id}
+              id={`p-${post.id}`}
+              className="scroll-mt-24 border-t border-line py-8 first:border-t-0"
+            >
+              <article>
+                <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span className="num">#{String(index + 1).padStart(2, "0")}</span>
                     <Link
                       href={`/u/${post.author.username}`}
-                      className="font-medium transition hover:text-indigo-700"
+                      className="text-[13px] font-medium text-ink transition-colors hover:text-accent"
                     >
                       {post.author.username}
                     </Link>
                     <RoleChip role={post.author.role} locale={locale} />
                     {index === 0 ? (
-                      <span className="ml-2 text-xs text-slate-400">{m.thread.originalPost}</span>
-                    ) : (
-                      <span className="ml-2 text-xs text-slate-400">
-                        {m.thread.postNumber(index + 1)}
-                      </span>
-                    )}
+                      <span className="eyebrow">{m.thread.originalPost}</span>
+                    ) : null}
                   </div>
-                  <time className="text-xs text-slate-400">
-                    {formatDateTime(post.createdAt, locale)}
-                  </time>
+                  <time className="meta">{formatDateTime(post.createdAt, locale)}</time>
                 </header>
 
                 {post.isDeleted ? (
-                  <p className="mt-3 text-sm italic text-slate-500">{m.thread.removed}</p>
+                  <p className="mt-4 text-[13px] italic text-muted">{m.thread.removed}</p>
                 ) : (
-                  <p className="mt-3 whitespace-pre-wrap break-words text-slate-800">
+                  <p
+                    className={`mt-4 whitespace-pre-wrap break-words leading-[1.95] text-ink ${
+                      index === 0 ? "text-[15.5px]" : "text-[15px]"
+                    }`}
+                  >
                     {post.body}
                   </p>
                 )}
 
                 {!post.isDeleted ? (
-                  <footer className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500">
+                  <footer className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
                     {user ? (
-                      <form action={`/api/posts/${post.id}/like`} method="post">
-                        <button
-                          type="submit"
-                          aria-label={liked ? m.thread.liked : m.thread.like}
-                          className={`transition ${
-                            liked ? "text-rose-600" : "hover:text-slate-800"
-                          }`}
-                        >
-                          {liked ? "♥" : "♡"} {post.likeCount}
-                        </button>
-                      </form>
+                      <ReactionButton
+                        action={`/api/posts/${post.id}/like`}
+                        initialActive={liked}
+                        initialCount={post.likeCount}
+                        activeLabel={m.thread.liked}
+                        inactiveLabel={m.thread.like}
+                        errorLabel={m.thread.actionFailed}
+                        icon="heart"
+                      />
                     ) : (
-                      <span>♡ {post.likeCount}</span>
+                      <span className="inline-flex items-center gap-1.5 text-[12px] text-muted">
+                        ♡ {post.likeCount}
+                      </span>
                     )}
-
-                    {user ? (
-                      <form action={`/api/threads/${thread.id}/bookmark`} method="post">
-                        <button
-                          type="submit"
-                          className={`transition ${
-                            bookmarked ? "text-indigo-600" : "hover:text-slate-800"
-                          }`}
-                        >
-                          {bookmarked ? m.thread.saved : m.thread.save}
-                        </button>
-                      </form>
-                    ) : null}
 
                     <ShareButton
                       path={`/t/${thread.id}#p-${post.id}`}
@@ -258,14 +245,14 @@ export default async function ThreadPage({
                     />
 
                     {user ? (
-                      <details className="group">
-                        <summary className="cursor-pointer select-none hover:text-slate-800">
+                      <details className="w-full">
+                        <summary className="btn-quiet cursor-pointer list-none select-none">
                           {m.thread.report}
                         </summary>
                         <form
                           action="/api/reports"
                           method="post"
-                          className="mt-2 flex max-w-xl flex-col gap-2 sm:flex-row"
+                          className="mt-3 flex max-w-xl flex-col gap-2 sm:flex-row"
                         >
                           <input type="hidden" name="postId" value={post.id} />
                           <input
@@ -274,12 +261,9 @@ export default async function ThreadPage({
                             minLength={LIMITS.reasonMin}
                             maxLength={LIMITS.reasonMax}
                             placeholder={m.thread.reportPlaceholder}
-                            className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="field flex-1 py-2 text-[13px]"
                           />
-                          <button
-                            type="submit"
-                            className="rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white transition hover:bg-slate-700"
-                          >
+                          <button type="submit" className="btn btn-primary px-3 py-2 text-[12px]">
                             {m.thread.sendReport}
                           </button>
                         </form>
@@ -287,8 +271,8 @@ export default async function ThreadPage({
                     ) : null}
 
                     {canModerate ? (
-                      <form action={`/api/posts/${post.id}/delete`} method="post">
-                        <button type="submit" className="hover:text-rose-700">
+                      <form action={`/api/posts/${post.id}/delete`} method="post" className="ml-auto">
+                        <button type="submit" className="btn-quiet text-error hover:text-error">
                           {m.thread.removePost}
                         </button>
                       </form>
@@ -301,65 +285,65 @@ export default async function ThreadPage({
         })}
       </ol>
 
-      <section className="mt-8">
+      <section className="mt-10 border-t border-line pt-8">
         {thread.isLocked ? (
-          <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-500">
-            {m.thread.lockedNotice}
-          </p>
+          <p className="text-[13px] text-muted">{m.thread.lockedNotice}</p>
         ) : user ? (
-          <form
-            action={`/api/threads/${thread.id}/posts`}
-            method="post"
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <label htmlFor="body" className="block text-sm font-medium text-slate-700">
-              {m.thread.replyAs(user.username)}
-            </label>
-            <textarea
-              id="body"
-              name="body"
-              required
-              rows={5}
-              maxLength={LIMITS.bodyMax}
-              className="mt-2 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-            />
-            <div className="mt-3">
-              <label htmlFor="tags" className="block text-sm font-medium text-slate-700">
-                {m.tagField.label}
-              </label>
-              <input
-                id="tags"
-                name="tags"
-                maxLength={150}
-                placeholder={m.tagField.placeholder}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-              />
-              <p className="mt-1 text-xs text-slate-500">{m.tagField.hint}</p>
-              {suggestedTags.length > 0 ? (
-                <p className="mt-0.5 text-xs text-slate-400">
-                  {m.tagField.suggested(
-                    thread.board.name,
-                    suggestedTags.map((tag) => `#${tag}`).join(" "),
-                  )}
-                </p>
-              ) : null}
-            </div>
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-slate-500">{m.thread.charLimit(LIMITS.bodyMax)}</p>
-              <button
-                type="submit"
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
-              >
+          <>
+            <h2 className="title-section">{m.thread.replyAs(user.username)}</h2>
+            <form
+              action={`/api/threads/${thread.id}/posts`}
+              method="post"
+              className="mt-5 max-w-2xl space-y-5"
+            >
+              <div>
+                <label htmlFor="body" className="field-label">
+                  {m.newThread.message}
+                </label>
+                <textarea
+                  id="body"
+                  name="body"
+                  required
+                  rows={6}
+                  maxLength={LIMITS.bodyMax}
+                  className="field mt-2 min-h-[9rem] resize-y"
+                />
+                <p className="hint">{m.thread.charLimit(LIMITS.bodyMax)}</p>
+              </div>
+
+              <div>
+                <label htmlFor="tags" className="field-label">
+                  {m.tagField.label}
+                </label>
+                <input
+                  id="tags"
+                  name="tags"
+                  maxLength={150}
+                  placeholder={m.tagField.placeholder}
+                  className="field mt-2 py-2 text-[13px]"
+                />
+                <p className="hint">{m.tagField.hint}</p>
+                {suggestedTags.length > 0 ? (
+                  <p className="hint">
+                    {m.tagField.suggested(
+                      thread.board.name,
+                      suggestedTags.map((tag) => `#${tag}`).join(" "),
+                    )}
+                  </p>
+                ) : null}
+              </div>
+
+              <button type="submit" className="btn btn-primary">
                 {m.thread.postReply}
               </button>
-            </div>
-          </form>
+            </form>
+          </>
         ) : (
-          <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
+          <p className="text-[13px] text-muted">
             {m.thread.loginPromptPrefix}
             <Link
               href={`/login?next=${encodeURIComponent(`/t/${thread.id}`)}`}
-              className="font-medium text-indigo-600 hover:text-indigo-700"
+              className="text-link ml-1"
             >
               {m.thread.loginLink}
             </Link>

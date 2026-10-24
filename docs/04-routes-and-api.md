@@ -181,12 +181,15 @@ success so the browser performs a `GET`.
 - Toggles one like per user and post, updating `Post.likeCount` and the thread's total
   `Thread.likeCount` in one transaction.
 - Redirects back to `/t/<threadId>#p-<postId>`.
+- When the request sends `Accept: application/json`, answers `{active, count}` instead of
+  redirecting (429 when rate-limited). The HTML form remains the no-JavaScript fallback.
 
 ### `POST /api/threads/[id]/bookmark`
 
 - Auth: signed-in user. No body.
 - Toggles one bookmark per user and thread, updating `Thread.bookmarkCount`.
 - Redirects to the referring page on the same host, or the thread page.
+- With `Accept: application/json`, answers `{active, count}` instead (429 when rate-limited).
 
 ### `POST /api/reports`
 

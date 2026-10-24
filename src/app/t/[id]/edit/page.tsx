@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canEditThread } from "@/lib/editing";
@@ -54,93 +55,87 @@ export default async function EditThreadPage({
   const errorText = errorMessage(error, locale);
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
-      <nav className="text-sm text-slate-500">
-        <Link href="/" className="hover:text-slate-800">
-          {m.board.breadcrumb}
-        </Link>
-        <span className="mx-2">/</span>
-        <Link href={`/b/${thread.board.slug}`} className="hover:text-slate-800">
-          {thread.board.name}
-        </Link>
-        <span className="mx-2">/</span>
-        <Link href={`/t/${thread.id}`} className="line-clamp-1 hover:text-slate-800">
-          {thread.title}
-        </Link>
-      </nav>
+    <main className="shell page">
+      <Breadcrumbs
+        items={[
+          { href: "/", label: m.board.breadcrumb },
+          { href: `/b/${thread.board.slug}`, label: thread.board.name },
+          { href: `/t/${thread.id}`, label: thread.title },
+          { label: m.editing.title },
+        ]}
+      />
 
-      <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">{m.editing.title}</h1>
-      <p className="mt-1 text-sm text-slate-500">{m.editing.subtitle}</p>
-
-      {errorText ? (
-        <p className="mt-6 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-rose-200">
-          {errorText}
-        </p>
-      ) : null}
-
-      <form
-        action={`/api/threads/${thread.id}/edit`}
-        method="post"
-        className="mt-6 space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-      >
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-slate-700">
-            {m.newThread.titleLabel}
-          </label>
-          <input
-            id="title"
-            name="title"
-            required
-            minLength={LIMITS.titleMin}
-            maxLength={LIMITS.titleMax}
-            defaultValue={thread.title}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-          />
+      <div className="mt-8 grid gap-10 border-t border-line pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-20">
+        <div className="max-w-md">
+          <p className="eyebrow">{m.editing.title}</p>
+          <h1 className="title-page mt-3">{m.editing.title}</h1>
+          <p className="mt-4 text-[13px] leading-[1.85] text-muted">{m.editing.subtitle}</p>
         </div>
 
-        <div>
-          <label htmlFor="tags" className="block text-sm font-medium text-slate-700">
-            {m.tagField.label}
-          </label>
-          <input
-            id="tags"
-            name="tags"
-            maxLength={150}
-            defaultValue={thread.tags.map((tag) => `#${tag.name}`).join(" ")}
-            placeholder={m.tagField.placeholder}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-          />
-          <p className="mt-1 text-xs text-slate-500">{m.tagField.hint}</p>
-        </div>
+        <div className="w-full max-w-xl lg:justify-self-end">
+          {errorText ? <p className="notice notice-error mb-6">{errorText}</p> : null}
 
-        <div>
-          <label htmlFor="body" className="block text-sm font-medium text-slate-700">
-            {m.newThread.message}
-          </label>
-          <textarea
-            id="body"
-            name="body"
-            required
-            rows={8}
-            maxLength={LIMITS.bodyMax}
-            defaultValue={openingPost?.body ?? ""}
-            className="mt-1 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-          />
-          <p className="mt-1 text-xs text-slate-500">{m.newThread.charLimit(LIMITS.bodyMax)}</p>
-        </div>
+          <form action={`/api/threads/${thread.id}/edit`} method="post" className="space-y-7">
+            <div>
+              <label htmlFor="title" className="field-label">
+                {m.newThread.titleLabel}
+              </label>
+              <input
+                id="title"
+                name="title"
+                required
+                minLength={LIMITS.titleMin}
+                maxLength={LIMITS.titleMax}
+                defaultValue={thread.title}
+                className="field mt-2"
+              />
+            </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            className="rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white transition hover:bg-indigo-700"
-          >
-            {m.editing.save}
-          </button>
-          <Link href={`/t/${thread.id}`} className="text-sm text-slate-600 hover:text-slate-900">
-            {m.editing.cancel}
-          </Link>
+            <div>
+              <label htmlFor="tags" className="field-label">
+                {m.tagField.label}
+              </label>
+              <input
+                id="tags"
+                name="tags"
+                maxLength={150}
+                defaultValue={thread.tags.map((tag) => `#${tag.name}`).join(" ")}
+                placeholder={m.tagField.placeholder}
+                className="field mt-2 py-2 text-[13px]"
+              />
+              <p className="hint">{m.tagField.hint}</p>
+            </div>
+
+            <div>
+              <label htmlFor="body" className="field-label">
+                {m.newThread.message}
+              </label>
+              <textarea
+                id="body"
+                name="body"
+                required
+                rows={9}
+                maxLength={LIMITS.bodyMax}
+                defaultValue={openingPost?.body ?? ""}
+                className="field mt-2 min-h-[14rem] resize-y"
+              />
+              <p className="hint">{m.newThread.charLimit(LIMITS.bodyMax)}</p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-5 border-t border-line pt-6">
+              <button type="submit" className="btn btn-primary">
+                {m.editing.save}
+              </button>
+              <Link
+                href={`/t/${thread.id}`}
+                className="text-[12px] text-muted transition-colors hover:text-ink"
+              >
+                {m.editing.cancel}
+              </Link>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </main>
   );
 }

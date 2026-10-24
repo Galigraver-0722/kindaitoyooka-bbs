@@ -156,12 +156,14 @@
 - 認証: ログイン済みの利用者。本文は不要です。
 - 利用者 1 人につき投稿 1 件のいいねを切り替えます。`Post.likeCount` とスレッド全体の `Thread.likeCount` を同じトランザクションで更新します。
 - `/t/<threadId>#p-<postId>` へ戻します。
+- リクエストが `Accept: application/json` を送ってきた場合は、リダイレクトの代わりに `{active, count}` を返します（レート制限時は 429）。JavaScript のない環境では、これまでどおりフォームが動きます。
 
 ### `POST /api/threads/[id]/bookmark`
 
 - 認証: ログイン済みの利用者。本文は不要です。
 - 利用者 1 人につきスレッド 1 件の保存を切り替え、`Thread.bookmarkCount` を更新します。
 - 同じホスト上の直前のページ、またはスレッドページへ戻します。
+- `Accept: application/json` のときは、代わりに `{active, count}` を返します（レート制限時は 429）。
 
 ### `POST /api/reports`
 

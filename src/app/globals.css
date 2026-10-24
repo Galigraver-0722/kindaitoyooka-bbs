@@ -1,14 +1,167 @@
 @import "tailwindcss";
 
+/*
+ * Editorial minimalism + Swiss typography + a restrained technical layer.
+ * Warm neutral surfaces carry the page; the muted green is reserved for
+ * actions, links, and state. Muted text is one step darker than the reference
+ * palette (#777a73 -> #6e716a) so 11-12px metadata clears WCAG AA on the
+ * warm background.
+ */
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans JP",
-    "Hiragino sans", "Helvetica Neue", Arial, sans-serif;
+  --color-bg: #faf9f6;
+  --color-surface: #ffffff;
+  --color-ink: #242622;
+  --color-muted: #6e716a;
+  --color-line: #e8e6e0;
+  --color-accent: #426b57;
+  --color-accent-hover: #345543;
+  --color-success: #387653;
+  --color-error: #b54740;
+
+  --font-sans: "Helvetica Neue", Helvetica, Arial, "Hiragino Kaku Gothic ProN",
+    "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", "Roboto Mono",
+    Menlo, Consolas, monospace;
 }
 
-* {
-  min-width: 0;
+@layer base {
+  * {
+    min-width: 0;
+  }
+
+  html {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    font-feature-settings: "palt" 1;
+  }
+
+  ::selection {
+    background-color: #dfe8e2;
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
 }
 
-::selection {
-  background-color: #c7d2fe;
+@layer components {
+  .shell {
+    @apply mx-auto w-full max-w-[76rem] px-5 sm:px-7 lg:px-10;
+  }
+
+  .page {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+
+  .eyebrow {
+    @apply font-mono text-[10.5px] uppercase leading-none tracking-[0.16em] text-muted;
+  }
+
+  .meta {
+    @apply font-mono text-[11px] tabular-nums leading-relaxed text-muted;
+  }
+
+  .num {
+    @apply font-mono text-[11px] tabular-nums leading-none text-muted;
+  }
+
+  .display {
+    @apply text-[2.6rem] font-semibold leading-[1.04] tracking-[-0.045em] text-ink sm:text-[3.3rem] lg:text-[4.05rem];
+    word-break: auto-phrase;
+    line-break: strict;
+  }
+
+  .title-page {
+    @apply text-[1.85rem] font-semibold leading-[1.14] tracking-[-0.035em] text-ink sm:text-[2.3rem];
+  }
+
+  .title-section {
+    @apply text-[1.05rem] font-semibold leading-snug tracking-[-0.015em] text-ink;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-[2px] border px-4 py-2.5 text-[13px] font-medium tracking-[0.01em] transition-colors duration-150 active:translate-y-px;
+  }
+
+  .btn-primary {
+    @apply border-accent bg-accent text-white hover:border-accent-hover hover:bg-accent-hover;
+  }
+
+  .btn-secondary {
+    @apply border-line bg-transparent text-ink hover:border-ink/30 hover:bg-surface;
+  }
+
+  .btn-danger {
+    @apply border-error/35 bg-transparent text-error hover:bg-error/5;
+  }
+
+  .btn-quiet {
+    @apply inline-flex items-center gap-2 border-b border-transparent py-0.5 text-[12px] text-muted transition-colors duration-150 hover:border-line hover:text-ink active:translate-y-px;
+  }
+
+  .text-link {
+    @apply underline decoration-line underline-offset-4 transition-colors duration-150 hover:text-accent hover:decoration-accent;
+  }
+
+  .field {
+    @apply w-full rounded-[2px] border border-line bg-surface px-3.5 py-2.5 text-[15px] leading-relaxed text-ink transition-colors duration-150 placeholder:text-muted focus:border-accent;
+  }
+
+  .field-label {
+    @apply block font-mono text-[10.5px] uppercase tracking-[0.12em] text-muted;
+  }
+
+  .hint {
+    @apply mt-1.5 text-[12px] leading-relaxed text-muted;
+  }
+
+  .tag {
+    @apply inline-flex items-center rounded-[2px] border border-line px-2 py-0.5 font-mono text-[10.5px] text-muted transition-colors duration-150 hover:border-accent/40 hover:text-accent;
+  }
+
+  .notice {
+    @apply border-l-2 py-2.5 pl-4 text-[13px] leading-relaxed;
+  }
+
+  .notice-error {
+    @apply border-error bg-error/[0.04] text-error;
+  }
+
+  .notice-success {
+    @apply border-success bg-success/[0.045] text-ink;
+  }
+
+  .row-hover {
+    @apply transition-colors duration-150 hover:bg-accent/[0.035];
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

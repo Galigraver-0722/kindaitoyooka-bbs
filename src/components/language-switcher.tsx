@@ -7,33 +7,32 @@ import { LOCALE_COOKIE, type Locale, t } from "@/lib/i18n";
 export function LanguageSwitcher({ locale }: { locale: Locale }) {
   const m = t(locale).language;
   const base =
-    "rounded px-2 py-1 text-xs font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-indigo-600";
+    "px-1 py-1 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors duration-150";
 
   return (
-    <div
-      className="ml-auto flex items-center gap-1 rounded-md border border-slate-300 p-0.5"
-      role="group"
-      aria-label={m.label}
-    >
+    <div className="flex items-center gap-1" role="group" aria-label={m.label}>
       <form action="/api/locale" method="post">
         <input type="hidden" name={LOCALE_COOKIE} value="ja" />
         <button
           type="submit"
           aria-pressed={locale === "ja"}
           className={`${base} ${
-            locale === "ja" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+            locale === "ja" ? "text-ink" : "text-muted hover:text-ink"
           }`}
         >
           日本語
         </button>
       </form>
+      <span aria-hidden="true" className="text-[10px] text-line">
+        /
+      </span>
       <form action="/api/locale" method="post">
         <input type="hidden" name={LOCALE_COOKIE} value="en" />
         <button
           type="submit"
           aria-pressed={locale === "en"}
           className={`${base} ${
-            locale === "en" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+            locale === "en" ? "text-ink" : "text-muted hover:text-ink"
           }`}
         >
           EN

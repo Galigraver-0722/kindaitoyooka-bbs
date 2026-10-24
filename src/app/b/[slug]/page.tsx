@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@prisma/client";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
@@ -102,121 +103,140 @@ export default async function BoardPage({
   const errorText = errorMessage(error, locale);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
-      <nav className="text-sm text-slate-500">
-        <Link href="/" className="hover:text-slate-800">
-          {m.board.breadcrumb}
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-slate-700">{board.name}</span>
-      </nav>
+    <main className="shell page">
+      <Breadcrumbs
+        items={[
+          { href: "/", label: m.board.breadcrumb },
+          { label: board.name },
+        ]}
+      />
 
-      <header className="mt-4 flex flex-wrap items-start justify-between gap-4">
+      <header className="mt-8 grid gap-8 border-b border-line pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{board.name}</h1>
-          <p className="mt-1 text-sm text-slate-500">{board.description}</p>
-          <p className="mt-1 text-xs text-slate-400">
-            {m.board.visibleThreads(board._count.threads)}
+          <h1 className="title-page">{board.name}</h1>
+          <p className="mt-3 max-w-[52ch] text-[14px] leading-[1.85] text-muted">
+            {board.description}
           </p>
-          <div className="mt-3 flex gap-2 text-sm">
-            <Link
-              href={`/b/${board.slug}?sort=latest`}
-              className={`rounded-full px-3 py-1 ${
-                order === "latest"
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {m.sort.latest}
-            </Link>
-            <Link
-              href={`/b/${board.slug}?sort=hot`}
-              className={`rounded-full px-3 py-1 ${
-                order === "hot"
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {m.sort.hot}
-            </Link>
-          </div>
         </div>
-        <Link
-          href={`/new?board=${board.slug}`}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
-        >
-          {m.board.newThread}
-        </Link>
+
+        <div className="flex flex-wrap items-end gap-6">
+          <div className="text-right">
+            <p
+              className="font-mono text-[26px] leading-none tabular-nums"
+              aria-label={m.board.visibleThreads(board._count.threads)}
+            >
+              {String(board._count.threads).padStart(2, "0")}
+            </p>
+          </div>
+          <Link href={`/new?board=${board.slug}`} className="btn btn-primary">
+            {m.board.newThread}
+          </Link>
+        </div>
       </header>
 
-      {errorText ? (
-        <p className="mt-6 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-rose-200">
-          {errorText}
-        </p>
-      ) : null}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-b border-line">
+        <div className="flex gap-6">
+          <Link
+            href={`/b/${board.slug}?sort=latest`}
+            className={`-mb-px border-b-2 pb-3 text-[12px] transition-colors ${
+              order === "latest"
+                ? "border-accent text-ink"
+                : "border-transparent text-muted hover:text-ink"
+            }`}
+          >
+            {m.sort.latest}
+          </Link>
+          <Link
+            href={`/b/${board.slug}?sort=hot`}
+            className={`-mb-px border-b-2 pb-3 text-[12px] transition-colors ${
+              order === "hot"
+                ? "border-accent text-ink"
+                : "border-transparent text-muted hover:text-ink"
+            }`}
+          >
+            {m.sort.hot}
+          </Link>
+        </div>
+        <span className="meta pb-3">
+          {String(currentPage).padStart(2, "0")} / {String(pageCount).padStart(2, "0")}
+        </span>
+      </div>
+
+      {errorText ? <p className="notice notice-error mt-6">{errorText}</p> : null}
 
       {totalCount === 0 ? (
-        <p className="mt-8 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
+        <p className="mt-10 border-t border-line pt-10 text-[13px] text-muted">
           {m.board.empty}
         </p>
       ) : (
-        <ul className="mt-8 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
-          {threads.map((thread) => (
-            <li key={thread.id} className="px-4 py-4 transition hover:bg-slate-50">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                {thread.isPinned ? (
-                  <span className="rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700">
-                    {m.board.pinned}
-                  </span>
-                ) : null}
-                {thread.isLocked ? (
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
-                    {m.board.locked}
-                  </span>
-                ) : null}
-                {unread.has(thread.id) ? (
-                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
-                    {m.board.unread}
-                  </span>
-                ) : null}
-                <span>{formatDateTime(thread.lastPostAt, locale)}</span>
-              </div>
+        <ol className="mt-2 divide-y divide-line">
+          {threads.map((thread, index) => (
+            <li key={thread.id}>
               <Link
                 href={`/t/${thread.id}`}
-                className="mt-1 block text-base font-medium text-slate-900 hover:text-indigo-700"
+                className="group row-hover -mx-3 grid grid-cols-[2.2rem_1fr] gap-4 px-3 py-5 sm:grid-cols-[2.75rem_1fr]"
               >
-                {thread.title}
+                <span className="num pt-1">
+                  {String((currentPage - 1) * THREADS_PER_PAGE + index + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {thread.isPinned ? (
+                      <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-accent">
+                        {m.board.pinned}
+                      </span>
+                    ) : null}
+                    {thread.isLocked ? (
+                      <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                        {m.board.locked}
+                      </span>
+                    ) : null}
+                    {unread.has(thread.id) ? (
+                      <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-accent">
+                        <span className="h-1 w-1 rounded-full bg-accent" />
+                        {m.board.unread}
+                      </span>
+                    ) : null}
+                    <time className="meta">{formatDateTime(thread.lastPostAt, locale)}</time>
+                  </div>
+                  <h2 className="mt-2 text-[17px] font-medium leading-snug tracking-[-0.012em] text-ink transition-colors duration-150 group-hover:text-accent">
+                    {thread.title}
+                  </h2>
+                  <p className="mt-1 text-[12px] text-muted">
+                    {m.board.threadMeta(
+                      thread.author.username,
+                      Math.max(thread._count.posts - 1, 0),
+                    )}
+                  </p>
+                </div>
               </Link>
-              <p className="mt-0.5 text-sm text-slate-500">
-                {m.board.threadMeta(thread.author.username, Math.max(thread._count.posts - 1, 0))}
-              </p>
             </li>
           ))}
-        </ul>
+        </ol>
       )}
 
       {pageCount > 1 ? (
         <nav
-          className="mt-4 flex items-center justify-between gap-3 text-sm"
+          className="mt-8 flex items-center justify-between gap-4 border-t border-line pt-4"
           aria-label={m.board.pageStatus(currentPage, pageCount)}
         >
           {currentPage > 1 ? (
             <Link
               href={boardPageHref(board.slug, { page: currentPage - 1, sort: order })}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 transition hover:bg-slate-50"
+              className="btn-quiet"
             >
               ← {m.board.pagePrevious}
             </Link>
           ) : (
             <span />
           )}
-          <span className="text-slate-500">
-            {m.board.pageStatus(currentPage, pageCount)}
+          <span className="meta">
+            {String(currentPage).padStart(2, "0")} / {String(pageCount).padStart(2, "0")}
           </span>
           {currentPage < pageCount ? (
             <Link
               href={boardPageHref(board.slug, { page: currentPage + 1, sort: order })}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 transition hover:bg-slate-50"
+              className="btn-quiet"
             >
               {m.board.pageNext} →
             </Link>

@@ -27,6 +27,8 @@ alternatives considered.
 | ADR-0015 | Per-thread read markers written on view | Accepted | 2026-10-24 |
 | ADR-0016 | Numbered board pagination, 20 threads per page | Accepted | 2026-10-24 |
 | ADR-0017 | Policies as bilingual, versioned code | Accepted | 2026-10-24 |
+| ADR-0018 | Editorial/Swiss visual system with one accent | Accepted | 2026-10-24 |
+| ADR-0019 | Progressive enhancement for reactions | Accepted | 2026-10-24 |
 
 ---
 
@@ -513,6 +515,65 @@ the policies in the onboarding post only (not durable and hard to link from the 
 **Revisit if.** A non-developer needs to update the text regularly, or the school requires a
 signed, versioned document. Then move to versioned Markdown with a review step and keep the same
 URLs.
+
+---
+
+## ADR-0018 — Editorial/Swiss visual system with one accent
+
+**Context.** The first interface grew by addition: rounded cards, shadows, pills, and several
+competing hues (indigo, rose, amber, emerald). Each screen worked, but the pages had no shared
+rhythm, metadata competed with content, and the result looked like a generic dashboard rather
+than a school publication.
+
+**Decision.** Adopt one small visual system in `src/app/globals.css`: a warm neutral background
+(`#FAF9F6`), white only for inputs and necessary surfaces, dark ink text, a single muted green
+accent, and hairline rules instead of cards. Interface and body text use one system sans stack;
+numbers, dates, labels, and code use a system monospace stack. Layouts follow a 12-column grid
+with generous vertical spacing, numbered lists, and left-aligned type. Hover states change color
+and a barely visible row tint; nothing lifts, scales, or casts a shadow. Muted text is one step
+darker than the reference palette so 11–12px metadata reaches WCAG AA.
+
+**Consequences.**
+
+- Content leads: titles, body text, and dates have a clear order; accent color is scarce.
+- No external font request, so the first paint stays fast and the site works offline.
+- Every new screen has to reuse the same primitives; adding a second accent or a card requires a
+  deliberate decision rather than a new utility class.
+- The look is intentionally quiet. It will not impress through decoration, and that is the point.
+
+**Alternatives considered.** A component library (fast, but produces the same dashboard look),
+pure black-and-white Swiss styling (colder and harder to signal actions), more accent colors
+(noise), a dark theme (a separate accessibility and contrast review; later if asked).
+
+**Revisit if.** The school adopts a visual identity that requires different colors, or a dark
+theme is requested. The tokens live in one place, so a theme can be added without touching page
+markup.
+
+---
+
+## ADR-0019 — Progressive enhancement for reactions
+
+**Context.** Liking a post and saving a thread should feel immediate, but the site promises to
+work without client JavaScript and every existing mutation is an HTML form.
+
+**Decision.** Keep the form as the source of truth and enhance it with one client component.
+When JavaScript is available, the button toggles its icon and count before the request, sends
+`Accept: application/json`, and reconciles with `{active, count}` from the route handler. On a
+failed request it rolls the state back and shows a short inline error. Without JavaScript, the
+same form posts normally and the page reloads.
+
+**Consequences.**
+
+- The interaction is instant on a good connection and still honest on a bad one.
+- The route handlers now have two response modes; both are documented in `docs/04`.
+- The page remains usable on old phones and with scripts blocked.
+- A rapid double click is blocked while the request is in flight; no queue is implemented.
+
+**Alternatives considered.** Client-only state with no form fallback (breaks the no-JavaScript
+promise), a full SPA (too much for two buttons), server actions (harder to test from curl).
+
+**Revisit if.** More interactions need optimistic updates. Then extract a shared request helper
+instead of copying the pattern into every button.
 
 ---
 

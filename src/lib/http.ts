@@ -64,3 +64,8 @@ export function sameHostPath(request: Request, fallback = "/"): string {
 
   return fallback;
 }
+
+/** Return JSON when a progressive-enhancement client asks for it. */
+export function wantsJson(request: Request): boolean {
+  return request.headers.get("accept")?.includes("application/json") ?? false;
+}
