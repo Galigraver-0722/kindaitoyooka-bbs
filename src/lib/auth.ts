@@ -1,12 +1,12 @@
-import { createHash, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
-import { promisify } from "node:util";
+import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import type { Role } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { hashPassword, verifyPassword } from "@/lib/passwords";
 
-const scryptAsync = promisify(scrypt);
-const KEY_LENGTH = 64;
+export { hashPassword, verifyPassword };
+
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
 export const SESSION_COOKIE = "toyooka_session";
@@ -16,29 +16,6 @@ export type SessionUser = {
   username: string;
   role: Role;
 };
-
-/**
- * Hash a password with a random salt. The stored format is
- * `scrypt:<salt-hex>:<derived-key-hex>` so the parameters can be upgraded later
- * without guessing how old hashes were produced.
- */
-export async function hashPassword(password: string): Promise<string> {
-  const salt = randomBytes(16).toString("hex");
-  const derived = (await scryptAsync(password.normalize("NFKC"), salt, KEY_LENGTH)) as Buffer;
-  return `scrypt:${salt}:${derived.toString("hex")}`;
-}
-
-export async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  const [scheme, salt, hash] = stored.split(":");
-  if (scheme !== "scrypt" || !salt || !hash) {
-    return false;
-  }
-
-  const derived = (await scryptAsync(password.normalize("NFKC"), salt, KEY_LENGTH)) as Buffer;
-  const expected = Buffer.from(hash, "hex");
-
-  return expected.length === derived.length && timingSafeEqual(expected, derived);
-}
 
 export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");

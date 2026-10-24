@@ -35,6 +35,7 @@ const en = {
     label: "Tags",
     placeholder: "#文化祭 #準備",
     hint: "Space or comma separated, up to 5. Tags apply to the whole thread.",
+    suggested: (board: string, tags: string) => `${board} suggestions: ${tags}`,
   },
   roles: {
     STUDENT: "Student",
@@ -70,6 +71,7 @@ const en = {
     empty: "Nothing here yet. Start the first thread.",
     pinned: "Pinned",
     locked: "Locked",
+    unread: "New",
     threadMeta: (author: string, replies: number) =>
       `by ${author} · ${replies} ${replies === 1 ? "reply" : "replies"}`,
   },
@@ -101,6 +103,35 @@ const en = {
     loginPromptSuffix: " to reply to this thread.",
     loginLink: "Log in",
     lockedNotice: "This thread is locked. New replies are disabled.",
+    edit: "Edit thread",
+    editedAt: (date: string) => `Edited ${date}`,
+    exportText: "Download as text",
+  },
+  editing: {
+    title: "Edit thread",
+    subtitle:
+      "You can change the title, opening post, and tags for 15 minutes after posting. A visible marker stays on edited threads.",
+    save: "Save changes",
+    cancel: "Cancel",
+  },
+  profile: {
+    title: "Profile",
+    joined: (date: string) => `Joined ${date}`,
+    threadCount: (count: number) => `${count} ${count === 1 ? "thread" : "threads"}`,
+    postCount: (count: number) => `${count} ${count === 1 ? "post" : "posts"}`,
+    recentThreads: "Recent threads",
+    recentPosts: "Recent posts",
+    noThreads: "No threads yet.",
+    noPosts: "No posts yet.",
+    inThread: (title: string) => `in ${title}`,
+  },
+  exportThread: {
+    board: "Board",
+    author: "Author",
+    created: "Created",
+    tags: "Tags",
+    removed: "Removed by a moderator.",
+    separator: "----------------------------------------",
   },
   newThread: {
     title: "Start a thread",
@@ -218,6 +249,7 @@ const ja: typeof en = {
     label: "タグ",
     placeholder: "#文化祭 #準備",
     hint: "スペースかカンマで区切って最大 5 個。タグはスレッド全体に付きます。",
+    suggested: (board: string, tags: string) => `${board} のおすすめタグ: ${tags}`,
   },
   roles: {
     STUDENT: "生徒",
@@ -251,6 +283,7 @@ const ja: typeof en = {
     empty: "まだスレッドがありません。最初の 1 本を立ててください。",
     pinned: "固定",
     locked: "ロック中",
+    unread: "新着",
     threadMeta: (author: string, replies: number) => `${author}・返信 ${replies} 件`,
   },
   thread: {
@@ -281,6 +314,35 @@ const ja: typeof en = {
     loginPromptSuffix: "してください。",
     loginLink: "ログイン",
     lockedNotice: "このスレッドはロックされています。新しい返信はできません。",
+    edit: "スレッドを編集",
+    editedAt: (date: string) => `${date} に編集`,
+    exportText: "テキストで保存",
+  },
+  editing: {
+    title: "スレッドを編集",
+    subtitle:
+      "投稿から 15 分以内なら、タイトル・最初の投稿・タグを直せます。編集したスレッドには「編集済み」の表示が残ります。",
+    save: "変更を保存",
+    cancel: "キャンセル",
+  },
+  profile: {
+    title: "プロフィール",
+    joined: (date: string) => `${date} に登録`,
+    threadCount: (count: number) => `スレッド ${count} 件`,
+    postCount: (count: number) => `投稿 ${count} 件`,
+    recentThreads: "最近のスレッド",
+    recentPosts: "最近の投稿",
+    noThreads: "まだスレッドを立てていません。",
+    noPosts: "まだ投稿していません。",
+    inThread: (title: string) => `「${title}」`,
+  },
+  exportThread: {
+    board: "ボード",
+    author: "作成者",
+    created: "作成日時",
+    tags: "タグ",
+    removed: "モデレーターが削除しました。",
+    separator: "----------------------------------------",
   },
   newThread: {
     title: "スレッドを立てる",

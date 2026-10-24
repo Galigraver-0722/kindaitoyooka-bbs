@@ -169,9 +169,9 @@ names) is stored once and never translated. Dates and numbers are formatted per 
 | XSS | No HTML rendering; React escapes text; plain-text only | Add CSP headers |
 | SQL injection | Prisma parameterizes queries | — |
 | CSRF | `SameSite=Lax` + `Origin` header check on every POST | Add per-form tokens if a browser edge case appears |
-| Session theft | HttpOnly + Secure cookie, hashed tokens, expiry | Rotate on password change (no password change yet) |
-| Brute-force login | Fixed window: 5 attempts per 10 minutes per IP + username | A shared store when more than one instance runs |
-| Spam / flood | Per-account limits on posts, reports, likes, and bookmarks; per-IP limits on registration | Tune from real beta traffic |
+| Session theft | HttpOnly + Secure cookie, hashed tokens, expiry | Password reset deletes every session; in-app password change is not built yet |
+| Brute-force login | Fixed window: 10 attempts per 10 minutes per IP + username, cleared on success; tunable by environment variable | A shared store when more than one instance runs |
+| Spam / flood | Per-account limits on posts, reports, likes, and bookmarks; per-IP limits on registration; all tunable by environment variable | Tune from real beta traffic |
 | Open redirect | `safeNextPath()` only allows same-site paths | Tests for `//evil` and absolute URLs |
 | Privilege escalation | Server-side role checks; append-only `AuditLog` with actor ids for every moderation action | — |
 | PII leakage | Policy, no uploads, no real-name field, report button | Automated pattern warnings; moderator training |

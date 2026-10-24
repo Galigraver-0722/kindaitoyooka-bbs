@@ -15,9 +15,11 @@ erDiagram
     User ||--o{ Report : "resolves"
     User ||--o{ PostLike : "likes"
     User ||--o{ ThreadBookmark : "saves"
+    User ||--o{ ThreadRead : "has read"
     Board ||--o{ Thread : "contains"
     Thread ||--o{ Post : "contains"
     Thread ||--o{ ThreadBookmark : "saved as"
+    Thread ||--o{ ThreadRead : "read state"
     Thread }o--o{ Tag : "tagged"
     Post ||--o{ Report : "receives"
     Post ||--o{ PostLike : "receives"
@@ -57,6 +59,7 @@ erDiagram
 | `description` | string | ホームページに出す 1 文 |
 | `sortOrder` | int | 値が小さい順 |
 | `isArchived` | boolean | アーカイブしたボードはナビゲーションから消え、新しいスレッドも受け付けない |
+| `suggestedTags` | string | 投稿フォームに出すタグのヒント。カンマ区切り（例: `質問,試験`） |
 | `createdAt` | datetime | |
 
 ### Thread
@@ -70,8 +73,9 @@ erDiagram
 | `isPinned` | boolean | 固定したスレッドは先頭に並ぶ。v0.1 に固定用の UI はない |
 | `isLocked` | boolean | true の間は返信を受け付けない |
 | `isDeleted` | boolean | 論理削除。一覧にもスレッド表示にも出ない |
-| `createdAt` | datetime | |
+| `createdAt` | datetime | 15 分間の編集可能時間の起点でもある |
 | `lastPostAt` | datetime | 返信のたびに更新。並び順を決める |
+| `editedAt` | datetime? | 作成者が編集を保存したときに設定。「編集済み」の表示に使う |
 
 ### Post
 
@@ -92,7 +96,7 @@ erDiagram
 | カラム | 型 | 備考 |
 | --- | --- | --- |
 | `id` | string（cuid） | |
-| `reporterId` | string | FK → User |
+| `reporterId` | string? | FK → User。自動フラグのときは `NULL` |
 | `postId` | string | FK → Post。通報の対象は投稿で、スレッドではない |
 | `reason` | string | 3〜500 文字。モデレーターに表示する |
 | `createdAt` | datetime | |
@@ -148,6 +152,16 @@ erDiagram
 
 主キーは `(userId, threadId)` です。`/bookmarks` はこの行を新しい順に並べたものです。
 
+### ThreadRead
+
+| カラム | 型 | 備考 |
+| --- | --- | --- |
+| `userId` | string | FK → User |
+| `threadId` | string | FK → Thread |
+| `lastReadAt` | datetime | ログイン中の利用者がスレッドを開いたときに更新する |
+
+主キーは `(userId, threadId)` です。この行がないとき、または `Thread.lastPostAt` が `lastReadAt` より新しいときに「新着」と表示します。ゲストは行を持たないため、未読バッジは表示しません。URL、滞在時間、端末の情報は保存しません。
+
 ## 3. 不変条件
 
 1. `Thread` は作成時に必ず 1 件以上の `Post` を持ちます（ネスト作成）。後からすべての投稿を論理削除することはできますが、モデレーターがスレッドを削除するまで、スレッドの行とタイトルは残ります。
@@ -159,10 +173,11 @@ erDiagram
 7. ゲストは読めますが、`authorId` として現れることはありません。
 8. `Thread.likeCount` は、そのスレッドの投稿に付いたいいねの合計です。いいねを切り替えるときは、`Post.likeCount` と `Thread.likeCount` を同じトランザクションで更新します。保存と `Thread.bookmarkCount` も同じルールです。
 9. 1 人が同じ投稿に付けるいいねは 1 つ、同じスレッドに付ける保存も 1 つまでです。行を消すときは、同じトランザクションで件数を戻します。
-10. ハッシュタグは保存前に NFKC で正規化し、小文字にします。1 回の書き込みから最大 5 個まで拾い、同じタグは使ったスレッドすべてで共有します。
+10. タグは保存前に NFKC で正規化し、小文字にします。1 回の書き込みから最大 5 個まで拾い、同じタグは使ったスレッドすべてで共有します。スレッドを編集すると、タグ一式を同じトランザクションで置き換え、`editedAt` を設定します。
 11. 件数は派生データです。ずれたとしても、`PostLike` と `ThreadBookmark` から作り直せます。利用者が書いた内容には触れません。
 12. モデレーション操作は、変更と同じトランザクションで `AuditLog` を 1 行書きます。監査行がなければ、その変更はコミットされていません。
 13. 自動フラグは `source = AUTO`、通報者 `NULL`、一致語入りの `reason` を持つ `Report` です。助言であり、`isDeleted` を立てることはありません。
+14. `ThreadRead` は利用者とスレッドの組ごとに 1 行で、時刻だけを保存します。ログイン中の利用者がスレッドを開いたときに書き込み、一括で既読にする操作はありません。
 
 ## 4. インデックス
 
@@ -177,6 +192,7 @@ erDiagram
 | `Tag.name` 一意 | ハッシュタグからのタグ照合 |
 | `PostLike(postId)` | 投稿ごのいいね集計 |
 | `ThreadBookmark(threadId)` | スレッドごの保存集計 |
+| `ThreadRead(threadId)` | スレッド削除時に既読行をカスケード削除する |
 | `Report(resolvedAt)` | 未処理キューの問い合わせ |
 | `AuditLog(createdAt)` | 最近のモデレーション履歴 |
 | `AuditLog(actorId)` | 特定のモデレーターの操作 |
@@ -199,7 +215,7 @@ erDiagram
 | モデル | 必要になる理由 |
 | --- | --- |
 | `Ban` / `Mute` | 繰り返し違反する利用者への対応。理由と期限を付けて期間を区切る |
-| `EmailVerification`、`PasswordReset` | アカウントの復旧。メール送信事業者が必要 |
+| `EmailVerification` | 利用者自身による確認と再設定リンク。メール送信事業者が必要。パスワードの再設定はいまは手作業（`pnpm reset-password`） |
 | `Notification` | 自分のスレッドへの返信やメンションの通知 |
 | `Attachment` | 画像とファイル。オブジェクトストレージ、サイズ制限、EXIF の削除、より厳しい安全レビューが必要 |
 | `BoardModerator` | 全体ロールではなく、ボード単位のモデレーション |

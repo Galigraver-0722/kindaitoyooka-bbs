@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { hotScore, sortByHot } from "../src/lib/hot";
-import { MAX_TAGS_PER_POST, parseTagInput } from "../src/lib/tags";
+import { MAX_TAGS_PER_POST, parseSuggestedTags, parseTagInput } from "../src/lib/tags";
 
 test("tag input accepts Japanese, Latin, and optional hashes", () => {
   assert.deepEqual(parseTagInput("#文化祭 #準備"), ["文化祭", "準備"]);
@@ -45,4 +45,10 @@ test("hot sort puts recent activity ahead when scores tie", () => {
 
   const sorted = sortByHot([older, newer], now);
   assert.equal(sorted[0], newer);
+});
+
+test("board tag hints are normalized and deduplicated", () => {
+  assert.deepEqual(parseSuggestedTags("質問, 試験、質問，＃宿題"), ["質問", "試験", "宿題"]);
+  assert.deepEqual(parseSuggestedTags(""), []);
+  assert.deepEqual(parseSuggestedTags("!!,bad#tag"), []);
 });

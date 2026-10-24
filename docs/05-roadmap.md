@@ -49,12 +49,14 @@ Deliverables:
 
 1. Deploy to an HTTPS domain on a VPS with a persistent disk.
 2. Daily SQLite backup to a second location; perform one restore drill.
-3. Rate limiting: shipped as 5 login attempts per 10 minutes per IP+username, 5 new threads per
-   hour, 20 replies per hour, and 20 reports per day. Tune after the beta.
+3. Rate limiting: shipped as 10 login attempts per 10 minutes per IP+username, 60 registrations
+   per hour per IP, 10 new threads per hour, 60 replies per hour, 30 reports per day, and 300
+   reactions per hour. Every limit is overridable through environment variables; tune after the
+   beta rather than editing code.
 4. `AuditLog` table and writes for remove/lock/resolve: shipped with actor, target, and timestamp.
 5. Pagination on board pages and recent activity (20 per page).
 6. Privacy notice, community rules, and a moderation policy page in plain English.
-7. A `GET /health` endpoint that checks the database connection.
+7. A `GET /health` endpoint that checks the database connection. **Shipped 2026-10-24.**
 8. Remove demo users; create a real admin account; rotate every credential.
 9. Moderator briefing: what to remove, what to escalate, response times.
 10. Error monitoring (Sentry free tier or a simple log drain).
@@ -68,18 +70,34 @@ Exit criteria:
 
 ## Phase 2 — Make it useful (3–4 weeks)
 
+**Status: in progress (2026-10-24).**
+
 Goal: the forum answers questions without a moderator explaining how to use it.
 
 Deliverables:
 
-- Upgrade the `contains` search to SQLite FTS5 when data grows or Japanese tokenization becomes a complaint.
+- Upgrade the `contains` search to SQLite FTS5 when data grows or Japanese tokenization becomes a
+  complaint. **Not started by design**: the current data set is small, and Japanese tokenization
+  needs a trigram or a custom dictionary before FTS5 helps rather than hurts.
 - Email verification and password reset, or a documented manual recovery process approved by
-  the teacher advisor.
-- User profile page: username, join date, recent posts (no personal data).
-- Unread markers or a weekly digest email.
-- Tags per board (`question`, `event`, `lost`, `club`).
-- Thread editing within a short window, with an "edited" marker.
-- Export a thread as plain text for printing or archiving.
+  the teacher advisor. **Manual recovery shipped**: `pnpm reset-password <username>` generates a
+  password, prints it once, and deletes every session. The documented procedure is in
+  `docs/07-operations.md`, section 8.2. Email verification remains open.
+- User profile page: username, join date, recent posts (no personal data). **Shipped.**
+- Unread markers or a weekly digest email. **In-app unread markers shipped**; email digest
+  remains open.
+- Tags per board (`question`, `event`, `lost`, `club`). **Shipped as per-board tag hints** in the
+  compose and reply forms. Enforcing a fixed tag vocabulary per board is still open.
+- Thread editing within a short window, with an "edited" marker. **Shipped** with a 15-minute
+  window; locked and removed threads cannot be edited.
+- Export a thread as plain text for printing or archiving. **Shipped** at `/t/<id>/export`.
+
+### Delivered in Phase 2 so far (2026-10-24)
+
+- Profiles, editing, text export, unread badges, board tag hints, manual password recovery, and
+  `/health`.
+- Tests grew to 31 cases; lint, build, and CI pass.
+- These reduce support work but do not replace the remaining Phase 1 deployment and backup work.
 
 Exit criteria:
 

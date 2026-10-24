@@ -12,7 +12,7 @@ Do not let the codebase answer them by accident.
 | Q3 | Is there a named teacher advisor and written approval? | Yes / no | Legal and safety requirement | Do not launch without both | Administration | Phase 3 |
 | Q4 | Where will it be hosted? | VPS, school server, Vercel + managed Postgres | Cost, HTTPS, backups, data location | Small VPS with HTTPS and offsite backup | Maintainer + advisor | Phase 1 |
 | Q5 | Who can register? | Open, invite code, school email domain | Spam and stranger risk vs adoption | Invite code for the beta, open with a school-domain hint for launch | Advisor | Phase 2 |
-| Q6 | Do we send email? | None, verification only, full notifications | Requires a provider, consent, and deliverability work | None in v0.1; verification before open registration | Maintainer | Phase 2 |
+| Q6 | Do we send email? | None, verification only, full notifications | Requires a provider, consent, and deliverability work | None in v0.1; manual reset covers recovery, verification before open registration | Maintainer | Phase 2 |
 | Q7 | Who moderates, and with what time commitment? | 2 student mods + teacher, a student committee, teachers only | Burnout and response time | At least 2 student moderators and 1 advisor; publish an SLA | Advisor | Phase 1 |
 | Q8 | Should the interface follow the browser language on a first visit? | Always Japanese, browser preference, always English | Shared devices and first impressions | Always Japanese for now; the header switch is explicit and predictable | Advisor | Phase 3 |
 | Q9 | What is the retention policy for removed content? | Keep forever, 180 days, 30 days | Privacy vs audit | 180 days for removed bodies, then purge with backup | Advisor + maintainer | Before launch |

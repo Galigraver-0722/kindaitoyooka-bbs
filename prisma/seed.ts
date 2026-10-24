@@ -5,11 +5,9 @@
  * deployment. See docs/07-operations.md for the launch checklist.
  */
 import { PrismaClient, Role } from "@prisma/client";
-import { randomBytes, scrypt } from "node:crypto";
-import { promisify } from "node:util";
+import { hashPassword } from "../src/lib/passwords";
 
 const prisma = new PrismaClient();
-const scryptAsync = promisify(scrypt);
 
 const DEMO_PASSWORD = "toyooka-demo-123";
 
@@ -17,12 +15,6 @@ function tagLinks(...names: string[]) {
   return {
     connectOrCreate: names.map((name) => ({ where: { name }, create: { name } })),
   };
-}
-
-async function hashPassword(password: string): Promise<string> {
-  const salt = randomBytes(16).toString("hex");
-  const derived = (await scryptAsync(password.normalize("NFKC"), salt, 64)) as Buffer;
-  return `scrypt:${salt}:${derived.toString("hex")}`;
 }
 
 async function main() {
@@ -67,37 +59,47 @@ async function main() {
       name: "雑談",
       description: "なんでも話す場所です。自己紹介もどうぞ。",
       sortOrder: 1,
+      suggestedTags: "質問,雑談,自己紹介",
     },
     {
       slug: "study",
       name: "勉強",
       description: "宿題の質問、試験対策、勉強会の連絡に。",
       sortOrder: 2,
+      suggestedTags: "質問,試験,宿題,勉強会",
     },
     {
       slug: "clubs",
       name: "部活・行事",
       description: "部活動の連絡、参加申し込み、行事の相談。",
       sortOrder: 3,
+      suggestedTags: "連絡,文化祭,部活",
     },
     {
       slug: "lost-found",
       name: "落とし物",
       description: "落とし物の連絡と、拾った物の報告。",
       sortOrder: 4,
+      suggestedTags: "落とし物,拾得物",
     },
     {
       slug: "meta",
       name: "サイトへの意見",
       description: "不具合、要望、この掲示板についての質問。",
       sortOrder: 5,
+      suggestedTags: "要望,不具合,質問",
     },
   ];
 
   for (const board of boards) {
     await prisma.board.upsert({
       where: { slug: board.slug },
-      update: { name: board.name, description: board.description, sortOrder: board.sortOrder },
+      update: {
+        name: board.name,
+        description: board.description,
+        sortOrder: board.sortOrder,
+        suggestedTags: board.suggestedTags,
+      },
       create: board,
     });
   }
@@ -211,8 +213,7 @@ async function main() {
           authorId: admin.id,
           body: [
             "この最初の版は、わざと小さく作っています。まだできないことは次のとおりです。",
-            "- メール確認とパスワードの再設定",
-            "- 検索",
+            "- メールによる確認とパスワードの再設定（忘れたときは管理者に連絡してください）",
             "- 画像のアップロード",
             "- 通知",
             "",

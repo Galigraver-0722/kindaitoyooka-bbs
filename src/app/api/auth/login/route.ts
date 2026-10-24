@@ -1,7 +1,7 @@
 import { createSession, SESSION_COOKIE, sessionCookieOptions, verifyPassword } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formText, isSameOrigin, seeOther } from "@/lib/http";
-import { checkRateLimit, RATE_LIMITS, requestIp } from "@/lib/rate-limit";
+import { checkRateLimit, RATE_LIMITS, requestIp, resetRateLimit } from "@/lib/rate-limit";
 import { safeNextPath } from "@/lib/validation";
 
 function failure(request: Request, next: string, code = "invalid-credentials") {
@@ -27,11 +27,8 @@ export async function POST(request: Request) {
     return failure(request, next);
   }
 
-  const limit = checkRateLimit(
-    `login:${requestIp(request)}:${username}`,
-    RATE_LIMITS.login.limit,
-    RATE_LIMITS.login.windowMs,
-  );
+  const loginKey = `login:${requestIp(request)}:${username}`;
+  const limit = checkRateLimit(loginKey, RATE_LIMITS.login.limit, RATE_LIMITS.login.windowMs);
   if (!limit.allowed) {
     return failure(request, next, "rate-limited");
   }
@@ -44,6 +41,8 @@ export async function POST(request: Request) {
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return failure(request, next);
   }
+
+  resetRateLimit(loginKey);
 
   const { token, expiresAt } = await createSession(user.id);
   const response = seeOther(request, next);

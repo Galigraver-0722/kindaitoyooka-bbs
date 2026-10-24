@@ -45,15 +45,42 @@ export function checkRateLimit(
   };
 }
 
+const MINUTE = 60_000;
+
+type RateLimit = { limit: number; windowMs: number };
+
+/**
+ * Defaults are deliberately generous: a whole class can share one school IP,
+ * and a student writing several replies or reacting to many posts should not
+ * hit a wall. Tighten them per deployment with environment variables rather than
+ * editing code. Each pair is `<NAME>_LIMIT` and `<NAME>_WINDOW_MIN`, e.g.
+ * `RATE_LIMIT_LOGIN_LIMIT=5`, `RATE_LIMIT_LOGIN_WINDOW_MIN=10`.
+ */
+function fromEnv(name: string, fallback: RateLimit): RateLimit {
+  const limit = Number.parseInt(process.env[`RATE_LIMIT_${name}_LIMIT`] ?? "", 10);
+  const minutes = Number.parseInt(process.env[`RATE_LIMIT_${name}_WINDOW_MIN`] ?? "", 10);
+
+  return {
+    limit: Number.isFinite(limit) && limit > 0 ? limit : fallback.limit,
+    windowMs:
+      Number.isFinite(minutes) && minutes > 0 ? minutes * MINUTE : fallback.windowMs,
+  };
+}
+
 export const RATE_LIMITS = {
-  login: { limit: 5, windowMs: 10 * 60_000 },
-  register: { limit: 5, windowMs: 60 * 60_000 },
-  threadCreate: { limit: 5, windowMs: 60 * 60_000 },
-  reply: { limit: 20, windowMs: 60 * 60_000 },
-  report: { limit: 20, windowMs: 24 * 60 * 60_000 },
-  like: { limit: 120, windowMs: 60 * 60_000 },
-  bookmark: { limit: 120, windowMs: 60 * 60_000 },
+  login: fromEnv("LOGIN", { limit: 10, windowMs: 10 * MINUTE }),
+  register: fromEnv("REGISTER", { limit: 60, windowMs: 60 * MINUTE }),
+  threadCreate: fromEnv("THREAD", { limit: 10, windowMs: 60 * MINUTE }),
+  reply: fromEnv("REPLY", { limit: 60, windowMs: 60 * MINUTE }),
+  report: fromEnv("REPORT", { limit: 30, windowMs: 24 * 60 * MINUTE }),
+  like: fromEnv("LIKE", { limit: 300, windowMs: 60 * MINUTE }),
+  bookmark: fromEnv("BOOKMARK", { limit: 300, windowMs: 60 * MINUTE }),
 } as const;
+
+/** Clear a bucket, e.g. after a successful login. */
+export function resetRateLimit(key: string): void {
+  buckets.delete(key);
+}
 
 /** Behind Caddy the first X-Forwarded-For entry is the client. */
 export function requestIp(request: Request): string {

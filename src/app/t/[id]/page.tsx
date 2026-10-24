@@ -4,10 +4,12 @@ import { RoleChip } from "@/components/role-chip";
 import { ShareButton } from "@/components/share-button";
 import { getCurrentUser, isModerator } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { canEditThread } from "@/lib/editing";
 import { formatDateTime } from "@/lib/format";
 import { getLocale, t } from "@/lib/i18n";
 import { errorMessage, noticeMessage } from "@/lib/messages";
-import { tagSearchHref } from "@/lib/tags";
+import { markThreadRead } from "@/lib/read-state";
+import { parseSuggestedTags, tagSearchHref } from "@/lib/tags";
 import { LIMITS } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +32,7 @@ export default async function ThreadPage({
     prisma.thread.findUnique({
       where: { id },
       include: {
-        board: { select: { slug: true, name: true } },
+        board: { select: { slug: true, name: true, suggestedTags: true } },
         author: { select: { username: true } },
         tags: { select: { name: true } },
         posts: {
@@ -44,6 +46,10 @@ export default async function ThreadPage({
 
   if (!thread || thread.isDeleted) {
     notFound();
+  }
+
+  if (user) {
+    await markThreadRead(user.id, thread.id);
   }
 
   const [likedPostIds, bookmarked] = user
@@ -64,6 +70,8 @@ export default async function ThreadPage({
     : ([new Set<string>(), false] as const);
 
   const canModerate = isModerator(user);
+  const canEdit = canEditThread(user?.id, thread);
+  const suggestedTags = parseSuggestedTags(thread.board.suggestedTags);
   const errorText = errorMessage(error, locale);
   const noticeText = noticeMessage(notice, locale);
 
@@ -93,8 +101,15 @@ export default async function ThreadPage({
           ) : null}
         </div>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{thread.title}</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          {m.thread.startedBy(thread.author.username, formatDateTime(thread.createdAt, locale))}
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+          <span>
+            {m.thread.startedBy(thread.author.username, formatDateTime(thread.createdAt, locale))}
+          </span>
+          {thread.editedAt ? (
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+              {m.thread.editedAt(formatDateTime(thread.editedAt, locale))}
+            </span>
+          ) : null}
         </p>
 
         {thread.tags.length > 0 ? (
@@ -116,6 +131,17 @@ export default async function ThreadPage({
           <span>
             {m.thread.save} {thread.bookmarkCount}
           </span>
+          <a href={`/t/${thread.id}/export`} className="transition hover:text-slate-800">
+            {m.thread.exportText}
+          </a>
+          {canEdit ? (
+            <Link
+              href={`/t/${thread.id}/edit`}
+              className="transition hover:text-slate-800"
+            >
+              {m.thread.edit}
+            </Link>
+          ) : null}
         </div>
       </header>
 
@@ -166,7 +192,12 @@ export default async function ThreadPage({
               >
                 <header className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
                   <div className="text-slate-700">
-                    <span className="font-medium">{post.author.username}</span>
+                    <Link
+                      href={`/u/${post.author.username}`}
+                      className="font-medium transition hover:text-indigo-700"
+                    >
+                      {post.author.username}
+                    </Link>
                     <RoleChip role={post.author.role} locale={locale} />
                     {index === 0 ? (
                       <span className="ml-2 text-xs text-slate-400">{m.thread.originalPost}</span>
@@ -304,6 +335,14 @@ export default async function ThreadPage({
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
               />
               <p className="mt-1 text-xs text-slate-500">{m.tagField.hint}</p>
+              {suggestedTags.length > 0 ? (
+                <p className="mt-0.5 text-xs text-slate-400">
+                  {m.tagField.suggested(
+                    thread.board.name,
+                    suggestedTags.map((tag) => `#${tag}`).join(" "),
+                  )}
+                </p>
+              ) : null}
             </div>
             <div className="mt-3 flex items-center justify-between gap-3">
               <p className="text-xs text-slate-500">{m.thread.charLimit(LIMITS.bodyMax)}</p>

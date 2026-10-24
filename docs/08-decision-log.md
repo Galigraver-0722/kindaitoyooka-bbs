@@ -22,6 +22,9 @@ alternatives considered.
 | ADR-0010 | In-process fixed-window rate limits | Accepted | 2026-10-24 |
 | ADR-0011 | Advisory automatic flags from an open word list | Accepted | 2026-10-24 |
 | ADR-0012 | Append-only audit log for moderation | Accepted | 2026-10-24 |
+| ADR-0013 | Fifteen-minute author edit window with a visible marker | Accepted | 2026-10-24 |
+| ADR-0014 | Manual password recovery instead of email reset | Accepted | 2026-10-24 |
+| ADR-0015 | Per-thread read markers written on view | Accepted | 2026-10-24 |
 
 ---
 
@@ -362,6 +365,91 @@ sourcing design (far more than this scale needs).
 
 **Revisit if.** The school needs to export the audit log for an investigation; add a read-only
 export rather than editing rows.
+
+---
+
+## ADR-0013 — Fifteen-minute author edit window with a visible marker
+
+**Context.** Students notice typos, missing dates, or a wrong room number minutes after posting.
+Without editing they either leave the error or add a correction reply, and the first version stays
+at the top of the thread. Unlimited editing would let someone rewrite a thread after others have
+replied, which makes moderation and quoted replies unreliable.
+
+**Decision.** Only the author may edit a thread, and only within 15 minutes of `Thread.createdAt`.
+The window covers the title, the opening post, and the tag set. A successful edit sets
+`Thread.editedAt`, and the thread page shows an "edited" marker with the timestamp. Locked or
+removed threads cannot be edited; moderators use the separate remove and lock tools instead.
+
+**Consequences.**
+
+- Small mistakes are fixed where they happened, without a correction reply.
+- Readers see that the text changed, even when they do not see the old version.
+- Every reply after the opening post remains uneditable in this phase; the window is about
+  correcting the thread's framing, not rewriting a conversation.
+- The rule is enforced in one pure function (`canEditThread`) and tested at the boundary, so the
+  page, the route, and the tests agree.
+
+**Alternatives considered.** No editing (support burden and stale errors), unlimited editing
+(allows silent rewriting after replies), a revision table with diffs (good audit, too much UI and
+storage for this phase), wiki-style editing by anyone (moderation risk).
+
+**Revisit if.** Students ask to edit their replies, or a moderator needs to correct a title after
+the window. Both are separate decisions; do not simply widen the window.
+
+---
+
+## ADR-0014 — Manual password recovery instead of email reset
+
+**Context.** Accounts are username + optional email. The school cannot guarantee that students
+have a mailbox the site can reach, and adding an email provider means a vendor, consent for
+minors' addresses, and deliverability work. Still, a forgotten password must not lock a student
+out permanently.
+
+**Decision.** Ship a maintainer command, `pnpm reset-password <username>`, that generates a
+16-character password, stores only its `scrypt` hash, deletes every session for the account, and
+prints the password once. Document an in-person identity check and forbid reset requests through
+public threads.
+
+**Consequences.**
+
+- No email provider, no verification tokens, and no new personal data.
+- Recovery depends on a maintainer being available; the runbook must name a backup person.
+- The generated password travels through a terminal and a conversation. The procedure tells the
+  student to treat it as temporary and to request another reset if it leaks.
+- The same command is the break-glass path after a credential leak.
+
+**Alternatives considered.** Email reset links (best self-service, blocked by delivery and
+privacy), security questions (weak and collect more personal data), letting moderators set
+passwords in the UI (widens the trust boundary and leaves no terminal audit).
+
+**Revisit if.** The school provides a domain for every student and approves email delivery. Then
+add a `PasswordReset` token table and keep the command as the fallback.
+
+---
+
+## ADR-0015 — Per-thread read markers written on view
+
+**Context.** Students want to know which threads are new without reading every board. Analytics
+and view counters would answer a different question and collect more data than needed.
+
+**Decision.** Store one `ThreadRead` row per user and thread with `lastReadAt`. Opening a thread
+upserts the row. Lists mark a thread "New" when the row is missing or `lastPostAt` is newer than
+`lastReadAt`. Guests have no read state and see no badges.
+
+**Consequences.**
+
+- The badge reflects replies, not mere views, and costs one small table.
+- A thread page performs a write on GET. The write is idempotent and stores only a timestamp, but
+  it does mean thread views are not read-only at the database level.
+- Read state is per account; shared devices show the badge of the signed-in account only.
+- There is no "mark all as read" or per-board counter yet.
+
+**Alternatives considered.** A `lastVisitedAt` cookie (no per-thread state, breaks across
+devices), counting views (privacy cost, easy to inflate), a weekly digest email (needs a mail
+provider; still open as a Phase 2 item).
+
+**Revisit if.** The write volume becomes a problem, or students ask for "mark all read". Then
+batch the upsert or move to a last-visit timestamp per user and board.
 
 ---
 

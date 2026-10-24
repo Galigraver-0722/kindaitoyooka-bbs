@@ -12,31 +12,44 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/` | Public | Hero, eight newest threads, board list, posting rules |
 | `/b/[slug]` | Public | All visible threads in a board, pinned first, then by activity |
 | `/t/[id]` | Public | Thread with all posts, reply form, report controls |
+| `/t/[id]/edit` | Author | Edit the title, opening post, and tags within 15 minutes of posting |
+| `/t/[id]/export` | Public | Download the thread as a plain-text file |
+| `/u/[username]` | Public | Profile: join date, visible thread/post counts, recent threads and posts |
 | `/new` | Signed-in | Create a thread; guests are redirected to `/login?next=/new` |
 | `/login` | Public | Login form; redirects signed-in users away |
 | `/register` | Public | Registration form; first account becomes `ADMIN` |
 | `/bookmarks` | Signed-in | Threads the signed-in user saved |
 | `/search` | Public | Search title/body, filter by tag, sort newest or popular |
 | `/moderation` | Moderator / Admin | Open reports, automatic flags, and the recent audit log |
+| `/health` | Public | JSON readiness check: `{"status":"ok","database":"ok"}`, or 503 |
 | any unknown path | Public | Custom 404 |
 
 All pages are server-rendered per request. There is no client-side data fetching.
 
 ### Rate limits
 
-All limits are in-process fixed windows, keyed by IP or account:
+All limits are in-process fixed windows, keyed by IP or account. The defaults are deliberately
+generous because a class can share one school IP:
 
-| Action | Limit |
+| Action | Default limit |
 | --- | --- |
-| Login | 5 attempts / 10 min per IP + username |
-| Registration | 5 / hour per IP |
-| New thread | 5 / hour per account |
-| Reply | 20 / hour per account |
-| Report | 20 / day per account |
-| Like / bookmark | 120 / hour per account |
+| Login | 10 attempts / 10 min per IP + username |
+| Registration | 60 / hour per IP |
+| New thread | 10 / hour per account |
+| Reply | 60 / hour per account |
+| Report | 30 / day per account |
+| Like / bookmark | 300 / hour per account |
 
-A blocked form submission redirects with `error=rate-limited`; `Retry-After` is not exposed because
-the responses are redirects, not API responses. A restart clears the counters.
+A successful login clears that IP + username bucket, so a mistyped password followed by the
+correct one does not count toward a lockout. A blocked form submission redirects with
+`error=rate-limited`; `Retry-After` is not exposed because the responses are redirects, not API
+responses. A restart clears the counters.
+
+Each pair is overridable without a code change: `RATE_LIMIT_<NAME>_LIMIT` and
+`RATE_LIMIT_<NAME>_WINDOW_MIN`, where `<NAME>` is `LOGIN`, `REGISTER`, `THREAD`, `REPLY`,
+`REPORT`, `LIKE`, or `BOOKMARK`. For example, `RATE_LIMIT_LOGIN_LIMIT=5` and
+`RATE_LIMIT_LOGIN_WINDOW_MIN=10` restore the old login limit. See
+`docs/07-operations.md`, section 2.
 
 ### Search and sorting
 
@@ -74,7 +87,8 @@ success so the browser performs a `GET`.
 
 - Success: session cookie, redirect to `next` or `/`.
 - Failure: `/login?error=invalid-credentials` (same message for unknown user and wrong password).
-- There is no lockout or rate limit yet. Add one before public launch.
+- Rate limited after 10 attempts per IP + username in 10 minutes (`error=rate-limited`); a
+  successful login clears the counter.
 
 ### `POST /api/auth/logout`
 
@@ -118,6 +132,21 @@ success so the browser performs a `GET`.
 - Success: inserts `Post` and updates `Thread.lastPostAt` in one transaction, redirects to
   `/t/<id>#p-<postId>`.
 - Failure codes: `thread-locked`, `invalid-input`, `thread-not-found`.
+
+### `POST /api/threads/[id]/edit`
+
+| Field | Required | Rules |
+| --- | --- | --- |
+| `title` | yes | 3–120 chars |
+| `body` | yes | 1–10,000 chars; replaces the opening post |
+| `tags` | no | Same rules as thread creation; replaces the current tag set |
+
+- Auth: the thread author only, within 15 minutes of `Thread.createdAt`.
+- Preconditions: thread exists, not deleted, not locked.
+- Success: updates the title and opening post, sets `Thread.editedAt`, replaces tags, and
+  redirects to `/t/<id>?notice=thread-edited`.
+- Sensitive-word matches on the edited text create one open `AUTO` report if none exists.
+- Failure codes: `edit-not-allowed`, `invalid-input`, `not-found`.
 
 ### `POST /api/threads/[id]/lock`
 
@@ -171,6 +200,13 @@ success so the browser performs a `GET`.
 - `remove`: soft-deletes the reported post and marks the report `removed`.
 - `dismiss`: leaves the post and marks the report `dismissed`.
 - Redirects to `/moderation` in both cases.
+
+### Unread markers
+
+`/`, `/b/[slug]`, and `/t/[id]` read `ThreadRead` for the signed-in user. A thread is shown as
+"New" when it has no read row or when `Thread.lastPostAt` is newer than `lastReadAt`. Rendering a
+thread page upserts the row with the current time. Guests have no read state, so no badge is
+shown; the write is idempotent and stores only a timestamp.
 
 ## 3. Error handling
 

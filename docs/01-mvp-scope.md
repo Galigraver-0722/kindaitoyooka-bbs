@@ -20,8 +20,15 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 - Saved-threads page and per-user reaction state.
 - Search titles and replies, with newest and popularity sorting.
 - Tags entered in a separate field on the compose and reply forms, with tag-filtered search.
-- Fixed-window rate limits on authentication, posting, reporting, and reactions.
+- Fixed-window rate limits on authentication, posting, reporting, and reactions, tunable by
+  environment variable.
 - An audit log for every moderation action, visible on `/moderation`.
+- Author profile pages at `/u/<username>` with join date and recent threads/posts.
+- Thread editing within 15 minutes of posting, with a visible "edited" marker.
+- Plain-text thread export at `/t/<id>/export`.
+- Unread badges on the home page and board lists for signed-in users.
+- Per-board tag hints on the compose and reply forms.
+- Manual password recovery with a maintenance command, and `GET /health`.
 - Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, reviewed by a human.
 - Report a post with a required reason.
 - Moderator queue: remove reported post or dismiss report.
@@ -59,16 +66,16 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 | --- | --- | --- |
 | Pagination or "load more" | A board with 500 threads is unusable | Cursor by `lastPostAt` |
 | Full-text indexing | `contains` is fine for a few thousand posts; ranking and Japanese tokenization need FTS5 or Postgres FTS | Add when search latency or precision becomes a complaint |
-| Password reset | Otherwise locked-out users need manual help | Requires email delivery |
+| Password reset | Otherwise locked-out users need manual help | Manual reset command shipped; self-service email reset still needs a provider |
 | Ban / mute | Removing single posts is not enough for repeat offenders | Time-boxed, with reason |
 | Privacy notice and terms | Required before school approval | Plain-language pages |
 
 ### Could (nice, after the forum is alive)
 
-- Notifications (email digest or in-app unread markers).
+- Notifications by email digest; in-app unread markers shipped.
 - Reactions instead of "+1" replies.
-- Tags and per-board prefixes (`question`, `event`, `lost`).
-- User profiles with avatar initials and post history.
+- Per-board tag presets; hints shipped, enforced prefixes are still open.
+- Profile customization (avatars, bios); read-only profiles shipped.
 - Draft autosave.
 - Full-text search across deleted content for moderators only.
 
@@ -158,7 +165,7 @@ If time is short, cut in this order and stop:
 
 1. Notifications and reactions (never in MVP).
 2. Search.
-3. Email verification and password reset.
+3. Email verification and self-service password reset (manual reset already ships).
 4. Thread pinning (seeded pinned threads can remain).
 5. The report queue (fall back to a shared moderation mailbox **only** if a teacher agrees;
    this weakens accountability and is a temporary measure).

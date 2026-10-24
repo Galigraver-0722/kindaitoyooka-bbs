@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getLocale, t } from "@/lib/i18n";
 import { errorMessage } from "@/lib/messages";
+import { parseSuggestedTags } from "@/lib/tags";
 import { LIMITS } from "@/lib/validation";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -32,10 +33,11 @@ export default async function NewThreadPage({
   const boards = await prisma.board.findMany({
     where: { isArchived: false },
     orderBy: { sortOrder: "asc" },
-    select: { id: true, slug: true, name: true },
+    select: { id: true, slug: true, name: true, suggestedTags: true },
   });
 
   const selectedBoard = boards.find((board) => board.slug === preferredSlug) ?? boards[0];
+  const suggestedTags = selectedBoard ? parseSuggestedTags(selectedBoard.suggestedTags) : [];
   const errorText = errorMessage(error, locale);
 
   return (
@@ -114,6 +116,14 @@ export default async function NewThreadPage({
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
             <p className="mt-1 text-xs text-slate-500">{m.tagField.hint}</p>
+            {suggestedTags.length > 0 ? (
+              <p className="mt-0.5 text-xs text-slate-400">
+                {m.tagField.suggested(
+                  selectedBoard.name,
+                  suggestedTags.map((tag) => `#${tag}`).join(" "),
+                )}
+              </p>
+            ) : null}
           </div>
 
           <div>

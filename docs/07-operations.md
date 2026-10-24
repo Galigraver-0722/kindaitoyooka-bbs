@@ -23,10 +23,23 @@ the deployment section but keep the backup and restore rules unchanged.
 | `NODE_ENV` | in production | `production` | Set by `next start` too |
 | `PORT` | no | `3000` | Pass with `pnpm start -p 3000` |
 | `COOKIE_SECURE` | no | `true` | Defaults to secure in production; `false` only for plain HTTP on a LAN |
+| `RATE_LIMIT_<NAME>_LIMIT` | no | `10` | Overrides one limit; `<NAME>` is `LOGIN`, `REGISTER`, `THREAD`, `REPLY`, `REPORT`, `LIKE`, or `BOOKMARK` |
+| `RATE_LIMIT_<NAME>_WINDOW_MIN` | no | `10` | Window in minutes for the same limit |
 
 Rate-limit counters live in process memory. A restart resets them, and a second app instance
 would keep its own counters. That is acceptable for one school server; move the counters to a
 shared store before scaling out.
+
+The defaults are intentionally loose because a class can share one school IP: 10 login attempts
+per 10 minutes per IP + username, 60 registrations per hour per IP, 10 threads per hour, 60
+replies per hour, 30 reports per day, and 300 reactions per hour. Tighten a single limit in
+`.env` instead of editing code, and restart the service:
+
+```bash
+# Example: five login attempts per ten minutes on a public-facing deployment
+RATE_LIMIT_LOGIN_LIMIT=5
+RATE_LIMIT_LOGIN_WINDOW_MIN=10
+```
 
 Never commit `.env`. `.env.example` documents the fields.
 
@@ -54,6 +67,7 @@ Useful commands:
 pnpm lint
 pnpm build
 pnpm db:studio      # browse the database in a browser
+pnpm reset-password <username>   # manual account recovery; prints a new password once
 pnpm exec prisma migrate dev --name <change>   # after switching to migrations
 ```
 
@@ -228,7 +242,7 @@ Minimum viable monitoring:
 
 | Signal | How | Alert |
 | --- | --- | --- |
-| Site up | Uptime checker every minute | Email or chat after 2 failures |
+| Site up | Uptime checker against `GET /health` every minute | Email or chat after 2 failures; `/health` returns 503 when the database fails |
 | Disk space | `df -h` daily or node_exporter | > 80% used |
 | Application errors | `journalctl -u toyooka-bbs -f`; Sentry (phase 1) | Any 500 spike |
 | Backup created | Cron output to a log file | Missing file for 2 days |
@@ -267,12 +281,13 @@ Minimum viable monitoring:
    proxy level.
 4. Escalate to the teacher advisor; if accounts are compromised, delete all sessions
    (`prisma.session.deleteMany()`), which logs everyone out.
-5. Add rate limiting before reopening.
+5. Tighten `RATE_LIMIT_*` values in `.env` before reopening, and remove them again once the wave passes.
 
 ### Suspected credential leak
 
 1. Delete all sessions (logs everyone out).
-2. Reset the affected account's password (seed or admin SQL).
+2. Reset the affected account's password with `pnpm reset-password <username>`; this also deletes
+   every session for that account.
 3. Rotate the GitHub deploy key, server access, and any API tokens.
 4. Review the audit trail for unexpected moderation actions.
 5. Tell the teacher advisor; follow the school's incident procedure.
@@ -289,6 +304,30 @@ read the diff before deploying, because a new term can raise the false-positive 
 ignore list and added Japanese threats live in `src/lib/content-filter.ts` and are covered by
 tests. Never auto-delete a post because of a match; a human decides.
 
+## 8.2 Manual password reset
+
+There is no self-service reset yet, so a locked-out student asks a maintainer in person. Do not
+accept reset requests through a public thread: you cannot verify identity there, and the request
+itself reveals who forgot their password.
+
+1. Confirm the student's identity in person or through a teacher advisor.
+2. Run the command with the exact username:
+
+   ```bash
+   pnpm reset-password sakura_17
+   ```
+
+3. The command generates a 16-character password, stores only its `scrypt` hash, deletes every
+   session for that account, and prints the password once.
+4. Hand the password over privately. Do not paste it into chat, email, a thread, or a commit.
+5. Ask the student to log in and change it once a self-service reset exists. Until then, tell
+   them to treat it as a one-time password and ask for another reset if it leaks.
+6. Record the reset (date, username, who asked) in the maintainer's private log, not in the
+   public database.
+
+The command needs `DATABASE_URL`. It reads `.env` from the repository root, so run it from the
+repository directory on the server.
+
 ## 9. Launch checklist
 
 - [ ] Teacher advisor and administration approval in writing.
@@ -296,7 +335,7 @@ tests. Never auto-delete a post because of a match; a human decides.
 - [ ] Demo accounts deleted; real admin account created with a unique password.
 - [ ] `COOKIE_SECURE` left at its secure default.
 - [ ] Daily backup cron installed and one restore tested.
-- [ ] Rate limiting implemented (or a proxy-level limit temporarily in place).
+- [x] Rate limiting implemented and tuned through environment variables.
 - [ ] Rules, privacy notice, and moderation policy published.
 - [ ] At least two moderators trained; escalation contacts shared.
 - [ ] Uptime monitoring configured.

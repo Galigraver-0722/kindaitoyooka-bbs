@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { checkRateLimit } from "../src/lib/rate-limit";
+import { checkRateLimit, resetRateLimit } from "../src/lib/rate-limit";
 
 test("a fixed window allows exactly the configured number of calls", () => {
   const key = `test:${Math.random()}`;
@@ -27,4 +27,15 @@ test("separate keys do not share counters", () => {
   const now = 3_000_000;
   assert.equal(checkRateLimit(`a:${Math.random()}`, 1, 1000, now).allowed, true);
   assert.equal(checkRateLimit(`b:${Math.random()}`, 1, 1000, now).allowed, true);
+});
+
+test("a successful login can clear its own bucket", () => {
+  const key = `test:${Math.random()}`;
+  const now = 4_000_000;
+
+  assert.equal(checkRateLimit(key, 1, 1000, now).allowed, true);
+  assert.equal(checkRateLimit(key, 1, 1000, now).allowed, false);
+
+  resetRateLimit(key);
+  assert.equal(checkRateLimit(key, 1, 1000, now).allowed, true);
 });

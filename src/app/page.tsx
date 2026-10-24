@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { getLocale, t } from "@/lib/i18n";
 import { noticeMessage } from "@/lib/messages";
+import { getUnreadThreadIds } from "@/lib/read-state";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +16,7 @@ export default async function HomePage({
   const [{ notice }, locale] = await Promise.all([searchParams, getLocale()]);
   const m = t(locale);
 
-  const [boards, recentThreads] = await Promise.all([
+  const [boards, recentThreads, user] = await Promise.all([
     prisma.board.findMany({
       where: { isArchived: false },
       orderBy: { sortOrder: "asc" },
@@ -32,8 +34,10 @@ export default async function HomePage({
         _count: { select: { posts: true } },
       },
     }),
+    getCurrentUser(),
   ]);
 
+  const unread = await getUnreadThreadIds(user?.id, recentThreads);
   const signedOutNotice = noticeMessage(notice, locale);
 
   return (
@@ -92,6 +96,11 @@ export default async function HomePage({
                     </Link>
                     {thread.isPinned ? (
                       <span className="font-medium text-indigo-600">{m.board.pinned}</span>
+                    ) : null}
+                    {unread.has(thread.id) ? (
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                        {m.board.unread}
+                      </span>
                     ) : null}
                     <span>{formatDateTime(thread.lastPostAt, locale)}</span>
                   </div>

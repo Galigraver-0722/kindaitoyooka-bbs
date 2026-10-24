@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { sortByHot } from "@/lib/hot";
 import { getLocale, t } from "@/lib/i18n";
 import { errorMessage } from "@/lib/messages";
+import { getUnreadThreadIds } from "@/lib/read-state";
 
 export const dynamic = "force-dynamic";
 
@@ -23,12 +25,15 @@ export default async function BoardPage({
   const order = sort === "hot" ? "hot" : "latest";
   const m = t(locale);
 
-  const board = await prisma.board.findUnique({
-    where: { slug },
-    include: {
-      _count: { select: { threads: { where: { isDeleted: false } } } },
-    },
-  });
+  const [board, user] = await Promise.all([
+    prisma.board.findUnique({
+      where: { slug },
+      include: {
+        _count: { select: { threads: { where: { isDeleted: false } } } },
+      },
+    }),
+    getCurrentUser(),
+  ]);
 
   if (!board) {
     notFound();
@@ -54,6 +59,7 @@ export default async function BoardPage({
       : threads;
 
   const ordered = [...sorted].sort((a, b) => Number(b.isPinned) - Number(a.isPinned));
+  const unread = await getUnreadThreadIds(user?.id, threads);
 
   const errorText = errorMessage(error, locale);
 
@@ -128,6 +134,11 @@ export default async function BoardPage({
                 {thread.isLocked ? (
                   <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
                     {m.board.locked}
+                  </span>
+                ) : null}
+                {unread.has(thread.id) ? (
+                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                    {m.board.unread}
                   </span>
                 ) : null}
                 <span>{formatDateTime(thread.lastPostAt, locale)}</span>

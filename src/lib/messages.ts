@@ -15,6 +15,7 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "report-invalid": "Please describe the problem in 3 to 500 characters.",
     "rate-limited": "Too many attempts. Please wait and try again.",
     "not-found": "We could not find what you were looking for.",
+    "edit-not-allowed": "Only the author can edit a thread, and only within 15 minutes of posting.",
   },
   ja: {
     "invalid-input": "入力内容を確認して、もう一度お試しください。",
@@ -30,6 +31,7 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "report-invalid": "問題の内容を 3〜500 文字で書いてください。",
     "rate-limited": "回数が多すぎます。しばらく待ってからお試しください。",
     "not-found": "お探しのページは見つかりませんでした。",
+    "edit-not-allowed": "スレッドを編集できるのは作成者だけで、投稿から 15 分以内に限ります。",
   },
 };
 
@@ -37,10 +39,12 @@ const NOTICE_MESSAGES: Record<Locale, Record<string, string>> = {
   en: {
     reported: "Thanks. A moderator will review your report.",
     "signed-out": "You have been signed out.",
+    "thread-edited": "Your changes are saved.",
   },
   ja: {
     reported: "通報を受け付けました。モデレーターが確認します。",
     "signed-out": "ログアウトしました。",
+    "thread-edited": "変更を保存しました。",
   },
 };
 

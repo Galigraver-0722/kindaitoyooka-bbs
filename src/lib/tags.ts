@@ -23,3 +23,17 @@ export function parseTagInput(value: string): string[] {
 export function tagSearchHref(tag: string): string {
   return `/search?tag=${encodeURIComponent(tag)}`;
 }
+
+/**
+ * Board-level hints stored as a comma-separated string. Unlike `parseTagInput`
+ * this does not cap the list; it only removes duplicates and invalid tokens.
+ */
+export function parseSuggestedTags(value: string): string[] {
+  const tags = value
+    .normalize("NFKC")
+    .split(/[,、，]/u)
+    .map((tag) => tag.trim().replace(/^#+/, "").toLowerCase())
+    .filter((tag) => TAG_TOKEN.test(tag));
+
+  return [...new Set(tags)];
+}

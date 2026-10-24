@@ -45,7 +45,9 @@ export function SiteHeader({ user, locale }: { user: SessionUser | null; locale:
           {user ? (
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-2 text-slate-700">
-                {user.username}
+                <Link href={`/u/${user.username}`} className="hover:text-indigo-700">
+                  {user.username}
+                </Link>
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${ROLE_STYLES[user.role]}`}
                 >

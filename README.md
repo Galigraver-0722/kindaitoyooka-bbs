@@ -10,10 +10,10 @@ question can be found and answered a month later, where clubs can post one canon
 thread, and where students can report problems without confronting anyone. See
 [the product brief](docs/00-product-brief.md) for the reasoning.
 
-> **Status: Phase 0, walking skeleton.** The core forum works end to end, but the project is
-> **not ready for real students** until the safety, deployment, and rate-limiting work in
-> [the roadmap](docs/05-roadmap.md) is done. Do not launch it as an official school service
-> without a teacher advisor and the administration's approval.
+> **Status: Phase 2 in progress.** The core forum works end to end and the Phase 2 features
+> below are usable, but the project is **not ready for real students** until deployment, backups,
+> and the school approval work in [the roadmap](docs/05-roadmap.md) are done. Do not launch it as
+> an official school service without a teacher advisor and the administration's approval.
 
 ## What works today
 
@@ -23,19 +23,26 @@ thread, and where students can report problems without confronting anyone. See
 - Like a post, bookmark a thread, copy a permalink, and report a post from one action bar.
 - Saved-threads page at `/bookmarks`.
 - Search titles and replies, sorted by newest or a transparent popularity score.
-- Hashtags in titles and replies, with tag-filtered search.
+- Tags from a dedicated field, with tag-filtered search and per-board tag hints.
 - Report a post with a reason; moderators review the queue at `/moderation`.
 - Moderator tools: remove post, lock/unlock thread, remove thread, dismiss reports.
 - Soft deletion: removed content leaves a visible placeholder instead of vanishing.
 - Japanese-first interface with a header switch to English; user content is never machine-translated.
 - Tags are a separate field when composing, not parsed out of the body.
-- Fixed-window rate limits on login, registration, posting, reporting, and reactions.
+- Profile pages at `/u/<username>` with join date and recent threads/posts; no email or real name.
+- Thread editing for 15 minutes after posting, with a visible "edited" marker.
+- Plain-text export of a whole thread at `/t/<id>/export`.
+- Unread badges on recent threads and board lists for signed-in users.
+- Fixed-window rate limits on login, registration, posting, reporting, and reactions, tunable
+  through environment variables.
 - Audit log for every moderation action, shown on `/moderation`.
+- Manual password recovery with `pnpm reset-password <username>`; no email provider required.
+- `GET /health` reports application and database readiness.
 - Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, with a project-specific ignore list; matches are reviewed by a human, never auto-hidden.
 - Responsive UI, plain-text content only, no uploads and no trackers.
 
 Not implemented yet: pagination, full-text indexing, quote reposts, user-created boards,
-email verification or password reset, notifications, account bans, profile pages, and image
+email verification or self-service password reset, notifications, account bans, and image
 uploads.
 The full list is in [MVP scope](docs/01-mvp-scope.md).
 
@@ -70,10 +77,12 @@ deployment, and never keep these passwords anywhere real.
 | `pnpm build` | Production build and type check |
 | `pnpm start` | Serve the production build |
 | `pnpm lint` | ESLint |
-| `pnpm test` | Validation unit tests |
+| `pnpm test` | Unit tests for validation, i18n, tags, rate limits, editing, and passwords |
 | `pnpm db:push` | Apply the Prisma schema to SQLite (development) |
 | `pnpm db:seed` | Insert development data |
 | `pnpm db:studio` | Browse the database in Prisma Studio |
+| `pnpm reset-password <username>` | Generate a new password, print it once, and sign the account out everywhere |
+| `curl -fsS localhost:3000/health` | Check that the app and database respond |
 | `pnpm exec prisma migrate dev --name <change>` | Create a migration (use before production) |
 
 ## Documentation
@@ -111,6 +120,7 @@ Start with the brief, then read the scope and the safety policy before writing c
 
 ```text
 prisma/            schema, seed data
+scripts/           operational scripts (password reset)
 src/app/           pages and form endpoints
 src/components/    header, footer, role chip
 src/lib/           auth, database client, validation, formatting

@@ -16,9 +16,11 @@ erDiagram
     User ||--o{ Report : "resolves"
     User ||--o{ PostLike : "likes"
     User ||--o{ ThreadBookmark : "saves"
+    User ||--o{ ThreadRead : "has read"
     Board ||--o{ Thread : "contains"
     Thread ||--o{ Post : "contains"
     Thread ||--o{ ThreadBookmark : "saved as"
+    Thread ||--o{ ThreadRead : "read state"
     Thread }o--o{ Tag : "tagged"
     Post ||--o{ Report : "receives"
     Post ||--o{ PostLike : "receives"
@@ -59,6 +61,7 @@ cheapest way to protect personal data is not to collect it.
 | `description` | string | One sentence shown on the home page |
 | `sortOrder` | int | Lower first |
 | `isArchived` | boolean | Archived boards disappear from navigation and reject new threads |
+| `suggestedTags` | string | Comma-separated tag hints for the compose form, e.g. `質問,試験` |
 | `createdAt` | datetime | |
 
 ### Thread
@@ -72,8 +75,9 @@ cheapest way to protect personal data is not to collect it.
 | `isPinned` | boolean | Pinned threads sort first; no pin UI in v0.1 |
 | `isLocked` | boolean | Replies rejected while true |
 | `isDeleted` | boolean | Soft delete; hidden from lists and thread view |
-| `createdAt` | datetime | |
+| `createdAt` | datetime | Also the start of the 15-minute edit window |
 | `lastPostAt` | datetime | Updated on each reply; drives ordering |
+| `editedAt` | datetime? | Set when the author saves an edit; rendered as an "edited" marker |
 
 ### Post
 
@@ -95,7 +99,7 @@ reporting, and moderation uniform: every piece of user text is one row with the 
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | string (cuid) | |
-| `reporterId` | string | FK → User |
+| `reporterId` | string? | FK → User; `NULL` for automatic flags |
 | `postId` | string | FK → Post; reports target posts, not threads |
 | `reason` | string | 3–500 chars, shown to moderators |
 | `createdAt` | datetime | |
@@ -155,6 +159,18 @@ Primary key is `(userId, postId)`, so one person can like a post once.
 
 Primary key is `(userId, threadId)`. The `/bookmarks` page lists these rows, newest first.
 
+### ThreadRead
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `userId` | string | FK → User |
+| `threadId` | string | FK → Thread |
+| `lastReadAt` | datetime | Updated when the signed-in user opens the thread |
+
+Primary key is `(userId, threadId)`. A thread is "New" when this row is missing or
+`Thread.lastPostAt` is newer than `lastReadAt`. Guests have no rows, so unread badges are only
+rendered for signed-in users. The table stores no URLs, durations, or device information.
+
 ## 3. Invariants
 
 1. A `Thread` always has at least one `Post` at creation (nested create). It can later have all
@@ -174,14 +190,17 @@ Primary key is `(userId, threadId)`. The `/bookmarks` page lists these rows, new
    `Thread.bookmarkCount`.
 9. A user has at most one like per post and one bookmark per thread. Removing the row reverses
    the counter in the same transaction.
-10. Hashtags are normalized with NFKC and lowercased before storage. At most five tags are read
-    from one write; a tag is shared by every thread that uses it.
+10. Tags are normalized with NFKC and lowercased before storage. At most five tags are read
+    from one write; a tag is shared by every thread that uses it. Editing a thread replaces its
+    tag set in one transaction and sets `editedAt`.
 11. Counters are derived data. If they ever drift, they can be rebuilt from `PostLike` and
     `ThreadBookmark` without touching user content.
 12. Every moderation action writes an `AuditLog` row in the same transaction as the change. A
     missing audit row means the change did not commit.
 13. An automatic flag is one `Report` with `source = AUTO`, a null reporter, and the matched
     terms. It is advisory; it never sets `isDeleted`.
+14. `ThreadRead` is per user and thread and stores only a timestamp. It is written when a
+    signed-in user opens the thread; there is no separate "mark all read" action.
 
 ## 4. Indexes
 
@@ -196,6 +215,7 @@ Primary key is `(userId, threadId)`. The `/bookmarks` page lists these rows, new
 | `Tag.name` unique | Tag lookup from hashtags |
 | `PostLike(postId)` | Counting likes for a post |
 | `ThreadBookmark(threadId)` | Counting saves for a thread |
+| `ThreadRead(threadId)` | Deleting a thread cascades its read rows |
 | `Report(resolvedAt)` | Open-queue query |
 | `AuditLog(createdAt)` | Recent moderation history |
 | `AuditLog(actorId)` | Actions by one moderator |
@@ -223,7 +243,7 @@ Primary key is `(userId, threadId)`. The `/bookmarks` page lists these rows, new
 | Model | Why it will be needed |
 | --- | --- |
 | `Ban` / `Mute` | Repeat offenders; time-boxed with a reason and an expiry. |
-| `EmailVerification`, `PasswordReset` | Account recovery. Requires an email provider. |
+| `EmailVerification` | Self-service verification and reset links. Requires an email provider; password reset is currently manual (`pnpm reset-password`). |
 | `Notification` | Reply to my thread / mention. |
 | `Attachment` | Images and files. Requires object storage, size limits, EXIF stripping, and a much stricter safety review. |
 | `BoardModerator` | Per-board moderation instead of global roles. |

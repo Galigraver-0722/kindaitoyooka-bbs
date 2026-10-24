@@ -39,6 +39,7 @@ model User {
   resolvedReports Report[]         @relation("ReportResolver")
   postLikes       PostLike[]
   threadBookmarks ThreadBookmark[]
+  threadReads     ThreadRead[]
   auditLogs       AuditLog[]       @relation("AuditActor")
 }
 
@@ -58,10 +59,12 @@ model Board {
   slug        String   @unique
   name        String
   description String
-  sortOrder   Int      @default(0)
-  isArchived  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  threads     Thread[]
+  sortOrder     Int      @default(0)
+  isArchived    Boolean  @default(false)
+  // Comma-separated tag hints for the compose form, e.g. "質問,試験,宿題".
+  suggestedTags String   @default("")
+  createdAt     DateTime @default(now())
+  threads       Thread[]
 }
 
 model Thread {
@@ -78,9 +81,11 @@ model Thread {
   bookmarkCount Int              @default(0)
   createdAt     DateTime         @default(now())
   lastPostAt    DateTime         @default(now())
+  editedAt      DateTime?
   posts         Post[]
   tags          Tag[]
   bookmarks     ThreadBookmark[]
+  reads         ThreadRead[]
 
   @@index([boardId, lastPostAt])
   @@index([likeCount])
@@ -126,6 +131,17 @@ model ThreadBookmark {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+
+  @@id([userId, threadId])
+  @@index([threadId])
+}
+
+model ThreadRead {
+  userId     String
+  threadId   String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread     Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  lastReadAt DateTime @default(now())
 
   @@id([userId, threadId])
   @@index([threadId])
