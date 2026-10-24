@@ -20,9 +20,10 @@
 # production
 /build
 
-# local database files
+# local database files and backups
 /prisma/*.db
 /prisma/*.db-journal
+/backups/
 
 # misc
 .DS_Store

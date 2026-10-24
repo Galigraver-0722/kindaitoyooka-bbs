@@ -35,7 +35,16 @@ RATE_LIMIT_LOGIN_LIMIT=5
 RATE_LIMIT_LOGIN_WINDOW_MIN=10
 ```
 
-`.env` はコミットしないでください。項目は `.env.example` に書いてあります。
+`.env` はコミットしないでください。項目は `.env.example` に書いてあります。サーバー用の雛形は `deploy/toyooka-bbs.env.example` です。
+
+配備用のテンプレートは `deploy/` にあります。
+
+| ファイル | 用途 |
+| --- | --- |
+| `deploy/Caddyfile` | HTTPS のリバースプロキシ。セキュリティヘッダー付き |
+| `deploy/toyooka-bbs.service` | systemd のユニット |
+| `deploy/toyooka-bbs.env.example` | 本番用の環境変数ファイル |
+| `deploy/bbs-backup.sh` | 日次 cron 用。30 日分を残す |
 
 ## 3. ローカル開発
 
@@ -62,6 +71,9 @@ pnpm lint
 pnpm build
 pnpm db:studio      # browse the database in a browser
 pnpm reset-password <username>   # 手作業の復旧。新しいパスワードを一度だけ表示する
+pnpm backup [dir]                # 動いたまま一貫性のあるバックアップを取る
+pnpm verify-backup <file>        # バックアップの整合性と件数を確認する
+pnpm restore <file> <target> --force   # バックアップを戻す。先にサービスを止める
 pnpm exec prisma migrate dev --name <change>   # after switching to migrations
 ```
 
@@ -106,6 +118,8 @@ pnpm exec prisma studio   # or a SQL client; delete the seeded users
 
 ### 4.3 systemd ユニット
 
+ユニットの雛形は `deploy/toyooka-bbs.service` にあります。インストール前に pnpm のパスを環境に合わせてください。
+
 `/etc/systemd/system/toyooka-bbs.service` の内容は次のとおりです。
 
 ```ini
@@ -140,12 +154,18 @@ sudo systemctl status toyooka-bbs
 
 ### 4.4 Caddy による TLS
 
-`/etc/caddy/Caddyfile` の内容は次のとおりです。
+`deploy/Caddyfile` の雛形には、HSTS と基本的なセキュリティヘッダーも入っています。`/etc/caddy/Caddyfile` の内容は次のとおりです。
 
 ```caddyfile
 bbs.example.com {
-    encode gzip
+    encode gzip zstd
     reverse_proxy 127.0.0.1:3000
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
 }
 ```
 
@@ -161,45 +181,56 @@ Caddy が証明書の取得と更新を自動で行います。先に、ドメ�
 
 ## 5. バックアップ
 
-データベースはファイル 1 つです。サイト全体と同じように守ってください。
+データベースはファイル 1 つです。サイト全体と同じように守ってください。アプリを動かしたまま取る場合は `pnpm backup` を使ってください。SQLite の `VACUUM INTO` で、書き込み中でも一貫性のあるコピーを作ります。動いている `.db` を `cp` で複製すると、書きかけのページを拾うことがあります。
 
-### 日次バックアップスクリプト
+### コマンド
 
-`/usr/local/bin/bbs-backup.sh` の内容は次のとおりです。
+| コマンド | 内容 |
+| --- | --- |
+| `pnpm backup [dir]` | `bbs-<timestamp>.db` を書き、整合性を確認し、SHA-256 と件数を表示する |
+| `pnpm verify-backup <file>` | 信頼する前に、整合性と件数をもう一度確認する |
+| `pnpm restore <file> <target> --force` | 確認済みのバックアップを対象データベースへ戻し、もう一度確認する |
+
+対象のデータベースは使用中であってはいけません。本番の復旧では、必ず先にサービスを止めてください。
+
+### 日次バックアップ cron
+
+リポジトリに `deploy/bbs-backup.sh` があります。`bbs` ユーザーで実行するので、復旧時にサービスがファイルを読めます。30 日より古いファイルを消し、`/srv/backups` へ書きます。
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-umask 077
-
-DB=/srv/bbs/app/prisma/prod.db
-DEST=/srv/backups
-STAMP=$(date +%Y-%m-%d)
-
-sqlite3 "$DB" ".backup '$DEST/bbs-$STAMP.db'"
-find "$DEST" -name 'bbs-*.db' -mtime +30 -delete
-
-# Optional: copy off the server (rclone, rsync, or the school's storage)
-# rclone copy "$DEST/bbs-$STAMP.db" remote:bbs-backups/
+sudo install -m 700 -o bbs -g bbs deploy/bbs-backup.sh /usr/local/bin/bbs-backup.sh
+sudo -u bbs crontab -e
+# 0 3 * * * /usr/local/bin/bbs-backup.sh /srv/backups >> /srv/bbs/backup.log 2>&1
 ```
 
+ローカルのバックアップが成功したあとに、別の場所へも複製してください。失敗がログに残るよう、cron には実際のコマンドを書きます。
+
 ```bash
-sudo chmod 700 /usr/local/bin/bbs-backup.sh
-sudo crontab -e
-# 0 3 * * * /usr/local/bin/bbs-backup.sh
+# 上の行のあとに追加する例:
+# rclone copy /srv/backups/ remote:bbs-backups/ --include 'bbs-*.db'
 ```
 
 ### 復旧演習（毎月行う）
 
 ```bash
 sudo systemctl stop toyooka-bbs
-cp /srv/backups/bbs-2026-10-24.db /srv/bbs/app/prisma/prod.db
-sudo chown bbs:bbs /srv/bbs/app/prisma/prod.db
+sudo -u bbs bash -lc 'cd /srv/bbs/app && pnpm restore /srv/backups/bbs-2026-10-24.db prisma/prod.db --force'
 sudo systemctl start toyooka-bbs
-curl -fsS https://bbs.example.com/ >/dev/null && echo OK
+curl -fsS https://bbs.example.com/health
 ```
 
-既知のスレッドとその返信が残っていることを確認してください。一度も復旧していないバックアップは、バックアップではなく希望にすぎません。
+サイトを開き、既知のスレッドと返信、バックアップ時点の最新投稿が残っていることを確認してください。一度も復旧していないバックアップは、バックアップではなく希望にすぎません。
+
+### ローカルで行った演習（2026-10-24）
+
+同じコマンドを、本番に触れずに開発用データベースで実行しました。
+
+1. `pnpm backup /tmp/bbs-backups` で、アプリを動かしたままバックアップを取った。
+2. `pnpm verify-backup` が `Integrity: ok` と、想定どおりの利用者・スレッド・投稿数を返した。
+3. `pnpm restore <backup> /tmp/bbs-restore.db` で別のデータベースを作り、整合性が `ok` だった。
+4. 復元したファイルを指す 2 台目の `next start` をポート 3100 で動かし、同じスレッドが読めることを確認した。
+
+これはスクリプトの確認であり、サーバーの確認ではありません。本番の演習は、最初の配備後に実際のホストで行う必要があります。
 
 ## 6. マイグレーション
 

@@ -74,6 +74,9 @@ const en = {
     unread: "New",
     threadMeta: (author: string, replies: number) =>
       `by ${author} · ${replies} ${replies === 1 ? "reply" : "replies"}`,
+    pagePrevious: "Previous",
+    pageNext: "Next",
+    pageStatus: (page: number, total: number) => `Page ${page} of ${total}`,
   },
   thread: {
     startedBy: (author: string, date: string) => `Started by ${author} · ${date}`,
@@ -165,6 +168,11 @@ const en = {
     createButton: "Create account",
     haveAccount: "Already registered?",
     loginLink: "Log in",
+    termsPrefix: "By registering, you agree to the ",
+    termsRules: "community rules",
+    termsAnd: " and the ",
+    termsPrivacy: "privacy notice",
+    termsSuffix: ".",
   },
   moderation: {
     title: "Moderation",
@@ -217,6 +225,10 @@ const en = {
     } as Record<string, string>,
   },
   footer: {
+    policies: "Site policies",
+    rules: "Community rules",
+    privacy: "Privacy notice",
+    moderation: "Moderation policy",
     disclaimer:
       "A community-run student project. Not an official communication channel of Kindai University Toyooka Junior & Senior High School.",
     license: "Built with Next.js and Prisma. Licensed under MIT.",
@@ -285,6 +297,9 @@ const ja: typeof en = {
     locked: "ロック中",
     unread: "新着",
     threadMeta: (author: string, replies: number) => `${author}・返信 ${replies} 件`,
+    pagePrevious: "前へ",
+    pageNext: "次へ",
+    pageStatus: (page: number, total: number) => `${total} ページ中 ${page} ページ`,
   },
   thread: {
     startedBy: (author: string, date: string) => `${author} が ${date} に作成`,
@@ -376,6 +391,11 @@ const ja: typeof en = {
     createButton: "アカウントを作成",
     haveAccount: "すでにアカウントをお持ちの方",
     loginLink: "ログイン",
+    termsPrefix: "登録すると、",
+    termsRules: "コミュニティルール",
+    termsAnd: "と",
+    termsPrivacy: "プライバシー通知",
+    termsSuffix: "に同意したものとみなします。",
   },
   moderation: {
     title: "モデレーション",
@@ -427,6 +447,10 @@ const ja: typeof en = {
     } as Record<string, string>,
   },
   footer: {
+    policies: "サイトの方針",
+    rules: "コミュニティルール",
+    privacy: "プライバシー通知",
+    moderation: "モデレーション方針",
     disclaimer:
       "生徒が運営する非公式のプロジェクトです。近畿大学附属豊岡中学校・高等学校の公式な連絡手段ではありません。",
     license: "Next.js と Prisma で構築。MIT ライセンスで公開しています。",

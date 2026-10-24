@@ -41,7 +41,17 @@ RATE_LIMIT_LOGIN_LIMIT=5
 RATE_LIMIT_LOGIN_WINDOW_MIN=10
 ```
 
-Never commit `.env`. `.env.example` documents the fields.
+Never commit `.env`. `.env.example` documents the fields; `deploy/toyooka-bbs.env.example` is the
+server version.
+
+Deployment templates live in `deploy/`:
+
+| File | Purpose |
+| --- | --- |
+| `deploy/Caddyfile` | HTTPS reverse proxy with security headers |
+| `deploy/toyooka-bbs.service` | systemd unit |
+| `deploy/toyooka-bbs.env.example` | production environment file |
+| `deploy/bbs-backup.sh` | daily cron wrapper with 30-day retention |
 
 ## 3. Local development
 
@@ -114,6 +124,7 @@ pnpm exec prisma studio   # or a SQL client; delete the seeded users
 
 ### 4.3 systemd unit
 
+A copy of this unit is in `deploy/toyooka-bbs.service`; replace the pnpm path before installing.
 `/etc/systemd/system/toyooka-bbs.service`:
 
 ```ini
@@ -148,12 +159,18 @@ sudo systemctl status toyooka-bbs
 
 ### 4.4 TLS with Caddy
 
-`/etc/caddy/Caddyfile`:
+The template in `deploy/Caddyfile` also sets HSTS and basic security headers. `/etc/caddy/Caddyfile`:
 
 ```caddyfile
 bbs.example.com {
-    encode gzip
+    encode gzip zstd
     reverse_proxy 127.0.0.1:3000
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
 }
 ```
 
@@ -169,46 +186,63 @@ Allow 22 (if needed), 80, and 443 only. Do not expose port 3000 to the internet.
 
 ## 5. Backups
 
-The database is one file. Protect it as if it were the whole site.
+The database is one file. Protect it as if it were the whole site. Back up while the application
+is running: `pnpm backup` uses SQLite `VACUUM INTO`, which writes a transactionally consistent
+copy. Copying a live `.db` file with `cp` can capture a half-written page.
 
-### Daily backup script
+### Commands
 
-`/usr/local/bin/bbs-backup.sh`:
+| Command | What it does |
+| --- | --- |
+| `pnpm backup [dir]` | Write `bbs-<timestamp>.db`, check integrity, print SHA-256 and row counts |
+| `pnpm verify-backup <file>` | Re-check integrity and show counts before trusting a file |
+| `pnpm restore <file> <target> --force` | Copy a verified backup over a target database, then verify it |
+
+The target database must not be in use. Stop the service before a real restore.
+
+### Daily backup cron
+
+The repository ships `deploy/bbs-backup.sh`. It runs the backup as the `bbs` user so the file is
+readable by the service during a restore, prunes files older than 30 days, and writes to
+`/srv/backups`.
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-umask 077
-
-DB=/srv/bbs/app/prisma/prod.db
-DEST=/srv/backups
-STAMP=$(date +%Y-%m-%d)
-
-sqlite3 "$DB" ".backup '$DEST/bbs-$STAMP.db'"
-find "$DEST" -name 'bbs-*.db' -mtime +30 -delete
-
-# Optional: copy off the server (rclone, rsync, or the school's storage)
-# rclone copy "$DEST/bbs-$STAMP.db" remote:bbs-backups/
+sudo install -m 700 -o bbs -g bbs deploy/bbs-backup.sh /usr/local/bin/bbs-backup.sh
+sudo -u bbs crontab -e
+# 0 3 * * * /usr/local/bin/bbs-backup.sh /srv/backups >> /srv/bbs/backup.log 2>&1
 ```
 
+Add an offsite copy after the local backup succeeds. Keep the exact command in the cron job so a
+failed backup is visible in the log:
+
 ```bash
-sudo chmod 700 /usr/local/bin/bbs-backup.sh
-sudo crontab -e
-# 0 3 * * * /usr/local/bin/bbs-backup.sh
+# Optional, after the line above:
+# rclone copy /srv/backups/ remote:bbs-backups/ --include 'bbs-*.db'
 ```
 
 ### Restore drill (do this monthly)
 
 ```bash
 sudo systemctl stop toyooka-bbs
-cp /srv/backups/bbs-2026-10-24.db /srv/bbs/app/prisma/prod.db
-sudo chown bbs:bbs /srv/bbs/app/prisma/prod.db
+sudo -u bbs bash -lc 'cd /srv/bbs/app && pnpm restore /srv/backups/bbs-2026-10-24.db prisma/prod.db --force'
 sudo systemctl start toyooka-bbs
-curl -fsS https://bbs.example.com/ >/dev/null && echo OK
+curl -fsS https://bbs.example.com/health
 ```
 
-Verify that a known thread and its replies are present. A backup that has never been restored is
-a hope, not a backup.
+Then open the site and check that a known thread and its replies are present, and that the newest
+posts from the backup are there. A backup that has never been restored is a hope, not a backup.
+
+### Drill performed locally (2026-10-24)
+
+The same commands were exercised against the development database without touching production:
+
+1. `pnpm backup /tmp/bbs-backups` wrote a backup while the app was running.
+2. `pnpm verify-backup` reported `Integrity: ok` and the expected user/thread/post counts.
+3. `pnpm restore <backup> /tmp/bbs-restore.db` created a second database; integrity was `ok`.
+4. A second `next start` on port 3100 pointed at the restored file and served the same threads.
+
+This proves the scripts, not the server. The production drill still has to run on the real host
+after the first deployment.
 
 ## 6. Migrations
 

@@ -101,6 +101,18 @@ export default async function RegisterPage({
           </button>
         </form>
 
+        <p className="mt-5 text-xs text-slate-500">
+          {m.auth.termsPrefix}
+          <Link href="/rules" className="font-medium text-indigo-600 hover:text-indigo-700">
+            {m.auth.termsRules}
+          </Link>
+          {m.auth.termsAnd}
+          <Link href="/privacy" className="font-medium text-indigo-600 hover:text-indigo-700">
+            {m.auth.termsPrivacy}
+          </Link>
+          {m.auth.termsSuffix}
+        </p>
+
         <p className="mt-6 text-sm text-slate-500">
           {m.auth.haveAccount}{" "}
           <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-700">

@@ -151,13 +151,18 @@ names) is stored once and never translated. Dates and numbers are formatted per 
 │       ├── content-filter.ts # sensitive-word flags (advisory)
 │       ├── db.ts            # Prisma singleton
 │       ├── format.ts        # JST timestamps
+│       ├── editing.ts       # 15-minute thread edit rule
 │       ├── hot.ts           # popularity score for hot sorting
 │       ├── http.ts          # redirects, origin check, form parsing
 │       ├── i18n.ts          # locale cookie + request-scoped resolution
 │       ├── locales.ts       # en/ja dictionaries and typed keys
-│       ├── tags.ts          # hashtag parsing and tag links
 │       ├── messages.ts      # localized error codes and notices
+│       ├── pagination.ts    # board page numbers and links
+│       ├── passwords.ts     # scrypt hash/verify, shared with scripts
+│       ├── policies.ts      # bilingual rules, privacy, moderation text
 │       ├── rate-limit.ts    # in-memory fixed-window limits
+│       ├── read-state.ts    # per-thread unread marks
+│       ├── tags.ts          # tag parsing and tag links
 │       └── validation.ts    # length rules, safe redirect paths
 └── docs/                    # this documentation set
 ```

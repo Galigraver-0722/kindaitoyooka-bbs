@@ -10,7 +10,7 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | Path | Access | Purpose |
 | --- | --- | --- |
 | `/` | Public | Hero, eight newest threads, board list, posting rules |
-| `/b/[slug]` | Public | All visible threads in a board, pinned first, then by activity |
+| `/b/[slug]` | Public | Visible threads in a board, 20 per page; pinned first, then by activity or popularity |
 | `/t/[id]` | Public | Thread with all posts, reply form, report controls |
 | `/t/[id]/edit` | Author | Edit the title, opening post, and tags within 15 minutes of posting |
 | `/t/[id]/export` | Public | Download the thread as a plain-text file |
@@ -21,6 +21,9 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/bookmarks` | Signed-in | Threads the signed-in user saved |
 | `/search` | Public | Search title/body, filter by tag, sort newest or popular |
 | `/moderation` | Moderator / Admin | Open reports, automatic flags, and the recent audit log |
+| `/rules` | Public | Community rules, in the current interface language |
+| `/privacy` | Public | Privacy notice: stored data, cookies, retention, access |
+| `/moderation-policy` | Public | How reports, automatic flags, appeals, and escalation work |
 | `/health` | Public | JSON readiness check: `{"status":"ok","database":"ok"}`, or 503 |
 | any unknown path | Public | Custom 404 |
 
@@ -56,7 +59,13 @@ Each pair is overridable without a code change: `RATE_LIMIT_<NAME>_LIMIT` and
 `/search` accepts `q` (≤ 100 chars), `tag` (normalized lowercase), and `sort=latest|hot`.
 `q` matches a thread title or any visible reply body with a `contains` comparison; results are
 capped at 100. `hot` sorts by `likes × 3 + bookmarks × 2 + replies + recency`, where recency adds
-up to 3 points for activity in the last 72 hours. Board pages accept the same `sort` parameter.
+up to 3 points for activity in the last 72 hours. Board pages accept the same `sort` parameter and `page` (1-based). The page size is 20. `page`
+is clamped to the last page; page 1 is the canonical URL without `?page=1`. With `sort=hot`, the
+ranking is computed over the top 100 candidates and then split into pages.
+
+The policy pages are static bilingual content from `src/lib/policies.ts`; their wording is code,
+so both languages change in the same commit. The advisor still has to approve that wording before
+launch.
 
 ## 2. Mutation endpoints
 

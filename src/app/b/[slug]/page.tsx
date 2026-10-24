@@ -1,23 +1,37 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { sortByHot } from "@/lib/hot";
 import { getLocale, t } from "@/lib/i18n";
 import { errorMessage } from "@/lib/messages";
+import {
+  boardPageHref,
+  parsePage,
+  THREADS_PER_PAGE,
+  totalPages,
+} from "@/lib/pagination";
 import { getUnreadThreadIds } from "@/lib/read-state";
 
 export const dynamic = "force-dynamic";
+
+const THREAD_INCLUDE = {
+  author: { select: { username: true } },
+  _count: { select: { posts: true } },
+} satisfies Prisma.ThreadInclude;
+
+type BoardThread = Prisma.ThreadGetPayload<{ include: typeof THREAD_INCLUDE }>;
 
 export default async function BoardPage({
   params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ error?: string; sort?: string }>;
+  searchParams: Promise<{ error?: string; sort?: string; page?: string }>;
 }) {
-  const [{ slug }, { error, sort }, locale] = await Promise.all([
+  const [{ slug }, { error, sort, page }, locale] = await Promise.all([
     params,
     searchParams,
     getLocale(),
@@ -39,28 +53,52 @@ export default async function BoardPage({
     notFound();
   }
 
-  const threads = await prisma.thread.findMany({
-    where: { boardId: board.id, isDeleted: false },
-    orderBy: { lastPostAt: "desc" },
-    include: {
-      author: { select: { username: true } },
-      _count: { select: { posts: true } },
-    },
-  });
+  const where = { boardId: board.id, isDeleted: false };
+  const requestedPage = parsePage(page);
+  let currentPage = 1;
+  let pageCount = 1;
+  let totalCount = 0;
+  let threads: BoardThread[] = [];
 
-  const sorted =
-    order === "hot"
-      ? sortByHot(
-          threads.map((thread) => ({
-            ...thread,
-            replyCount: Math.max(thread._count.posts - 1, 0),
-          })),
-        )
-      : threads;
+  if (order === "hot") {
+    // "Hot" is computed in application code over the top 100 candidates, so
+    // paginate the ranked list instead of the database query.
+    const candidates = await prisma.thread.findMany({
+      where,
+      orderBy: { lastPostAt: "desc" },
+      take: 100,
+      include: THREAD_INCLUDE,
+    });
 
-  const ordered = [...sorted].sort((a, b) => Number(b.isPinned) - Number(a.isPinned));
+    const ranked = sortByHot(
+      candidates.map((thread) => ({
+        ...thread,
+        replyCount: Math.max(thread._count.posts - 1, 0),
+      })),
+    ).sort((a, b) => Number(b.isPinned) - Number(a.isPinned));
+
+    totalCount = ranked.length;
+    pageCount = totalPages(totalCount);
+    currentPage = Math.min(requestedPage, pageCount);
+    threads = ranked.slice(
+      (currentPage - 1) * THREADS_PER_PAGE,
+      currentPage * THREADS_PER_PAGE,
+    );
+  } else {
+    totalCount = board._count.threads;
+    pageCount = totalPages(totalCount);
+    currentPage = Math.min(requestedPage, pageCount);
+
+    threads = await prisma.thread.findMany({
+      where,
+      orderBy: [{ isPinned: "desc" }, { lastPostAt: "desc" }],
+      skip: (currentPage - 1) * THREADS_PER_PAGE,
+      take: THREADS_PER_PAGE,
+      include: THREAD_INCLUDE,
+    });
+  }
+
   const unread = await getUnreadThreadIds(user?.id, threads);
-
   const errorText = errorMessage(error, locale);
 
   return (
@@ -117,13 +155,13 @@ export default async function BoardPage({
         </p>
       ) : null}
 
-      {threads.length === 0 ? (
+      {totalCount === 0 ? (
         <p className="mt-8 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
           {m.board.empty}
         </p>
       ) : (
         <ul className="mt-8 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
-          {ordered.map((thread) => (
+          {threads.map((thread) => (
             <li key={thread.id} className="px-4 py-4 transition hover:bg-slate-50">
               <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                 {thread.isPinned ? (
@@ -156,6 +194,37 @@ export default async function BoardPage({
           ))}
         </ul>
       )}
+
+      {pageCount > 1 ? (
+        <nav
+          className="mt-4 flex items-center justify-between gap-3 text-sm"
+          aria-label={m.board.pageStatus(currentPage, pageCount)}
+        >
+          {currentPage > 1 ? (
+            <Link
+              href={boardPageHref(board.slug, { page: currentPage - 1, sort: order })}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 transition hover:bg-slate-50"
+            >
+              ← {m.board.pagePrevious}
+            </Link>
+          ) : (
+            <span />
+          )}
+          <span className="text-slate-500">
+            {m.board.pageStatus(currentPage, pageCount)}
+          </span>
+          {currentPage < pageCount ? (
+            <Link
+              href={boardPageHref(board.slug, { page: currentPage + 1, sort: order })}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 transition hover:bg-slate-50"
+            >
+              {m.board.pageNext} →
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      ) : null}
     </main>
   );
 }

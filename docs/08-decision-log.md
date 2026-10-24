@@ -25,6 +25,8 @@ alternatives considered.
 | ADR-0013 | Fifteen-minute author edit window with a visible marker | Accepted | 2026-10-24 |
 | ADR-0014 | Manual password recovery instead of email reset | Accepted | 2026-10-24 |
 | ADR-0015 | Per-thread read markers written on view | Accepted | 2026-10-24 |
+| ADR-0016 | Numbered board pagination, 20 threads per page | Accepted | 2026-10-24 |
+| ADR-0017 | Policies as bilingual, versioned code | Accepted | 2026-10-24 |
 
 ---
 
@@ -450,6 +452,67 @@ provider; still open as a Phase 2 item).
 
 **Revisit if.** The write volume becomes a problem, or students ask for "mark all read". Then
 batch the upsert or move to a last-visit timestamp per user and board.
+
+---
+
+## ADR-0016 — Numbered board pagination, 20 threads per page
+
+**Context.** A board eventually holds more threads than anyone wants to scroll. The site must keep
+working without client JavaScript, and the popular sort is computed in application code rather
+than in SQL.
+
+**Decision.** Board pages use numbered pages with `?page=N` and 20 threads per page. The page
+number is clamped to the last page, and page 1 is the canonical URL without a `page` parameter.
+The newest sort uses database `skip`/`take`; the popular sort ranks the top 100 candidates and
+then slices that list. Pinned threads stay first.
+
+**Consequences.**
+
+- Links are shareable and work without JavaScript; the back button behaves normally.
+- Offset pagination can repeat or skip an item when new threads arrive between page views. At
+  this scale that is a cosmetic problem, not a correctness problem.
+- The popular sort only covers 100 candidates; older threads are reachable through the newest
+  sort and search.
+- Every page still loads the unread state for the 20 visible threads only.
+
+**Alternatives considered.** Cursor pagination by `lastPostAt` (better for infinite streams, but
+awkward to combine with pinned threads and a computed hot score), a "load more" button (needs
+client JavaScript), rendering all threads and hiding extras in CSS (wasteful and bad for old
+phones).
+
+**Revisit if.** A board regularly exceeds a few thousand threads, offset queries become slow, or
+students ask for an infinite feed. Then move the newest sort to a cursor and keep numbered pages
+for the popular view.
+
+---
+
+## ADR-0017 — Policies as bilingual, versioned code
+
+**Context.** School approval needs a privacy notice, community rules, and a moderation policy.
+The text must match what the code actually does, and it must exist in both interface languages.
+A policy that promises deletion the code cannot perform is worse than no policy.
+
+**Decision.** Store the three documents in a typed module (`src/lib/policies.ts`) and render them
+through one component at `/rules`, `/privacy`, and `/moderation-policy`. The English and Japanese
+editions sit next to each other, share one update date, and are checked by tests for structure and
+unfinished placeholders. Where a capability is missing (account suspension, automatic purge),
+the text says so instead of implying it exists.
+
+**Consequences.**
+
+- A behavior change and its policy text change land in the same commit.
+- Both languages are always present; there is no silent English-only policy.
+- Editing policy text requires a developer and a deploy; the teacher advisor cannot edit it
+  directly. The advisor still has to approve the wording before launch.
+- Tests catch missing sections and placeholder text, not legal adequacy.
+
+**Alternatives considered.** Markdown files (easy to edit, easy to let the two languages drift),
+a CMS or database-backed pages (new dependency, permissions, and versioning questions), leaving
+the policies in the onboarding post only (not durable and hard to link from the footer).
+
+**Revisit if.** A non-developer needs to update the text regularly, or the school requires a
+signed, versioned document. Then move to versioned Markdown with a review step and keep the same
+URLs.
 
 ---
 

@@ -10,10 +10,11 @@ question can be found and answered a month later, where clubs can post one canon
 thread, and where students can report problems without confronting anyone. See
 [the product brief](docs/00-product-brief.md) for the reasoning.
 
-> **Status: Phase 2 in progress.** The core forum works end to end and the Phase 2 features
-> below are usable, but the project is **not ready for real students** until deployment, backups,
-> and the school approval work in [the roadmap](docs/05-roadmap.md) are done. Do not launch it as
-> an official school service without a teacher advisor and the administration's approval.
+> **Status: Phase 1 hardening.** The forum, Phase 2 features, board pagination, published
+> policies, backup scripts, and a local restore drill are done. The project is **not ready for
+> real students** until it is deployed behind HTTPS with server-side backups and the school
+> approval work in [the roadmap](docs/05-roadmap.md) is complete. Do not launch it as an official
+> school service without a teacher advisor and the administration's approval.
 
 ## What works today
 
@@ -29,6 +30,9 @@ thread, and where students can report problems without confronting anyone. See
 - Soft deletion: removed content leaves a visible placeholder instead of vanishing.
 - Japanese-first interface with a header switch to English; user content is never machine-translated.
 - Tags are a separate field when composing, not parsed out of the body.
+- Board pages paginate at 20 threads, with working newest and popular sorts.
+- Public community rules, privacy notice, and moderation policy at `/rules`, `/privacy`, and
+  `/moderation-policy`, in both languages.
 - Profile pages at `/u/<username>` with join date and recent threads/posts; no email or real name.
 - Thread editing for 15 minutes after posting, with a visible "edited" marker.
 - Plain-text export of a whole thread at `/t/<id>/export`.
@@ -41,9 +45,8 @@ thread, and where students can report problems without confronting anyone. See
 - Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, with a project-specific ignore list; matches are reviewed by a human, never auto-hidden.
 - Responsive UI, plain-text content only, no uploads and no trackers.
 
-Not implemented yet: pagination, full-text indexing, quote reposts, user-created boards,
-email verification or self-service password reset, notifications, account bans, and image
-uploads.
+Not implemented yet: full-text indexing, quote reposts, user-created boards, email verification
+or self-service password reset, notifications, account bans, and image uploads.
 The full list is in [MVP scope](docs/01-mvp-scope.md).
 
 ## Quick start
@@ -77,11 +80,14 @@ deployment, and never keep these passwords anywhere real.
 | `pnpm build` | Production build and type check |
 | `pnpm start` | Serve the production build |
 | `pnpm lint` | ESLint |
-| `pnpm test` | Unit tests for validation, i18n, tags, rate limits, editing, and passwords |
+| `pnpm test` | Unit tests for validation, i18n, tags, pagination, policies, rate limits, editing, and passwords |
 | `pnpm db:push` | Apply the Prisma schema to SQLite (development) |
 | `pnpm db:seed` | Insert development data |
 | `pnpm db:studio` | Browse the database in Prisma Studio |
 | `pnpm reset-password <username>` | Generate a new password, print it once, and sign the account out everywhere |
+| `pnpm backup [dir]` | Write a consistent SQLite backup while the app is running |
+| `pnpm verify-backup <file>` | Check integrity and row counts of a backup |
+| `pnpm restore <file> <target> --force` | Restore a backup; stop the app first |
 | `curl -fsS localhost:3000/health` | Check that the app and database respond |
 | `pnpm exec prisma migrate dev --name <change>` | Create a migration (use before production) |
 
@@ -120,7 +126,8 @@ Start with the brief, then read the scope and the safety policy before writing c
 
 ```text
 prisma/            schema, seed data
-scripts/           operational scripts (password reset)
+scripts/           operational scripts (password reset, backup, restore)
+deploy/            Caddy, systemd, and cron templates
 src/app/           pages and form endpoints
 src/components/    header, footer, role chip
 src/lib/           auth, database client, validation, formatting

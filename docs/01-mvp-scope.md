@@ -22,6 +22,8 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 - Tags entered in a separate field on the compose and reply forms, with tag-filtered search.
 - Fixed-window rate limits on authentication, posting, reporting, and reactions, tunable by
   environment variable.
+- Board pagination at 20 threads per page, preserving the newest/popular sort.
+- Public community rules, privacy notice, and moderation policy pages, in English and Japanese.
 - An audit log for every moderation action, visible on `/moderation`.
 - Author profile pages at `/u/<username>` with join date and recent threads/posts.
 - Thread editing within 15 minutes of posting, with a visible "edited" marker.
@@ -64,11 +66,11 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 
 | Capability | Why | Note |
 | --- | --- | --- |
-| Pagination or "load more" | A board with 500 threads is unusable | Cursor by `lastPostAt` |
+| Pagination or "load more" | A board with 500 threads is unusable | Shipped: numbered pages, 20 per page |
 | Full-text indexing | `contains` is fine for a few thousand posts; ranking and Japanese tokenization need FTS5 or Postgres FTS | Add when search latency or precision becomes a complaint |
 | Password reset | Otherwise locked-out users need manual help | Manual reset command shipped; self-service email reset still needs a provider |
 | Ban / mute | Removing single posts is not enough for repeat offenders | Time-boxed, with reason |
-| Privacy notice and terms | Required before school approval | Plain-language pages |
+| Privacy notice and terms | Required before school approval | Shipped at `/rules`, `/privacy`, `/moderation-policy`; the advisor still has to approve the wording |
 
 ### Could (nice, after the forum is alive)
 

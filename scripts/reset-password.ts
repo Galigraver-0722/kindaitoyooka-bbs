@@ -8,30 +8,9 @@
  * in person; never paste it into a public thread or commit it anywhere.
  */
 import { randomInt } from "node:crypto";
-import { readFileSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/passwords";
-
-/** Load `.env` the way Next.js does, so the script works without extra flags. */
-function loadLocalEnv(): void {
-  if (process.env.DATABASE_URL) {
-    return;
-  }
-
-  try {
-    const file = readFileSync(new URL("../.env", import.meta.url), "utf8");
-    for (const line of file.split("\n")) {
-      const match = /^\s*(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*)\s*$/.exec(line);
-      if (!match) {
-        continue;
-      }
-      const value = match[2].replace(/^["']|["']$/g, "");
-      process.env[match[1]] ??= value;
-    }
-  } catch {
-    // No .env file: rely on the caller's environment.
-  }
-}
+import { loadLocalEnv } from "./env";
 
 loadLocalEnv();
 

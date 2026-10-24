@@ -135,13 +135,18 @@ sequenceDiagram
 │       ├── content-filter.ts # 要注意語のフラグ（助言）
 │       ├── db.ts            # Prisma singleton
 │       ├── format.ts        # JST timestamps
+│       ├── editing.ts       # 投稿後 15 分の編集ルール
 │       ├── hot.ts           # 人気順のスコア
 │       ├── http.ts          # redirects, origin check, form parsing
 │       ├── i18n.ts          # locale cookie + request-scoped resolution
 │       ├── locales.ts       # en/ja dictionaries and typed keys
-│       ├── tags.ts          # ハッシュタグの解析とタグリンク
 │       ├── messages.ts      # localized error codes and notices
+│       ├── pagination.ts    # ボードのページ番号とリンク
+│       ├── passwords.ts     # scrypt のハッシュと検証（スクリプトと共用）
+│       ├── policies.ts      # ルール・プライバシー・モデレーションの二言語本文
 │       ├── rate-limit.ts    # プロセス内の固定ウィンドウ制限
+│       ├── read-state.ts    # スレッド単位の既読
+│       ├── tags.ts          # タグの解析とタグリンク
 │       └── validation.ts    # length rules, safe redirect paths
 └── docs/                    # this documentation set
 ```
