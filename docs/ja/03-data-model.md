@@ -13,9 +13,14 @@ erDiagram
     User ||--o{ Post : "writes"
     User ||--o{ Report : "files"
     User ||--o{ Report : "resolves"
+    User ||--o{ PostLike : "likes"
+    User ||--o{ ThreadBookmark : "saves"
     Board ||--o{ Thread : "contains"
     Thread ||--o{ Post : "contains"
+    Thread ||--o{ ThreadBookmark : "saved as"
+    Thread }o--o{ Tag : "tagged"
     Post ||--o{ Report : "receives"
+    Post ||--o{ PostLike : "receives"
 ```
 
 ## 2. テーブル
@@ -77,6 +82,7 @@ erDiagram
 | `authorId` | string | FK → User |
 | `body` | string | プレーンテキスト、1〜10,000 文字 |
 | `isDeleted` | boolean | 論理削除。プレースホルダーとして描画する |
+| `likeCount` | int | この投稿へのいいね数。非正規化した値 |
 | `createdAt` | datetime | 時系列順 |
 
 最初の投稿も `Post` の 1 行です。`Thread.body` という別の列はありません。こうしておくと、描画・通報・モデレーションを同じ形で扱えます。利用者が書いたテキストは、どれも同じルールを持つ 1 行になるからです。
@@ -96,6 +102,36 @@ erDiagram
 
 通報は書き換えない履歴です。処理の結果は記録しますが、キューからは何も消しません。
 
+### Tag
+
+| カラム | 型 | 備考 |
+| --- | --- | --- |
+| `id` | string（cuid） | |
+| `name` | string、一意 | NFKC 正規化して小文字にした 1〜30 文字 |
+| `createdAt` | datetime | |
+
+タグは暗黙の多対多テーブルでスレッド間で共有します。タイトルや返信のハッシュタグから作られ、専用のタグ編集画面はありません。
+
+### PostLike
+
+| カラム | 型 | 備考 |
+| --- | --- | --- |
+| `userId` | string | FK → User |
+| `postId` | string | FK → Post |
+| `createdAt` | datetime | |
+
+主キーは `(userId, postId)` です。1 人が同じ投稿に何度もいいねすることはできません。
+
+### ThreadBookmark
+
+| カラム | 型 | 備考 |
+| --- | --- | --- |
+| `userId` | string | FK → User |
+| `threadId` | string | FK → Thread |
+| `createdAt` | datetime | |
+
+主キーは `(userId, threadId)` です。`/bookmarks` はこの行を新しい順に並べたものです。
+
 ## 3. 不変条件
 
 1. `Thread` は作成時に必ず 1 件以上の `Post` を持ちます（ネスト作成）。後からすべての投稿を論理削除することはできますが、モデレーターがスレッドを削除するまで、スレッドの行とタイトルは残ります。
@@ -105,6 +141,10 @@ erDiagram
 5. ユーザー名は検証と保存の前に小文字へ正規化します。そのため `Alice` と `alice` は共存できません。
 6. 処理済みの通報には、`resolvedAt`、`resolvedById`、`resolution` の 3 つが同時に設定されます。
 7. ゲストは読めますが、`authorId` として現れることはありません。
+8. `Thread.likeCount` は、そのスレッドの投稿に付いたいいねの合計です。いいねを切り替えるときは、`Post.likeCount` と `Thread.likeCount` を同じトランザクションで更新します。保存と `Thread.bookmarkCount` も同じルールです。
+9. 1 人が同じ投稿に付けるいいねは 1 つ、同じスレッドに付ける保存も 1 つまでです。行を消すときは、同じトランザクションで件数を戻します。
+10. ハッシュタグは保存前に NFKC で正規化し、小文字にします。1 回の書き込みから最大 5 個まで拾い、同じタグは使ったスレッドすべてで共有します。
+11. 件数は派生データです。ずれたとしても、`PostLike` と `ThreadBookmark` から作り直せます。利用者が書いた内容には触れません。
 
 ## 4. インデックス
 
@@ -115,6 +155,10 @@ erDiagram
 | `Session.userId` | 「自分のセッションを削除」する操作 |
 | `Thread(boardId, lastPostAt)` | ボードのスレッド一覧の並び順 |
 | `Post(threadId, createdAt)` | スレッドの描画順 |
+| `Thread(likeCount)` | 人気順の並べ替え |
+| `Tag.name` 一意 | ハッシュタグからのタグ照合 |
+| `PostLike(postId)` | 投稿ごのいいね集計 |
+| `ThreadBookmark(threadId)` | スレッドごの保存集計 |
 | `Report(resolvedAt)` | 未処理キューの問い合わせ |
 
 ## 5. 削除の意味
@@ -138,10 +182,10 @@ erDiagram
 | `Ban` / `Mute` | 繰り返し違反する利用者への対応。理由と期限を付けて期間を区切る |
 | `EmailVerification`、`PasswordReset` | アカウントの復旧。メール送信事業者が必要 |
 | `Notification` | 自分のスレッドへの返信やメンションの通知 |
-| `Reaction` | 「+1」投稿の代わりになる軽い表現 |
-| `Tag` | ボードの中でスレッドを分類する |
 | `Attachment` | 画像とファイル。オブジェクトストレージ、サイズ制限、EXIF の削除、より厳しい安全レビューが必要 |
 | `BoardModerator` | 全体ロールではなく、ボード単位のモデレーション |
+| `Board.ownerId` / `Board.kind` | 利用者が作るボードと、公式ボードの区別。`docs/10` を参照 |
+| `Quote` | 引用付きの転載（引用投稿） |
 
 ## 8. データ保存期間の提案
 

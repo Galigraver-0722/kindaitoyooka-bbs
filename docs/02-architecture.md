@@ -134,22 +134,26 @@ names) is stored once and never translated. Dates and numbers are formatted per 
 │   │   │   ├── posts/
 │   │   │   ├── reports/
 │   │   │   └── threads/
-│   │   ├── b/[slug]/        # board page
-│   │   ├── t/[id]/          # thread page
+│   │   ├── b/[slug]/        # board page (latest/hot)
+│   │   ├── t/[id]/          # thread page (reactions, tags)
+│   │   ├── search/          # search + tag filter
+│   │   ├── bookmarks/       # saved threads
 │   │   ├── login/           # auth pages
 │   │   ├── register/
 │   │   ├── new/             # create thread
 │   │   ├── moderation/      # report queue
 │   │   ├── layout.tsx
 │   │   └── page.tsx
-│   ├── components/          # header, footer, role chip
+│   ├── components/          # header, footer, role chip, share button
 │   └── lib/
 │       ├── auth.ts          # hashing, sessions, current user
 │       ├── db.ts            # Prisma singleton
 │       ├── format.ts        # JST timestamps
+│       ├── hot.ts           # popularity score for hot sorting
 │       ├── http.ts          # redirects, origin check, form parsing
 │       ├── i18n.ts          # locale cookie + request-scoped resolution
 │       ├── locales.ts       # en/ja dictionaries and typed keys
+│       ├── tags.ts          # hashtag parsing and tag links
 │       ├── messages.ts      # localized error codes and notices
 │       └── validation.ts    # length rules, safe redirect paths
 └── docs/                    # this documentation set

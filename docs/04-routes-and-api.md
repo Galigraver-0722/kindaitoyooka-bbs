@@ -15,10 +15,19 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/new` | Signed-in | Create a thread; guests are redirected to `/login?next=/new` |
 | `/login` | Public | Login form; redirects signed-in users away |
 | `/register` | Public | Registration form; first account becomes `ADMIN` |
+| `/bookmarks` | Signed-in | Threads the signed-in user saved |
+| `/search` | Public | Search title/body, filter by tag, sort newest or popular |
 | `/moderation` | Moderator / Admin | Open reports; others are redirected |
 | any unknown path | Public | Custom 404 |
 
 All pages are server-rendered per request. There is no client-side data fetching.
+
+### Search and sorting
+
+`/search` accepts `q` (≤ 100 chars), `tag` (normalized lowercase), and `sort=latest|hot`.
+`q` matches a thread title or any visible reply body with a `contains` comparison; results are
+capped at 100. `hot` sorts by `likes × 3 + bookmarks × 2 + replies + recency`, where recency adds
+up to 3 points for activity in the last 72 hours. Board pages accept the same `sort` parameter.
 
 ## 2. Mutation endpoints
 
@@ -109,6 +118,19 @@ success so the browser performs a `GET`.
 - Auth: `MODERATOR` or `ADMIN`. No body.
 - Sets `isDeleted = true` and redirects to the thread. The post stays visible as a placeholder.
 - Failure codes: `forbidden`, `not-found`.
+
+### `POST /api/posts/[id]/like`
+
+- Auth: signed-in user. No body.
+- Toggles one like per user and post, updating `Post.likeCount` and the thread's total
+  `Thread.likeCount` in one transaction.
+- Redirects back to `/t/<threadId>#p-<postId>`.
+
+### `POST /api/threads/[id]/bookmark`
+
+- Auth: signed-in user. No body.
+- Toggles one bookmark per user and thread, updating `Thread.bookmarkCount`.
+- Redirects to the referring page on the same host, or the thread page.
 
 ### `POST /api/reports`
 

@@ -1,26 +1,6 @@
 import { cookieSecure } from "@/lib/auth";
-import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { formText, isSameOrigin, sameHostPath, seeOther } from "@/lib/http";
 import { isLocale, LOCALE_COOKIE } from "@/lib/i18n";
-
-/** Return to the page the reader came from, but only on this host. */
-function backTo(request: Request): string {
-  const referer = request.headers.get("referer");
-  if (!referer) {
-    return "/";
-  }
-
-  try {
-    const url = new URL(referer);
-    const host = request.headers.get("host");
-    if (host && url.host === host) {
-      return `${url.pathname}${url.search}${url.hash}`;
-    }
-  } catch {
-    // A malformed Referer is treated as "no Referer".
-  }
-
-  return "/";
-}
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
@@ -29,7 +9,7 @@ export async function POST(request: Request) {
 
   const data = await request.formData();
   const requested = formText(data, LOCALE_COOKIE);
-  const target = backTo(request);
+  const target = sameHostPath(request);
 
   if (!isLocale(requested)) {
     return seeOther(request, target);

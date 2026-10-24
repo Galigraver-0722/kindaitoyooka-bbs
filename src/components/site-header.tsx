@@ -28,6 +28,14 @@ export function SiteHeader({ user, locale }: { user: SessionUser | null; locale:
           <Link href="/new" className="text-slate-600 transition hover:text-slate-900">
             {m.nav.newThread}
           </Link>
+          <Link href="/search" className="text-slate-600 transition hover:text-slate-900">
+            {m.nav.search}
+          </Link>
+          {user ? (
+            <Link href="/bookmarks" className="text-slate-600 transition hover:text-slate-900">
+              {m.nav.bookmarks}
+            </Link>
+          ) : null}
           {canModerate ? (
             <Link href="/moderation" className="text-slate-600 transition hover:text-slate-900">
               {m.nav.moderation}

@@ -17,6 +17,8 @@ alternatives considered.
 | ADR-0005 | Plain HTML forms and route handlers, not server actions or an SPA | Accepted | 2026-10-24 |
 | ADR-0006 | Japanese-first bilingual interface with English as the source of truth | Accepted | 2026-10-24 |
 | ADR-0007 | Soft deletion for all user content | Accepted | 2026-10-24 |
+| ADR-0008 | Transparent weighted score for "hot" sorting | Accepted | 2026-10-24 |
+| ADR-0009 | Hashtags parsed from text into shared thread tags | Accepted | 2026-10-24 |
 
 ---
 
@@ -230,6 +232,58 @@ threads from the application.
 **Alternatives considered.** Hard delete (loses context and audit), hiding only in the UI
 (insufficient if the row is served elsewhere), a separate archive table (more complexity than
 this scale needs).
+
+---
+
+## ADR-0008 — Transparent weighted score for "hot" sorting
+
+**Context.** Readers need a way to find threads that are getting attention, but the site stores
+no view counts and no analytics, and it must stay explainable to students and teachers.
+
+**Decision.** Compute popularity in the application as
+`likes × 3 + bookmarks × 2 + replies + recency`, where recency adds up to 3 points for activity
+within the last 72 hours. Sort at most 100 candidate rows in memory. Do not store a score.
+
+**Consequences.**
+
+- The formula is public and easy to change; nobody has to guess what "hot" means.
+- Liking and bookmarking become meaningful signals without tracking readers.
+- The cost is bounded by the 100-row cap; results older than the current query window are not
+  ranked.
+- Pinned threads stay at the top regardless of score.
+
+**Alternatives considered.** View counts (privacy cost, easy to game), a Hacker News-style
+time-decay formula (harder to explain), a stored `hotScore` column (more write paths and drift).
+
+**Revisit if.** The candidate window grows beyond a few hundred threads, or ranking needs
+personalization. Then move to SQL-side scoring or a materialized score.
+
+---
+
+## ADR-0009 — Hashtags parsed from text into shared thread tags
+
+**Context.** Users want topics without filling in another form, and the existing editor is plain
+text.
+
+**Decision.** Parse `#tag` from thread titles and reply bodies on write. Normalize with NFKC,
+lowercase, allow Unicode letters, numbers, and underscores, and read at most five tags per
+write. Connect or create shared `Tag` rows and attach them to the thread. Tag links open
+`/search?tag=...`.
+
+**Consequences.**
+
+- No extra UI; a hashtag in a sentence is enough.
+- Typos create new tags, and there is no rename or merge screen yet. Moderators can merge them
+  in the database if it becomes a problem.
+- A tag belongs to the whole thread, not to the individual post that mentioned it.
+- Tags are user content: report the post that introduced an abusive tag.
+
+**Alternatives considered.** A tag picker with autocomplete (cleaner data, more UI and client
+JavaScript), a separate tag field (duplicate input), per-post tags (more precise, but threads are
+the unit of discovery here).
+
+**Revisit if.** Tag spam appears, or users need controlled vocabularies such as subjects and
+clubs.
 
 ---
 

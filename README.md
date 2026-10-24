@@ -20,14 +20,19 @@ thread, and where students can report problems without confronting anyone. See
 - Username-and-password registration, login, logout with server-side sessions.
 - Five boards, recent activity, and thread lists.
 - Create a thread, reply, and see replies in chronological order.
+- Like a post, bookmark a thread, copy a permalink, and report a post from one action bar.
+- Saved-threads page at `/bookmarks`.
+- Search titles and replies, sorted by newest or a transparent popularity score.
+- Hashtags in titles and replies, with tag-filtered search.
 - Report a post with a reason; moderators review the queue at `/moderation`.
 - Moderator tools: remove post, lock/unlock thread, remove thread, dismiss reports.
 - Soft deletion: removed content leaves a visible placeholder instead of vanishing.
 - Japanese-first interface with a header switch to English; user content is never machine-translated.
 - Responsive UI, plain-text content only, no uploads and no trackers.
 
-Not implemented yet: search, pagination, email verification or password reset, notifications,
-rate limiting, audit log, account bans, profile pages, and image uploads.
+Not implemented yet: pagination, full-text indexing, quote reposts, user-created boards,
+email verification or password reset, notifications, rate limiting, audit log, account bans,
+profile pages, and image uploads.
 The full list is in [MVP scope](docs/01-mvp-scope.md).
 
 ## Quick start

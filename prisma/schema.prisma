@@ -21,17 +21,19 @@ enum Role {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  username     String    @unique
-  email        String?   @unique
-  passwordHash String
-  role         Role      @default(STUDENT)
-  createdAt    DateTime  @default(now())
-  sessions     Session[]
-  threads      Thread[]
-  posts        Post[]
-  reports      Report[]  @relation("ReportAuthor")
-  resolvedReports Report[] @relation("ReportResolver")
+  id              String           @id @default(cuid())
+  username        String           @unique
+  email           String?          @unique
+  passwordHash    String
+  role            Role             @default(STUDENT)
+  createdAt       DateTime         @default(now())
+  sessions        Session[]
+  threads         Thread[]
+  posts           Post[]
+  reports         Report[]         @relation("ReportAuthor")
+  resolvedReports Report[]         @relation("ReportResolver")
+  postLikes       PostLike[]
+  threadBookmarks ThreadBookmark[]
 }
 
 model Session {
@@ -57,34 +59,70 @@ model Board {
 }
 
 model Thread {
-  id         String   @id @default(cuid())
-  boardId    String
-  board      Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  authorId   String
-  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  title      String
-  isPinned   Boolean  @default(false)
-  isLocked   Boolean  @default(false)
-  isDeleted  Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  lastPostAt DateTime @default(now())
-  posts      Post[]
+  id            String           @id @default(cuid())
+  boardId       String
+  board         Board            @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title         String
+  isPinned      Boolean          @default(false)
+  isLocked      Boolean          @default(false)
+  isDeleted     Boolean          @default(false)
+  likeCount     Int              @default(0)
+  bookmarkCount Int              @default(0)
+  createdAt     DateTime         @default(now())
+  lastPostAt    DateTime         @default(now())
+  posts         Post[]
+  tags          Tag[]
+  bookmarks     ThreadBookmark[]
 
   @@index([boardId, lastPostAt])
+  @@index([likeCount])
 }
 
 model Post {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   threadId  String
-  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  thread    Thread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
   body      String
-  isDeleted Boolean  @default(false)
-  createdAt DateTime @default(now())
+  isDeleted Boolean    @default(false)
+  likeCount Int        @default(0)
+  createdAt DateTime   @default(now())
   reports   Report[]
+  likes     PostLike[]
 
   @@index([threadId, createdAt])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  threads   Thread[]
+}
+
+model PostLike {
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, postId])
+  @@index([postId])
+}
+
+model ThreadBookmark {
+  userId    String
+  threadId  String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, threadId])
+  @@index([threadId])
 }
 
 model Report {

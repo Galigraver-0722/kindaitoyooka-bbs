@@ -13,6 +13,12 @@ const scryptAsync = promisify(scrypt);
 
 const DEMO_PASSWORD = "toyooka-demo-123";
 
+function tagLinks(...names: string[]) {
+  return {
+    connectOrCreate: names.map((name) => ({ where: { name }, create: { name } })),
+  };
+}
+
 async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString("hex");
   const derived = (await scryptAsync(password.normalize("NFKC"), salt, 64)) as Buffer;
@@ -113,6 +119,7 @@ async function main() {
       authorId: admin.id,
       title: "Toyooka BBS へようこそ",
       isPinned: true,
+      tags: tagLinks("ルール", "はじめて"),
       posts: {
         create: {
           authorId: admin.id,
@@ -137,6 +144,7 @@ async function main() {
       boardId: general.id,
       authorId: student.id,
       title: "今年の文化祭、何を追加したい？",
+      tags: tagLinks("文化祭"),
       posts: {
         create: [
           {
@@ -161,6 +169,7 @@ async function main() {
       boardId: study.id,
       authorId: student.id,
       title: "中間テスト前の数学勉強会",
+      tags: tagLinks("数学", "勉強会"),
       posts: {
         create: [
           {
@@ -181,6 +190,7 @@ async function main() {
       boardId: clubs.id,
       authorId: moderator.id,
       title: "写真部：週末のフォトウォーク",
+      tags: tagLinks("写真部"),
       posts: {
         create: {
           authorId: moderator.id,
@@ -195,6 +205,7 @@ async function main() {
       boardId: meta.id,
       authorId: admin.id,
       title: "この試作版でまだできないこと",
+      tags: tagLinks("要望"),
       posts: {
         create: {
           authorId: admin.id,

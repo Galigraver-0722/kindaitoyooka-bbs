@@ -30,6 +30,13 @@ Deliverables:
 
 Exit criteria: `pnpm build`, `pnpm lint`, and the end-to-end manual flow all pass.
 
+### Delivered ahead of the roadmap (2026-10-24)
+
+- Post likes, thread bookmarks, a saved-threads page, and a share action.
+- Title/body search with newest and popularity sorting.
+- Hashtag parsing, tag pages through `/search?tag=`, and tag chips on threads.
+- These are not a substitute for Phase 1 safety work; they are additive.
+
 ## Phase 1 — Make it safe to open a beta (2 weeks)
 
 Goal: 20 invited students use the site for two weeks without a data or safety incident.
@@ -61,7 +68,7 @@ Goal: the forum answers questions without a moderator explaining how to use it.
 
 Deliverables:
 
-- Search across threads and posts (SQLite FTS5 first; move to Postgres if needed).
+- Upgrade the `contains` search to SQLite FTS5 when data grows or Japanese tokenization becomes a complaint.
 - Email verification and password reset, or a documented manual recovery process approved by
   the teacher advisor.
 - User profile page: username, join date, recent posts (no personal data).

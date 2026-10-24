@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isSameOrigin, seeOther } from "@/lib/http";
+import { parseHashtags } from "@/lib/tags";
 import { validateBody } from "@/lib/validation";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -35,6 +36,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return seeOther(request, `/t/${id}?error=invalid-input`);
   }
 
+  const tags = parseHashtags(body);
+
   const post = await prisma.$transaction(async (tx) => {
     const created = await tx.post.create({
       data: { threadId: id, authorId: user.id, body },
@@ -43,7 +46,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     await tx.thread.update({
       where: { id },
-      data: { lastPostAt: created.createdAt },
+      data: {
+        lastPostAt: created.createdAt,
+        ...(tags.length > 0
+          ? {
+              tags: {
+                connectOrCreate: tags.map((name) => ({ where: { name }, create: { name } })),
+              },
+            }
+          : {}),
+      },
     });
 
     return created;

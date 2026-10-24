@@ -118,22 +118,26 @@ sequenceDiagram
 │   │   │   ├── posts/
 │   │   │   ├── reports/
 │   │   │   └── threads/
-│   │   ├── b/[slug]/        # board page
-│   │   ├── t/[id]/          # thread page
+│   │   ├── b/[slug]/        # board page（新着／人気）
+│   │   ├── t/[id]/          # thread page（リアクション、タグ）
+│   │   ├── search/          # 検索とタグ絞り込み
+│   │   ├── bookmarks/       # 保存したスレッド
 │   │   ├── login/           # auth pages
 │   │   ├── register/
 │   │   ├── new/             # create thread
 │   │   ├── moderation/      # report queue
 │   │   ├── layout.tsx
 │   │   └── page.tsx
-│   ├── components/          # header, footer, role chip
+│   ├── components/          # header, footer, role chip, share button
 │   └── lib/
 │       ├── auth.ts          # hashing, sessions, current user
 │       ├── db.ts            # Prisma singleton
 │       ├── format.ts        # JST timestamps
+│       ├── hot.ts           # 人気順のスコア
 │       ├── http.ts          # redirects, origin check, form parsing
 │       ├── i18n.ts          # locale cookie + request-scoped resolution
 │       ├── locales.ts       # en/ja dictionaries and typed keys
+│       ├── tags.ts          # ハッシュタグの解析とタグリンク
 │       ├── messages.ts      # localized error codes and notices
 │       └── validation.ts    # length rules, safe redirect paths
 └── docs/                    # this documentation set

@@ -14,9 +14,14 @@ erDiagram
     User ||--o{ Post : "writes"
     User ||--o{ Report : "files"
     User ||--o{ Report : "resolves"
+    User ||--o{ PostLike : "likes"
+    User ||--o{ ThreadBookmark : "saves"
     Board ||--o{ Thread : "contains"
     Thread ||--o{ Post : "contains"
+    Thread ||--o{ ThreadBookmark : "saved as"
+    Thread }o--o{ Tag : "tagged"
     Post ||--o{ Report : "receives"
+    Post ||--o{ PostLike : "receives"
 ```
 
 ## 2. Tables
@@ -79,6 +84,7 @@ cheapest way to protect personal data is not to collect it.
 | `authorId` | string | FK → User |
 | `body` | string | Plain text, 1–10,000 chars |
 | `isDeleted` | boolean | Soft delete; rendered as a placeholder |
+| `likeCount` | int | Likes on this post; denormalized |
 | `createdAt` | datetime | Chronological order |
 
 The opening post is also a `Post` row. There is no separate `Thread.body`. This keeps rendering,
@@ -99,6 +105,37 @@ reporting, and moderation uniform: every piece of user text is one row with the 
 
 Reports are immutable history. Resolution is recorded; nothing is deleted from the queue.
 
+### Tag
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | string (cuid) | |
+| `name` | string, unique | NFKC-normalized, lowercased, 1–30 chars |
+| `createdAt` | datetime | |
+
+Tags are shared across threads through an implicit many-to-many table. They are created from
+hashtags in titles and replies, not from a separate tag editor.
+
+### PostLike
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `userId` | string | FK → User |
+| `postId` | string | FK → Post |
+| `createdAt` | datetime | |
+
+Primary key is `(userId, postId)`, so one person can like a post once.
+
+### ThreadBookmark
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `userId` | string | FK → User |
+| `threadId` | string | FK → Thread |
+| `createdAt` | datetime | |
+
+Primary key is `(userId, threadId)`. The `/bookmarks` page lists these rows, newest first.
+
 ## 3. Invariants
 
 1. A `Thread` always has at least one `Post` at creation (nested create). It can later have all
@@ -113,6 +150,15 @@ Reports are immutable history. Resolution is recorded; nothing is deleted from t
    cannot both exist.
 6. A resolved report has `resolvedAt`, `resolvedById`, and `resolution` set together.
 7. Guests can read but cannot appear as `authorId`.
+8. `Thread.likeCount` is the sum of likes on its posts. Toggling a like updates `Post.likeCount`
+   and `Thread.likeCount` in the same transaction; the same rule applies to bookmarks and
+   `Thread.bookmarkCount`.
+9. A user has at most one like per post and one bookmark per thread. Removing the row reverses
+   the counter in the same transaction.
+10. Hashtags are normalized with NFKC and lowercased before storage. At most five tags are read
+    from one write; a tag is shared by every thread that uses it.
+11. Counters are derived data. If they ever drift, they can be rebuilt from `PostLike` and
+    `ThreadBookmark` without touching user content.
 
 ## 4. Indexes
 
@@ -123,6 +169,10 @@ Reports are immutable history. Resolution is recorded; nothing is deleted from t
 | `Session.userId` | "Delete my sessions" operations |
 | `Thread(boardId, lastPostAt)` | Board thread list ordering |
 | `Post(threadId, createdAt)` | Thread rendering order |
+| `Thread(likeCount)` | Popularity sorting |
+| `Tag.name` unique | Tag lookup from hashtags |
+| `PostLike(postId)` | Counting likes for a post |
+| `ThreadBookmark(threadId)` | Counting saves for a thread |
 | `Report(resolvedAt)` | Open-queue query |
 
 ## 5. Delete semantics
@@ -151,10 +201,10 @@ Reports are immutable history. Resolution is recorded; nothing is deleted from t
 | `Ban` / `Mute` | Repeat offenders; time-boxed with a reason and an expiry. |
 | `EmailVerification`, `PasswordReset` | Account recovery. Requires an email provider. |
 | `Notification` | Reply to my thread / mention. |
-| `Reaction` | Cheap alternative to "+1" posts. |
-| `Tag` | Classify threads inside a board. |
 | `Attachment` | Images and files. Requires object storage, size limits, EXIF stripping, and a much stricter safety review. |
 | `BoardModerator` | Per-board moderation instead of global roles. |
+| `Board.ownerId` / `Board.kind` | User-created boards, separated from official boards. See `docs/10`. |
+| `Quote` | A repost that embeds another post with commentary. |
 
 ## 8. Data retention proposal
 

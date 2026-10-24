@@ -44,3 +44,23 @@ export function withError(path: string, code: string): string {
   const separator = path.includes("?") ? "&" : "?";
   return `${path}${separator}error=${encodeURIComponent(code)}`;
 }
+
+/** Return to the referring page, but only when it belongs to this host. */
+export function sameHostPath(request: Request, fallback = "/"): string {
+  const referer = request.headers.get("referer");
+  if (!referer) {
+    return fallback;
+  }
+
+  try {
+    const url = new URL(referer);
+    const host = request.headers.get("host");
+    if (host && url.host === host) {
+      return `${url.pathname}${url.search}${url.hash}`;
+    }
+  } catch {
+    // A malformed Referer is treated as "no Referer".
+  }
+
+  return fallback;
+}

@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RoleChip } from "@/components/role-chip";
+import { ShareButton } from "@/components/share-button";
 import { getCurrentUser, isModerator } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { getLocale, t } from "@/lib/i18n";
 import { errorMessage, noticeMessage } from "@/lib/messages";
+import { tagSearchHref } from "@/lib/tags";
 import { LIMITS } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +32,7 @@ export default async function ThreadPage({
       include: {
         board: { select: { slug: true, name: true } },
         author: { select: { username: true } },
+        tags: { select: { name: true } },
         posts: {
           orderBy: { createdAt: "asc" },
           include: { author: { select: { username: true, role: true } } },
@@ -42,6 +45,23 @@ export default async function ThreadPage({
   if (!thread || thread.isDeleted) {
     notFound();
   }
+
+  const [likedPostIds, bookmarked] = user
+    ? await Promise.all([
+        prisma.postLike
+          .findMany({
+            where: { userId: user.id, postId: { in: thread.posts.map((post) => post.id) } },
+            select: { postId: true },
+          })
+          .then((rows) => new Set(rows.map((row) => row.postId))),
+        prisma.threadBookmark
+          .findUnique({
+            where: { userId_threadId: { userId: user.id, threadId: thread.id } },
+            select: { userId: true },
+          })
+          .then(Boolean),
+      ])
+    : ([new Set<string>(), false] as const);
 
   const canModerate = isModerator(user);
   const errorText = errorMessage(error, locale);
@@ -76,6 +96,27 @@ export default async function ThreadPage({
         <p className="mt-1 text-sm text-slate-500">
           {m.thread.startedBy(thread.author.username, formatDateTime(thread.createdAt, locale))}
         </p>
+
+        {thread.tags.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {thread.tags.map((tag) => (
+              <Link
+                key={tag.name}
+                href={tagSearchHref(tag.name)}
+                className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 transition hover:bg-slate-200"
+              >
+                #{tag.name}
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-500">
+          <span aria-label={m.thread.like}>♡ {thread.likeCount}</span>
+          <span>
+            {m.thread.save} {thread.bookmarkCount}
+          </span>
+        </div>
       </header>
 
       {canModerate ? (
@@ -111,81 +152,122 @@ export default async function ThreadPage({
       ) : null}
 
       <ol className="mt-6 space-y-4">
-        {thread.posts.map((post, index) => (
-          <li key={post.id} id={`p-${post.id}`} className="scroll-mt-6">
-            <article
-              className={`rounded-xl border p-5 ${
-                post.isDeleted
-                  ? "border-dashed border-slate-300 bg-slate-50"
-                  : "border-slate-200 bg-white"
-              }`}
-            >
-              <header className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
-                <div className="text-slate-700">
-                  <span className="font-medium">{post.author.username}</span>
-                  <RoleChip role={post.author.role} locale={locale} />
-                  {index === 0 ? (
-                    <span className="ml-2 text-xs text-slate-400">{m.thread.originalPost}</span>
-                  ) : (
-                    <span className="ml-2 text-xs text-slate-400">
-                      {m.thread.postNumber(index + 1)}
-                    </span>
-                  )}
-                </div>
-                <time className="text-xs text-slate-400">
-                  {formatDateTime(post.createdAt, locale)}
-                </time>
-              </header>
+        {thread.posts.map((post, index) => {
+          const liked = likedPostIds.has(post.id);
 
-              {post.isDeleted ? (
-                <p className="mt-3 text-sm italic text-slate-500">{m.thread.removed}</p>
-              ) : (
-                <p className="mt-3 whitespace-pre-wrap break-words text-slate-800">{post.body}</p>
-              )}
+          return (
+            <li key={post.id} id={`p-${post.id}`} className="scroll-mt-6">
+              <article
+                className={`rounded-xl border p-5 ${
+                  post.isDeleted
+                    ? "border-dashed border-slate-300 bg-slate-50"
+                    : "border-slate-200 bg-white"
+                }`}
+              >
+                <header className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+                  <div className="text-slate-700">
+                    <span className="font-medium">{post.author.username}</span>
+                    <RoleChip role={post.author.role} locale={locale} />
+                    {index === 0 ? (
+                      <span className="ml-2 text-xs text-slate-400">{m.thread.originalPost}</span>
+                    ) : (
+                      <span className="ml-2 text-xs text-slate-400">
+                        {m.thread.postNumber(index + 1)}
+                      </span>
+                    )}
+                  </div>
+                  <time className="text-xs text-slate-400">
+                    {formatDateTime(post.createdAt, locale)}
+                  </time>
+                </header>
 
-              {!post.isDeleted ? (
-                <footer className="mt-4 flex flex-wrap items-start gap-4 text-xs text-slate-500">
-                  {user ? (
-                    <details className="group">
-                      <summary className="cursor-pointer select-none hover:text-slate-800">
-                        {m.thread.report}
-                      </summary>
-                      <form
-                        action="/api/reports"
-                        method="post"
-                        className="mt-2 flex max-w-xl flex-col gap-2 sm:flex-row"
-                      >
-                        <input type="hidden" name="postId" value={post.id} />
-                        <input
-                          name="reason"
-                          required
-                          minLength={LIMITS.reasonMin}
-                          maxLength={LIMITS.reasonMax}
-                          placeholder={m.thread.reportPlaceholder}
-                          className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                        />
+                {post.isDeleted ? (
+                  <p className="mt-3 text-sm italic text-slate-500">{m.thread.removed}</p>
+                ) : (
+                  <p className="mt-3 whitespace-pre-wrap break-words text-slate-800">
+                    {post.body}
+                  </p>
+                )}
+
+                {!post.isDeleted ? (
+                  <footer className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500">
+                    {user ? (
+                      <form action={`/api/posts/${post.id}/like`} method="post">
                         <button
                           type="submit"
-                          className="rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white transition hover:bg-slate-700"
+                          aria-label={liked ? m.thread.liked : m.thread.like}
+                          className={`transition ${
+                            liked ? "text-rose-600" : "hover:text-slate-800"
+                          }`}
                         >
-                          {m.thread.sendReport}
+                          {liked ? "♥" : "♡"} {post.likeCount}
                         </button>
                       </form>
-                    </details>
-                  ) : null}
+                    ) : (
+                      <span>♡ {post.likeCount}</span>
+                    )}
 
-                  {canModerate ? (
-                    <form action={`/api/posts/${post.id}/delete`} method="post">
-                      <button type="submit" className="hover:text-rose-700">
-                        {m.thread.removePost}
-                      </button>
-                    </form>
-                  ) : null}
-                </footer>
-              ) : null}
-            </article>
-          </li>
-        ))}
+                    {user ? (
+                      <form action={`/api/threads/${thread.id}/bookmark`} method="post">
+                        <button
+                          type="submit"
+                          className={`transition ${
+                            bookmarked ? "text-indigo-600" : "hover:text-slate-800"
+                          }`}
+                        >
+                          {bookmarked ? m.thread.saved : m.thread.save}
+                        </button>
+                      </form>
+                    ) : null}
+
+                    <ShareButton
+                      path={`/t/${thread.id}#p-${post.id}`}
+                      label={m.thread.share}
+                      copiedLabel={m.thread.copied}
+                    />
+
+                    {user ? (
+                      <details className="group">
+                        <summary className="cursor-pointer select-none hover:text-slate-800">
+                          {m.thread.report}
+                        </summary>
+                        <form
+                          action="/api/reports"
+                          method="post"
+                          className="mt-2 flex max-w-xl flex-col gap-2 sm:flex-row"
+                        >
+                          <input type="hidden" name="postId" value={post.id} />
+                          <input
+                            name="reason"
+                            required
+                            minLength={LIMITS.reasonMin}
+                            maxLength={LIMITS.reasonMax}
+                            placeholder={m.thread.reportPlaceholder}
+                            className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                          />
+                          <button
+                            type="submit"
+                            className="rounded-md bg-slate-900 px-3 py-1.5 font-medium text-white transition hover:bg-slate-700"
+                          >
+                            {m.thread.sendReport}
+                          </button>
+                        </form>
+                      </details>
+                    ) : null}
+
+                    {canModerate ? (
+                      <form action={`/api/posts/${post.id}/delete`} method="post">
+                        <button type="submit" className="hover:text-rose-700">
+                          {m.thread.removePost}
+                        </button>
+                      </form>
+                    ) : null}
+                  </footer>
+                ) : null}
+              </article>
+            </li>
+          );
+        })}
       </ol>
 
       <section className="mt-8">
@@ -211,9 +293,7 @@ export default async function ThreadPage({
               className="mt-2 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
             <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-slate-500">
-                {m.thread.charLimit(LIMITS.bodyMax)}
-              </p>
+              <p className="text-xs text-slate-500">{m.thread.charLimit(LIMITS.bodyMax)}</p>
               <button
                 type="submit"
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"

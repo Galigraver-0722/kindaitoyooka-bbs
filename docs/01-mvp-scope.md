@@ -16,6 +16,10 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 - Five seeded boards and sample discussions.
 - Board index, recent activity, thread list, thread view.
 - Create thread, reply to thread.
+- Like posts, bookmark threads, share permalinks, and report posts from one action bar.
+- Saved-threads page and per-user reaction state.
+- Search titles and replies, with newest and popularity sorting.
+- Hashtags parsed from titles and replies, with tag-filtered search.
 - Report a post with a required reason.
 - Moderator queue: remove reported post or dismiss report.
 - Moderator actions: remove post, lock/unlock thread, remove thread.
@@ -42,13 +46,15 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 | Permissions | Students cannot reach `/moderation` or call moderation endpoints |
 | Safety placeholder | Removed post remains in the thread as a localized placeholder ("Removed by a moderator" / 「モデレーターが削除しました」) |
 | Language switch | Every page opens in Japanese by default and can be switched to English; the choice survives navigation |
+| React | Signed-in users can like a post and bookmark a thread; counts update and toggling reverses the action |
+| Search and tags | Search matches titles and replies, filters by tag, and sorts by newest or popularity |
 
 ### Should (before opening to the whole school)
 
 | Capability | Why | Note |
 | --- | --- | --- |
 | Pagination or "load more" | A board with 500 threads is unusable | Cursor by `lastPostAt` |
-| Search | The main reason a forum beats chat | SQLite FTS5 or Postgres FTS |
+| Full-text indexing | `contains` is fine for a few thousand posts; ranking and Japanese tokenization need FTS5 or Postgres FTS | Add when search latency or precision becomes a complaint |
 | Rate limiting | Stops accidental and deliberate floods | Per-IP and per-account |
 | Audit log | Accountability for moderator actions | Append-only table |
 | Password reset | Otherwise locked-out users need manual help | Requires email delivery |

@@ -182,6 +182,18 @@ must never be run against production with demo accounts.
 persistent storage, TLS, and a process manager. Running `pnpm dev` on your laptop is not a
 deployment.
 
+**Like.** A lightweight signal that a reader found a post useful. A like is one row per user
+and post; the displayed count is a denormalized total.
+
+**Bookmark.** A private save of a thread for later reading. Bookmarks are visible only to their
+owner and drive the `/bookmarks` page.
+
+**Hashtag.** A `#word` inside a title or reply. Hashtags are normalized and attached to the whole
+thread; they are not a separate field.
+
+**Hot score.** The transparent popularity formula `likes × 3 + bookmarks × 2 + replies +
+recency`. It ranks search and board results without tracking views.
+
 **Locale.** The language used for interface text and formatting, stored in the `locale` cookie
 as `en` or `ja`. A locale changes UI strings, dates, and number formatting; it never translates
 user-written content.

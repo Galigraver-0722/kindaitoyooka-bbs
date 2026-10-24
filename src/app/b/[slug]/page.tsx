@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
+import { sortByHot } from "@/lib/hot";
 import { getLocale, t } from "@/lib/i18n";
 import { errorMessage } from "@/lib/messages";
 
@@ -12,9 +13,14 @@ export default async function BoardPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; sort?: string }>;
 }) {
-  const [{ slug }, { error }, locale] = await Promise.all([params, searchParams, getLocale()]);
+  const [{ slug }, { error, sort }, locale] = await Promise.all([
+    params,
+    searchParams,
+    getLocale(),
+  ]);
+  const order = sort === "hot" ? "hot" : "latest";
   const m = t(locale);
 
   const board = await prisma.board.findUnique({
@@ -30,12 +36,24 @@ export default async function BoardPage({
 
   const threads = await prisma.thread.findMany({
     where: { boardId: board.id, isDeleted: false },
-    orderBy: [{ isPinned: "desc" }, { lastPostAt: "desc" }],
+    orderBy: { lastPostAt: "desc" },
     include: {
       author: { select: { username: true } },
       _count: { select: { posts: true } },
     },
   });
+
+  const sorted =
+    order === "hot"
+      ? sortByHot(
+          threads.map((thread) => ({
+            ...thread,
+            replyCount: Math.max(thread._count.posts - 1, 0),
+          })),
+        )
+      : threads;
+
+  const ordered = [...sorted].sort((a, b) => Number(b.isPinned) - Number(a.isPinned));
 
   const errorText = errorMessage(error, locale);
 
@@ -56,6 +74,28 @@ export default async function BoardPage({
           <p className="mt-1 text-xs text-slate-400">
             {m.board.visibleThreads(board._count.threads)}
           </p>
+          <div className="mt-3 flex gap-2 text-sm">
+            <Link
+              href={`/b/${board.slug}?sort=latest`}
+              className={`rounded-full px-3 py-1 ${
+                order === "latest"
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              {m.sort.latest}
+            </Link>
+            <Link
+              href={`/b/${board.slug}?sort=hot`}
+              className={`rounded-full px-3 py-1 ${
+                order === "hot"
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              {m.sort.hot}
+            </Link>
+          </div>
         </div>
         <Link
           href={`/new?board=${board.slug}`}
@@ -77,7 +117,7 @@ export default async function BoardPage({
         </p>
       ) : (
         <ul className="mt-8 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
-          {threads.map((thread) => (
+          {ordered.map((thread) => (
             <li key={thread.id} className="px-4 py-4 transition hover:bg-slate-50">
               <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                 {thread.isPinned ? (
