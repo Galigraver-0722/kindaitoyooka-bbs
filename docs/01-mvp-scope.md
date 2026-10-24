@@ -1,0 +1,153 @@
+# MVP Scope
+
+## Definition
+
+The MVP is a **walking skeleton**: every layer of the system is present and connected, even if
+each layer is thin. A student can register, read, start a thread, reply, and report a post. A
+moderator can remove a post, lock a thread, and clear the report queue.
+
+If any of those actions is missing, this is not an MVP; it is a prototype.
+
+## What is already implemented (v0.1)
+
+- Email-optional registration, login, logout with server-side sessions.
+- Five seeded boards and sample discussions.
+- Board index, recent activity, thread list, thread view.
+- Create thread, reply to thread.
+- Report a post with a required reason.
+- Moderator queue: remove reported post or dismiss report.
+- Moderator actions: remove post, lock/unlock thread, remove thread.
+- Soft deletion with a visible placeholder instead of a silent disappearance.
+- Role display (`student`, `moderator`, `admin`) and server-side permission checks.
+- English UI, responsive layout, plain-text content only.
+
+## MoSCoW
+
+### Must (v0.1 launch)
+
+| Capability | Acceptance criteria |
+| --- | --- |
+| Register | Username 3–20 chars `[a-z0-9_]`, password ≥ 10 chars, duplicate username rejected with a readable message |
+| Log in / out | Session persists across refresh; logout invalidates the server-side session |
+| Browse | Guest can read boards, thread lists, and threads without an account |
+| Start a thread | Signed-in user picks a board, title 3–120 chars, body ≤ 10,000 chars |
+| Reply | Signed-in user can reply in an unlocked, non-deleted thread |
+| Report | Signed-in user can report any visible post with a 3–500 char reason |
+| Moderate | Moderator can remove a post, lock a thread, remove a thread, and resolve reports |
+| Permissions | Students cannot reach `/moderation` or call moderation endpoints |
+| Safety placeholder | Removed post remains in the thread as "Removed by a moderator" |
+
+### Should (before opening to the whole school)
+
+| Capability | Why | Note |
+| --- | --- | --- |
+| Pagination or "load more" | A board with 500 threads is unusable | Cursor by `lastPostAt` |
+| Search | The main reason a forum beats chat | SQLite FTS5 or Postgres FTS |
+| Rate limiting | Stops accidental and deliberate floods | Per-IP and per-account |
+| Audit log | Accountability for moderator actions | Append-only table |
+| Password reset | Otherwise locked-out users need manual help | Requires email delivery |
+| Ban / mute | Removing single posts is not enough for repeat offenders | Time-boxed, with reason |
+| Privacy notice and terms | Required before school approval | Plain-language pages |
+
+### Could (nice, after the forum is alive)
+
+- Notifications (email digest or in-app unread markers).
+- Reactions instead of "+1" replies.
+- Tags and per-board prefixes (`question`, `event`, `lost`).
+- User profiles with avatar initials and post history.
+- Draft autosave.
+- Full-text search across deleted content for moderators only.
+
+### Won't (this school year)
+
+- Real-time chat or direct messages.
+- Image, video, or file uploads.
+- Anonymous posting.
+- Public federation or open registration outside the school.
+- Native mobile apps.
+- AI content moderation. It may assist later, but a human must remain accountable.
+
+## User stories and acceptance tests
+
+### US-1 Register and log in
+
+As a student, I want an account with only a username and password so that I can post without
+revealing my real identity.
+
+- Given a fresh install, the first registered account becomes `ADMIN`.
+- Given an existing username, registration returns `username-taken` and keeps the form data
+  except the password.
+- Given correct credentials, login sets an HttpOnly session cookie and redirects to the page
+  the user came from.
+- Given wrong credentials, the same generic error appears whether the username or the password
+  was wrong (no account enumeration through the message).
+
+### US-2 Read without an account
+
+As a prospective student, I want to read the forum before registering.
+
+- Guests see boards, thread lists, and posts.
+- Guests see "Log in to reply" instead of the reply form.
+- Guests never see the moderation link.
+
+### US-3 Start a thread
+
+As a club officer, I want to post an event thread that people can find later.
+
+- The board select is pre-filled when arriving from `/new?board=<slug>`.
+- An archived board is rejected server-side.
+- Invalid title or body returns to the form with an error and without losing the board choice.
+- The author is redirected to the new thread after creation.
+
+### US-4 Reply
+
+As a student, I want to answer a question.
+
+- The reply appears at the end of the thread and the thread moves to the top of its board.
+- A locked thread rejects replies with `thread-locked`.
+- A removed thread rejects replies.
+
+### US-5 Report
+
+As a student, I want to flag a post without confronting its author.
+
+- The report form is available on every visible post to signed-in users.
+- A reason of 3–500 characters is required.
+- The reporter sees a confirmation notice; the post is not hidden automatically.
+- Reports appear in `/moderation` in oldest-first order.
+
+### US-6 Moderate
+
+As a moderator, I want to clear reports quickly.
+
+- Removing a reported post soft-deletes it and resolves the report as `removed`.
+- Dismissing a report resolves it as `dismissed` and leaves the post intact.
+- Locking a thread prevents replies but keeps it readable.
+- Removing a thread hides it from lists and returns the moderator to the board.
+- Every action requires a `MODERATOR` or `ADMIN` session; hidden buttons are not the control.
+
+## Definition of done for v0.1
+
+- [x] `pnpm build` succeeds with zero type errors.
+- [x] `pnpm lint` succeeds.
+- [x] Full flow works against a production build: register → thread → reply → report →
+      moderate → lock → logout.
+- [ ] Deployed to an HTTPS URL owned by the school or a teacher-approved account.
+- [ ] Seed/demo accounts removed or rotated.
+- [ ] Backup job runs daily and a restore has been tested.
+- [ ] Moderators trained and the report SLA published.
+- [ ] Teacher advisor and administration have signed off (see `docs/06`).
+
+## Explicit cut lines
+
+If time is short, cut in this order and stop:
+
+1. Notifications and reactions (never in MVP).
+2. Search.
+3. Email verification and password reset.
+4. Thread pinning (seeded pinned threads can remain).
+5. The report queue (fall back to a shared moderation mailbox **only** if a teacher agrees;
+   this weakens accountability and is a temporary measure).
+
+Do **not** cut: permission checks, soft deletion, the report path, backups, or the teacher
+escalation route. Those are the difference between a forum and a liability.

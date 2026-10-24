@@ -1,0 +1,104 @@
+// Data model for the Toyooka BBS.
+//
+// Conventions:
+// - `cuid()` ids keep URLs opaque and sortable enough for a small community.
+// - Content is soft-deleted (`isDeleted`) so moderation stays auditable.
+// - Every account is local to this app; no external identity provider yet.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  MODERATOR
+  ADMIN
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  email        String?   @unique
+  passwordHash String
+  role         Role      @default(STUDENT)
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+  threads      Thread[]
+  posts        Post[]
+  reports      Report[]  @relation("ReportAuthor")
+  resolvedReports Report[] @relation("ReportResolver")
+}
+
+model Session {
+  // SHA-256 of the cookie token, never the token itself.
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Board {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  sortOrder   Int      @default(0)
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  threads     Thread[]
+}
+
+model Thread {
+  id         String   @id @default(cuid())
+  boardId    String
+  board      Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title      String
+  isPinned   Boolean  @default(false)
+  isLocked   Boolean  @default(false)
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  lastPostAt DateTime @default(now())
+  posts      Post[]
+
+  @@index([boardId, lastPostAt])
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  reports   Report[]
+
+  @@index([threadId, createdAt])
+}
+
+model Report {
+  id           String    @id @default(cuid())
+  reporterId   String
+  reporter     User      @relation("ReportAuthor", fields: [reporterId], references: [id], onDelete: Cascade)
+  postId       String
+  post         Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reason       String
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+  resolvedById String?
+  resolvedBy   User?     @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolution   String?
+
+  @@index([resolvedAt])
+}
