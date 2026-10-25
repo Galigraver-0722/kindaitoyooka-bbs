@@ -12,6 +12,7 @@
     "test": "tsx --test tests/*.test.ts",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "reset-password": "tsx scripts/reset-password.ts",
     "db:studio": "prisma studio",

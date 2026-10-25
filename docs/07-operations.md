@@ -58,7 +58,7 @@ Deployment templates live in `deploy/`:
 ```bash
 pnpm install
 cp .env.example .env
-pnpm db:push        # create prisma/dev.db
+pnpm db:deploy      # create prisma/dev.db from prisma/migrations
 pnpm db:seed        # boards, demo users, sample threads
 pnpm dev            # http://localhost:3000
 ```
@@ -78,7 +78,7 @@ pnpm lint
 pnpm build
 pnpm db:studio      # browse the database in a browser
 pnpm reset-password <username>   # manual account recovery; prints a new password once
-pnpm exec prisma migrate dev --name <change>   # after switching to migrations
+pnpm db:migrate --name <change>   # after editing prisma/schema.prisma
 ```
 
 ## 4. First production deployment (VPS + Caddy + systemd)
@@ -108,12 +108,12 @@ cd /srv/bbs/app
 pnpm install --frozen-lockfile
 cp .env.example .env
 # edit .env: DATABASE_URL="file:./prod.db"
-pnpm exec prisma migrate deploy   # after the initial migration exists
+pnpm db:deploy   # applies every migration in prisma/migrations
 pnpm build
 ```
 
-If the project is still using `db push` (pre-launch only), run `pnpm db:push` instead of
-`migrate deploy`. Switch to migrations before real users exist.
+`prisma/migrations` holds the initial migration, so a fresh server builds the same schema a
+local checkout has. `pnpm db:push` skips the history and is for throwaway experiments only.
 
 Create the first administrator by registering on the site. On an empty database, the first
 account becomes `ADMIN`. Then remove any demo accounts:
@@ -246,10 +246,12 @@ after the first deployment.
 
 ## 6. Migrations
 
-Before launch, create the initial migration:
+`prisma/migrations/20261025120000_init` is the baseline: it creates every table the schema
+declares, and the development database is marked as already having it. To change the schema,
+edit `prisma/schema.prisma` and create a new migration:
 
 ```bash
-pnpm exec prisma migrate dev --name init
+pnpm db:migrate --name <change>
 git add prisma/migrations
 ```
 
@@ -258,9 +260,20 @@ On each deploy:
 ```bash
 git pull
 pnpm install --frozen-lockfile
-pnpm exec prisma migrate deploy
+pnpm db:deploy        # prisma migrate deploy
 pnpm build
 sudo systemctl restart toyooka-bbs
+```
+
+To check that the migrations and the schema still agree, apply them to a throwaway file and
+compare:
+
+```bash
+rm -f /tmp/migtest.db
+DATABASE_URL="file:/tmp/migtest.db" pnpm db:deploy
+npx prisma migrate diff --from-migrations prisma/migrations \
+  --to-schema-datamodel prisma/schema.prisma --shadow-database-url "file:/tmp/shadow.db"
+# "No difference detected." means the committed SQL still matches the schema
 ```
 
 Rules:

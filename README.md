@@ -63,7 +63,7 @@ Requirements: **Node.js 22+** and **pnpm 12+**.
 ```bash
 pnpm install
 cp .env.example .env
-pnpm db:push       # create the SQLite database
+pnpm db:deploy     # create the SQLite database from prisma/migrations
 pnpm db:seed       # boards, demo users, sample threads
 pnpm dev           # http://localhost:3000
 ```
@@ -88,7 +88,8 @@ deployment, and never keep these passwords anywhere real.
 | `pnpm start` | Serve the production build |
 | `pnpm lint` | ESLint |
 | `pnpm test` | Unit tests for validation, i18n, tags, pagination, policies, rate limits, editing, and passwords |
-| `pnpm db:push` | Apply the Prisma schema to SQLite (development) |
+| `pnpm db:deploy` | Create or update the SQLite database from `prisma/migrations` |
+| `pnpm db:push` | Push the schema without a migration (quick experiments only) |
 | `pnpm db:seed` | Insert development data |
 | `pnpm db:studio` | Browse the database in Prisma Studio |
 | `pnpm reset-password <username>` | Generate a new password, print it once, and sign the account out everywhere |
@@ -96,7 +97,7 @@ deployment, and never keep these passwords anywhere real.
 | `pnpm verify-backup <file>` | Check integrity and row counts of a backup |
 | `pnpm restore <file> <target> --force` | Restore a backup; stop the app first |
 | `curl -fsS localhost:3000/health` | Check that the app and database respond |
-| `pnpm exec prisma migrate dev --name <change>` | Create a migration (use before production) |
+| `pnpm db:migrate --name <change>` | Create a migration after editing `prisma/schema.prisma` |
 
 ## Documentation
 

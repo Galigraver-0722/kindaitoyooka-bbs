@@ -251,9 +251,13 @@ today. It stores no URLs, durations, or device information.
 
 ## 6. Migration strategy
 
-- Development: `prisma db push` for fast iteration.
-- Production: switch to `prisma migrate` **before launch**; `prisma migrate deploy` on deploy.
-  Never run `db push` against production.
+- `prisma/migrations/20261025120000_init` is the committed baseline; the development database is
+  marked as already applied.
+- Development: `pnpm db:migrate --name <change>` after editing the schema, then `pnpm db:deploy`
+  would apply the history elsewhere. `prisma db push` is for throwaway experiments only, because
+  it leaves no history.
+- Deployment: `pnpm db:deploy` (`prisma migrate deploy`) builds the database from the committed
+  SQL. Never run `db push` against production.
 - Every migration that drops or renames a column needs a backup first and a rollback plan.
 - Seed data is for development only. Production starts with boards created by an admin script
   and no demo users.
