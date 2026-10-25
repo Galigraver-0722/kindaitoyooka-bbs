@@ -46,11 +46,13 @@ const NOTICE_MESSAGES: Record<Locale, Record<string, string>> = {
     reported: "Thanks. A moderator will review your report.",
     "signed-out": "You have been signed out.",
     "thread-edited": "Your changes are saved.",
+    "profile-saved": "Profile saved.",
   },
   ja: {
     reported: "通報を受け付けました。モデレーターが確認します。",
     "signed-out": "ログアウトしました。",
     "thread-edited": "変更を保存しました。",
+    "profile-saved": "プロフィールを保存しました。",
   },
 };
 

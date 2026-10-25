@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic";
 
 const THREAD_INCLUDE = {
   board: { select: { slug: true, name: true } },
-  author: { select: { username: true } },
+  author: { select: { username: true, avatarColor: true, avatarRing: true } },
   tags: { select: { name: true } },
   _count: { select: { posts: true } },
 } satisfies Prisma.ThreadInclude;

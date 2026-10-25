@@ -1,9 +1,10 @@
 import { getCurrentUser } from "@/lib/auth";
 import { detectSensitiveText } from "@/lib/content-filter";
 import { prisma } from "@/lib/db";
-import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { formText, isSameOrigin, seeOther, wantsJson } from "@/lib/http";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { parseTagInput } from "@/lib/tags";
+import { formatDateTime } from "@/lib/format";
 import { validateBody } from "@/lib/validation";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -111,6 +112,34 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     return created;
   });
+
+  if (wantsJson(request)) {
+    const author = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { username: true, role: true, avatarColor: true, avatarRing: true },
+    });
+
+    return Response.json(
+      {
+        comment: {
+          id: post.id,
+          number: "",
+          body,
+          author: author ?? {
+            username: user.username,
+            role: user.role,
+            avatarColor: null,
+            avatarRing: null,
+          },
+          createdAt: formatDateTime(post.createdAt, "ja"),
+          likeCount: 0,
+          liked: false,
+          children: [],
+        },
+      },
+      { status: 201 },
+    );
+  }
 
   return seeOther(request, `/t/${id}#p-${post.id}`);
 }

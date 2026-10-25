@@ -4,7 +4,7 @@ export type HomeThread = {
   id: string;
   title: string;
   board: { slug: string; name: string };
-  author: { username: string };
+  author: { username: string; avatarColor?: string | null; avatarRing?: string | null };
   tags: { name: string }[];
   likeCount: number;
   bookmarkCount: number;

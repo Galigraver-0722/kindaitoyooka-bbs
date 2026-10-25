@@ -9,9 +9,9 @@ import { errorMessage, noticeMessage } from "@/lib/messages";
 import { markThreadRead } from "@/lib/read-state";
 import { getLocale, t } from "@/lib/i18n";
 import { getTheme } from "@/lib/theme";
-import { buildThreadTree, countComments, type TreeNode } from "@/lib/thread-tree";
+import { buildThreadTree, type TreeNode } from "@/lib/thread-tree";
 import { ToggleAction } from "@/components/theme/actions";
-import { Comment, type CommentData, type CommentLabels } from "@/components/theme/comment";
+import { CommentSection, type CommentData, type CommentLabels } from "@/components/theme/comment";
 
 export const dynamic = "force-dynamic";
 
@@ -27,28 +27,8 @@ type PostRow = {
   body: string;
   likeCount: number;
   createdAt: Date;
-  author: { username: string; role: string };
+  author: { username: string; role: string; avatarColor: string | null; avatarRing: string | null };
 };
-
-function ReplyForm({
-  threadId,
-  parentId,
-  placeholder,
-  submit,
-}: {
-  threadId: string;
-  parentId?: string;
-  placeholder: string;
-  submit: string;
-}) {
-  return (
-    <form className="reply-form" action={`/api/threads/${threadId}/posts`} method="post">
-      {parentId ? <input type="hidden" name="parentId" value={parentId} /> : null}
-      <textarea name="body" required maxLength={2000} placeholder={placeholder} aria-label={placeholder} rows={3} />
-      <button className="btn btn-p" type="submit">{submit}</button>
-    </form>
-  );
-}
 
 export default async function ThreadPage({
   params,
@@ -74,7 +54,7 @@ export default async function ThreadPage({
         tags: { select: { name: true } },
         posts: {
           orderBy: { createdAt: "asc" },
-          include: { author: { select: { username: true, role: true } } },
+          include: { author: { select: { username: true, role: true, avatarColor: true, avatarRing: true } } },
         },
       },
     }),
@@ -115,7 +95,6 @@ export default async function ThreadPage({
 
   const root = thread.posts[0];
   const tree = buildThreadTree(thread.posts.slice(1));
-  const totalComments = countComments(tree);
   const labels: CommentLabels = {
     reply: copy.reply,
     placeholder: copy.replyPlaceholder,
@@ -123,6 +102,7 @@ export default async function ThreadPage({
     collapse: copy.collapse,
     expand: copy.expand,
     foldedSuffix: copy.foldedSuffix,
+    commentsSuffix: copy.commentsSuffix,
     admin: locale === "ja" ? "管理者" : "Admin",
     moderator: locale === "ja" ? "モデレーター" : "Moderator",
   };
@@ -131,7 +111,12 @@ export default async function ThreadPage({
     id: node.post.id,
     number: node.number,
     body: node.post.body,
-    author: { username: node.post.author.username, role: node.post.author.role },
+    author: {
+      username: node.post.author.username,
+      role: node.post.author.role,
+      avatarColor: node.post.author.avatarColor,
+      avatarRing: node.post.author.avatarRing,
+    },
     createdAt: formatDateTime(node.post.createdAt, "ja"),
     likeCount: node.post.likeCount,
     liked: likedPostIds.has(node.post.id),
@@ -160,7 +145,6 @@ export default async function ThreadPage({
           <div className="row-meta">
             <span className="pill">{thread.author.username}</span>
             <span className="pill">{formatDateTime(thread.createdAt, "ja")}</span>
-            <span className="pill">{copy.comments(totalComments)}</span>
             {thread.isLocked ? <span className="pill">{locale === "ja" ? "ロック中" : "Locked"}</span> : null}
             {thread.tags.map((tag) => (
               <Link className="pill" href={`/?q=${encodeURIComponent(`#${tag.name}`)}`} key={tag.name}>
@@ -196,7 +180,15 @@ export default async function ThreadPage({
             <div className="root-head">
               <span className="root-no">0</span>
               <span className="cmt-who">
-                <span className="dot">{root.author.username.slice(0, 1).toUpperCase()}</span>
+                <span
+                  className="dot"
+                  style={{
+                    background: root.author.avatarColor ?? undefined,
+                    borderColor: root.author.avatarRing ?? undefined,
+                  }}
+                >
+                  {root.author.username.slice(0, 1).toUpperCase()}
+                </span>
                 {root.author.username}
               </span>
               <span className="cmt-time">{formatDateTime(root.createdAt, "ja")}</span>
@@ -205,46 +197,27 @@ export default async function ThreadPage({
             <div className="root-body">{root.body}</div>
             <div className="acts cmt-acts">
               {canReply ? (
-                <details className="reply-box">
-                  <summary className="act reply-btn">{replyIcon}<span>{copy.reply}</span></summary>
-                  <ReplyForm threadId={thread.id} placeholder={copy.replyPlaceholder} submit={copy.replySend} />
-                </details>
+                <a className="act reply-btn" href="#reply-form">
+                  {replyIcon}
+                  <span>{copy.reply}</span>
+                </a>
               ) : null}
             </div>
           </article>
         ) : null}
 
-        <div className="feed-bar comments-head">
-          <h2><span className="tick" />{copy.comments(totalComments)}</h2>
-        </div>
-
-        {comments.length === 0 ? (
-          <p className="empty">{copy.noComments}</p>
-        ) : (
-          <div className="cmt-tree">
-            {comments.map((comment) => (
-              <Comment
-                key={comment.id}
-                data={comment}
-                threadId={thread.id}
-                canReply={canReply}
-                labels={labels}
-              />
-            ))}
-          </div>
-        )}
-
         {thread.isLocked ? (
           <p className="notice">{locale === "ja" ? "このスレッドはロックされています。新しい返信はできません。" : "This thread is locked."}</p>
-        ) : canReply ? (
-          <div className="form-card">
-            <h2>{copy.reply}</h2>
-            <ReplyForm threadId={thread.id} placeholder={copy.replyPlaceholder} submit={copy.replySend} />
-          </div>
         ) : (
-          <p className="notice">
-            {copy.loginToReply} <Link href="/login">{t(locale).nav.logIn}</Link>
-          </p>
+          <CommentSection
+            threadId={thread.id}
+            initial={comments}
+            canReply={canReply}
+            labels={labels}
+            emptyText={copy.noComments}
+            loginText={copy.loginToReply}
+            loginLabel={t(locale).nav.logIn}
+          />
         )}
       </main>
     </ThemedPage>

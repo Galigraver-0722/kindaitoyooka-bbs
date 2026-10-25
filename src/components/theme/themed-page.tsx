@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LanguageToggle } from "@/components/theme/language-toggle";
 import { BackButton } from "@/components/theme/nav-buttons";
+import { ScrollHeader } from "@/components/theme/scroll-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { homeDCss } from "@/components/home/home-d-css";
 import { homeBCss } from "@/components/home/home-b-css";
@@ -111,6 +112,12 @@ export async function ThemedPage({
   children: ReactNode;
 }) {
   const [boards, locale] = await Promise.all([boardSummaries(), getLocale()]);
+  const me = username
+    ? await prisma.user.findUnique({
+        where: { username },
+        select: { avatarColor: true, avatarRing: true },
+      })
+    : null;
   const copy = t(locale).shell;
   const css = theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss;
   const wrap = theme === "light" ? "tw-d" : "tw-b";
@@ -119,7 +126,8 @@ export async function ThemedPage({
     <div className={wrap} data-active={active ?? "home"} lang={locale}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       {theme === "light" ? (
-        <header className="top">
+        <ScrollHeader>
+          <header className="top">
           <div className="top-in">
             <div className="nav-left">
               <BackButton label={copy.back} />
@@ -141,14 +149,24 @@ export async function ThemedPage({
               </form>
               <LanguageToggle locale={locale} />
               <ThemeToggle theme="light" />
-              <Link className="ava" href={username ? `/u/${username}` : "/login"} aria-label="account">
+              <Link
+                className="ava"
+                href={username ? `/u/${username}` : "/login"}
+                aria-label="account"
+                style={{
+                  background: me?.avatarColor ?? undefined,
+                  borderColor: me?.avatarRing ?? undefined,
+                }}
+              >
                 {username ? username.slice(0, 1).toUpperCase() : "?"}
               </Link>
             </div>
           </div>
-        </header>
+          </header>
+        </ScrollHeader>
       ) : (
         <>
+          <ScrollHeader>
           <header className="bar">
             <div className="nav-left">
               <BackButton label={copy.back} />
@@ -171,10 +189,20 @@ export async function ThemedPage({
             </form>
             <LanguageToggle locale={locale} />
             <ThemeToggle theme="dark" />
-            <Link className="who" href={username ? `/u/${username}` : "/login"} aria-label="account">
+            <Link
+              className="who"
+              href={username ? `/u/${username}` : "/login"}
+              aria-label="account"
+              style={{
+                background: me?.avatarColor ? `${me.avatarColor}22` : undefined,
+                borderColor: me?.avatarRing ?? undefined,
+                color: me?.avatarColor ?? undefined,
+              }}
+            >
               {username ? username.slice(0, 2).toUpperCase() : "?"}
             </Link>
           </header>
+          </ScrollHeader>
           <div className="rail" aria-hidden="true">
             <span className="v">TOYOOKA STUDENT NETWORK</span>
             <span className="ticks"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></span>
@@ -255,7 +283,15 @@ export function ThreadCards({ threads }: { threads: HomeThread[] }) {
           </div>
           <div className="card-foot">
             <span className="who">
-              <span className="dot">{thread.author.username.slice(0, 1).toUpperCase()}</span>
+              <span
+                className="dot"
+                style={{
+                  background: thread.author.avatarColor ?? undefined,
+                  borderColor: thread.author.avatarRing ?? undefined,
+                }}
+              >
+                {thread.author.username.slice(0, 1).toUpperCase()}
+              </span>
               {thread.author.username}・{timeAgo(thread.lastPostAt)}
             </span>
             <span className="metric">{replyIcon}{thread.replyCount}</span>
