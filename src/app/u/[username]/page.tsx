@@ -3,15 +3,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ThemedPage, ThreadCards, ThreadRows, Crumb } from "@/components/theme/themed-page";
 import { LogoutButton } from "@/components/theme/logout-button";
+import { ProfileEditor } from "@/components/theme/profile-editor";
 import type { HomeThread } from "@/components/home/types";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
 import { getLikedThreadIds } from "@/lib/likes";
 import { prisma } from "@/lib/db";
-import { formatDateTime } from "@/lib/format";
 import { readableInk } from "@/lib/color";
 import { noticeMessage } from "@/lib/messages";
 import { getTheme } from "@/lib/theme";
+import { timeAgo } from "@/lib/time-ago";
 import { getLocale, t } from "@/lib/i18n";
 
 export async function generateMetadata({
@@ -30,14 +31,15 @@ export default async function ProfilePage({
   searchParams,
 }: {
   params: Promise<{ username: string }>;
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ notice?: string; tab?: string }>;
 }) {
-  const [{ username }, { notice }, theme, locale] = await Promise.all([
+  const [{ username }, { notice, tab }, theme, locale] = await Promise.all([
     params,
     searchParams,
     getTheme(),
     getLocale(),
   ]);
+  const view = tab === "replies" ? "replies" : "threads";
 
   const profile = await prisma.user.findUnique({
     where: { username: username.toLowerCase() },
@@ -53,7 +55,7 @@ export default async function ProfilePage({
   });
   if (!profile) notFound();
 
-  const [viewer, threads, threadCount, postCount] = await Promise.all([
+  const [viewer, threads, threadCount, postCount, likeSum, replyRows] = await Promise.all([
     getCurrentUser(),
     prisma.thread.findMany({
       where: { authorId: profile.id, isDeleted: false },
@@ -68,6 +70,29 @@ export default async function ProfilePage({
     }),
     prisma.thread.count({ where: { authorId: profile.id, isDeleted: false } }),
     prisma.post.count({ where: { authorId: profile.id, isDeleted: false } }),
+    prisma.thread.aggregate({
+      where: { authorId: profile.id, isDeleted: false },
+      _sum: { likeCount: true },
+    }),
+    prisma.post.findMany({
+      where: { authorId: profile.id, isDeleted: false },
+      orderBy: { createdAt: "desc" },
+      take: 24,
+      select: {
+        id: true,
+        body: true,
+        createdAt: true,
+        parentId: true,
+        thread: {
+          select: {
+            id: true,
+            title: true,
+            board: { select: { name: true } },
+            posts: { take: 1, orderBy: { createdAt: "asc" }, select: { id: true } },
+          },
+        },
+      },
+    }),
   ]);
 
   const ids = threads.map((thread) => thread.id);
@@ -90,18 +115,26 @@ export default async function ProfilePage({
     isUnread: false,
     excerpt: "",
   }));
+
+  const replies = replyRows
+    .filter((row) => row.thread.posts[0]?.id !== row.id)
+    .slice(0, 20);
+
   const roleLabel = profile.role === "ADMIN" ? "管理者" : profile.role === "MODERATOR" ? "モデレーター" : "生徒";
   const isOwner = viewer?.id === profile.id;
   const noticeText = noticeMessage(notice, locale);
   const avatarColor = profile.avatarColor ?? undefined;
   const avatarRing = profile.avatarRing ?? undefined;
+  const baseHref = `/u/${profile.username}`;
+  const tabHref = (next: "threads" | "replies") => (next === "threads" ? baseHref : `${baseHref}?tab=replies`);
 
   return (
     <ThemedPage theme={theme} username={viewer?.username ?? null}>
       <main>
-        <div className="page-head">
+        <div className="profile-page">
           <Crumb items={[{ href: "/", label: "ホーム" }, { label: "プロフィール" }]} />
-          <div className="profile-head">
+
+          <section className="profile-banner">
             <span
               className="profile-ava"
               style={{
@@ -112,87 +145,100 @@ export default async function ProfilePage({
             >
               {profile.username.slice(0, 1).toUpperCase()}
             </span>
+
             <div className="profile-copy">
-              <h1>{profile.username}</h1>
-              <p className="lede">
+              <div className="profile-title">
+                <h1>{profile.username}</h1>
+                <span className="profile-role">{roleLabel}</span>
+              </div>
+              <p className="profile-handle">@{profile.username}</p>
+              <p className="profile-bio">
                 {profile.bio ?? "このユーザーが立てたスレッドと活動の記録です。"}
               </p>
             </div>
+
+            <div className="profile-actions">
+              {isOwner ? (
+                <>
+                  <ProfileEditor
+                    username={profile.username}
+                    bio={profile.bio ?? ""}
+                    avatarColor={profile.avatarColor ?? "#12BFD1"}
+                    avatarRing={profile.avatarRing ?? "#062330"}
+                  />
+                  <LogoutButton
+                    label="ログアウト"
+                    title="ログアウトしますか？"
+                    text="この端末からログアウトします。書きかけの内容は保存されません。あとでまたログインできます。"
+                    confirm="ログアウト"
+                    cancel="キャンセル"
+                  />
+                </>
+              ) : viewer ? (
+                <Link className="btn" href={`/u/${viewer.username}`}>自分のページ</Link>
+              ) : (
+                <>
+                  <Link className="btn btn-p" href={`/login?next=${encodeURIComponent(baseHref)}`}>ログイン</Link>
+                  <Link className="btn" href="/register">新規登録</Link>
+                </>
+              )}
+            </div>
+
+            <div className="board-stats profile-stats">
+              <div className="bs">
+                <span>スレッド</span>
+                <b>{threadCount}</b>
+              </div>
+              <div className="bs">
+                <span>投稿</span>
+                <b>{postCount}</b>
+              </div>
+              <div className="bs">
+                <span>いいね</span>
+                <b>{likeSum._sum.likeCount ?? 0}</b>
+              </div>
+              <div className="bs">
+                <span>参加</span>
+                <b>{profile.createdAt.toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, ".")}</b>
+              </div>
+            </div>
+          </section>
+
+          {noticeText ? <p className="notice">{noticeText}</p> : null}
+
+          <div className="hub-tabs profile-tabs">
+            <Link className={view === "threads" ? "on" : ""} href={tabHref("threads")}>スレッド</Link>
+            <Link className={view === "replies" ? "on" : ""} href={tabHref("replies")}>返信</Link>
           </div>
-          <div className="row-meta">
-            <span className="pill">{roleLabel}</span>
-            <span className="pill">参加 {formatDateTime(profile.createdAt, "ja")}</span>
-            <span className="pill">{threadCount} スレッド</span>
-            <span className="pill">{postCount} 投稿</span>
-          </div>
-          <div className="account-bar">
-            {viewer ? (
-              <>
-                <span className="account-name">@{viewer.username}</span>
-                <LogoutButton
-                  label="ログアウト"
-                  title="ログアウトしますか？"
-                  text="この端末からログアウトします。書きかけの内容は保存されません。あとでまたログインできます。"
-                  confirm="ログアウト"
-                  cancel="キャンセル"
-                />
-              </>
+
+          {view === "threads" ? (
+            list.length === 0 ? (
+              <p className="empty">まだスレッドを立てていません。</p>
+            ) : theme === "light" ? (
+              <ThreadCards threads={list} />
             ) : (
-              <>
-                <Link className="btn btn-p" href={`/login?next=${encodeURIComponent(`/u/${profile.username}`)}`}>ログイン</Link>
-                <Link className="btn" href="/register">新規登録</Link>
-              </>
-            )}
-          </div>
+              <ThreadRows threads={list} />
+            )
+          ) : replies.length === 0 ? (
+            <p className="empty">まだ返信していません。</p>
+          ) : (
+            <div className="profile-replies">
+              {replies.map((reply) => (
+                <article className="profile-reply" key={reply.id}>
+                  <Link className="reply-thread" href={`/t/${reply.thread.id}#p-${reply.id}`}>
+                    {reply.thread.title}
+                  </Link>
+                  <p className="reply-body">{reply.body}</p>
+                  <div className="reply-meta">
+                    <span>{reply.thread.board.name}</span>
+                    <span>{timeAgo(reply.createdAt)}</span>
+                    {reply.parentId ? <span className="reply-kind">返信</span> : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
-
-        {noticeText ? <p className="notice">{noticeText}</p> : null}
-
-        {isOwner ? (
-          <details className="profile-edit">
-            <summary className="btn">プロフィールを編集</summary>
-          <form className="form-card profile-form" action="/api/profile" method="post">
-            <h2>プロフィールを編集</h2>
-            <label className="field-label" htmlFor="bio">自己紹介</label>
-            <textarea id="bio" name="bio" maxLength={200} rows={4} defaultValue={profile.bio ?? ""} placeholder="部活、好きな科目、ひとこと。" />
-            <p className="hint">{profile.bio?.length ?? 0} / 200</p>
-
-            <div className="color-row">
-              <label className="color-field">
-                <span className="field-label">アイコンの色</span>
-                <input type="color" name="avatarColor" defaultValue={profile.avatarColor ?? "#12BFD1"} />
-              </label>
-              <label className="color-field">
-                <span className="field-label">枠の色</span>
-                <input type="color" name="avatarRing" defaultValue={profile.avatarRing ?? "#062330"} />
-              </label>
-              <span
-                className="profile-ava preview"
-                aria-hidden="true"
-                style={{
-                  background: avatarColor ?? "var(--sky)",
-                  borderColor: avatarRing ?? "var(--line)",
-                  color: readableInk(avatarColor),
-                }}
-              >
-                {profile.username.slice(0, 1).toUpperCase()}
-              </span>
-            </div>
-
-            <div className="form-foot">
-              <button className="btn btn-p" type="submit">保存する</button>
-            </div>
-          </form>
-          </details>
-        ) : null}
-
-        {list.length === 0 ? (
-          <p className="empty">まだスレッドを立てていません。</p>
-        ) : theme === "light" ? (
-          <ThreadCards threads={list} />
-        ) : (
-          <ThreadRows threads={list} />
-        )}
       </main>
     </ThemedPage>
   );
