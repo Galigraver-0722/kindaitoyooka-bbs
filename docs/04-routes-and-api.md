@@ -23,7 +23,7 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/threads` | Public | Redirects to `/`, keeping `q`, `filter`, and `sort` |
 | `/search` | Public | Redirects to `/` with `q`; `tag` becomes a `#tag` query |
 | `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
-| any signed-in page | Signed-in | The header shows a notification inbox (replies, comments, likes, saves) with an unread count |
+| any signed-in page | Signed-in | The header shows a notification inbox (replies, comments, likes, saves) with an unread count; every item links to a specific post (`#p-<id>`), including thread-level likes and saves, which point at the opening post |
 | `/moderation` | Moderator / Admin | Open reports (10 per page, `page` parameter), automatic flags, the recent audit log, and — for administrators — the student-board archive controls |
 | `/rules` | Public | Community rules, in the current interface language |
 | `/privacy` | Public | Privacy notice: stored data, cookies, retention, access |
@@ -194,6 +194,9 @@ success so the browser performs a `GET`.
 - Auth: signed-in user. No body.
 - Sets `User.notificationsSeenAt` to now, which clears the unread badge. The events themselves
   are derived, so nothing is created or deleted.
+- Opening an item always moves the reader: a link to another page navigates, and a link to the
+  page already open sets the hash, scrolls the post into view, and flashes it (Next's router treats
+  a push to the current path as a no-op, so the panel does this by hand).
 - `Accept: application/json` answers `{ok:true}` (401 for a guest); otherwise redirects to `/`.
 
 ### `POST /api/boards/[id]/archive`

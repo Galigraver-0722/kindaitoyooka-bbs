@@ -47,6 +47,7 @@ export async function getNotifications(
         authorId: { not: userId },
         isDeleted: false,
         parent: { authorId: userId, isDeleted: false },
+        thread: { isDeleted: false },
       },
       orderBy: { createdAt: "desc" },
       take,
@@ -78,7 +79,7 @@ export async function getNotifications(
     prisma.postLike.findMany({
       where: {
         userId: { not: userId },
-        post: { authorId: userId, isDeleted: false },
+        post: { authorId: userId, isDeleted: false, thread: { isDeleted: false } },
       },
       orderBy: { createdAt: "desc" },
       take,
@@ -98,7 +99,18 @@ export async function getNotifications(
       select: {
         createdAt: true,
         user: { select: { username: true } },
-        thread: { select: { id: true, title: true } },
+        thread: {
+          select: {
+            id: true,
+            title: true,
+            posts: {
+              where: { isDeleted: false },
+              orderBy: { createdAt: "asc" },
+              take: 1,
+              select: { id: true },
+            },
+          },
+        },
       },
     }),
     prisma.threadBookmark.findMany({
@@ -111,7 +123,18 @@ export async function getNotifications(
       select: {
         createdAt: true,
         user: { select: { username: true } },
-        thread: { select: { id: true, title: true } },
+        thread: {
+          select: {
+            id: true,
+            title: true,
+            posts: {
+              where: { isDeleted: false },
+              orderBy: { createdAt: "asc" },
+              take: 1,
+              select: { id: true },
+            },
+          },
+        },
       },
     }),
     prisma.user.findUnique({ where: { id: userId }, select: { notificationsSeenAt: true } }),
@@ -154,6 +177,9 @@ export async function getNotifications(
       createdAt: like.createdAt,
       threadId: like.thread.id,
       threadTitle: like.thread.title,
+      // Thread-level events land on the opening post so the reader sees the
+      // title and body, not just the top of the page.
+      postId: like.thread.posts[0]?.id,
     })),
     ...bookmarks.map((bookmark) => ({
       id: `bookmark:${bookmark.user.username}:${bookmark.thread.id}:${bookmark.createdAt.toISOString()}`,
@@ -162,6 +188,7 @@ export async function getNotifications(
       createdAt: bookmark.createdAt,
       threadId: bookmark.thread.id,
       threadTitle: bookmark.thread.title,
+      postId: bookmark.thread.posts[0]?.id,
     })),
   ]
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())

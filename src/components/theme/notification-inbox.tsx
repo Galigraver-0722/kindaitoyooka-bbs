@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -97,6 +96,40 @@ export function NotificationInbox({
     };
   }, [open, close]);
 
+  /**
+   * Clicking a notification that points at the page you are already on must
+   * still move the reader. Next's `<Link>` treats a same-path push as a no-op,
+   * so set the hash ourselves (which scrolls and fires `hashchange`, letting
+   * AnchorHighlight flash the post), or re-run the flash when the hash already
+   * matches.
+   */
+  function openItem(event: React.MouseEvent<HTMLAnchorElement>, href: string) {
+    close();
+    const target = new URL(href, window.location.href);
+    // Crossing pages: let the browser navigate. Same page: Next's router treats
+    // a push to the current pathname as a no-op, so move the reader by hand and
+    // keep the hash in the address bar.
+    if (target.pathname !== window.location.pathname) return;
+
+    event.preventDefault();
+    if (target.search) window.history.replaceState(null, "", `${target.pathname}${target.search}${target.hash}`);
+
+    if (!target.hash) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    window.history.replaceState(null, "", `${target.pathname}${target.hash}`);
+    const id = target.hash.slice(1);
+    const node = id ? document.getElementById(id) : null;
+    if (!node) return;
+    node.scrollIntoView({ block: "start", behavior: "smooth" });
+    node.classList.remove("flash");
+    void (node as HTMLElement).offsetWidth;
+    node.classList.add("flash");
+    window.setTimeout(() => node.classList.remove("flash"), 2200);
+  }
+
   function toggle() {
     const next = !open;
     setOpen(next);
@@ -151,7 +184,7 @@ export function NotificationInbox({
             <ul className="inbox-list">
               {items.map((item) => (
                 <li key={item.id}>
-                  <Link href={item.href} onClick={close}>
+                  <a href={item.href} onClick={(event) => openItem(event, item.href)}>
                     <span className={`inbox-icon k-${item.kind}`} aria-hidden="true">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d={ICONS[item.kind]} />
@@ -162,7 +195,7 @@ export function NotificationInbox({
                       {item.excerpt ? <span className="inbox-excerpt">{item.excerpt}</span> : null}
                       <span className="inbox-when">{item.when}</span>
                     </span>
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>
