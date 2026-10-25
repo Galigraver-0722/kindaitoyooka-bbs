@@ -93,6 +93,7 @@ async function BoardLinks({ boards, activeSlug }: { boards: BoardSummary[]; acti
       <div className="bn-group">
         <p className="bn-label"><span className="bn-dot comm" />{m.community}</p>
         {community.length > 0 ? community.map(row) : <p className="bn-empty">{m.communityEmpty}</p>}
+        <Link className="bn-create" href="/boards/new">＋ {m.createBoard}</Link>
       </div>
     </nav>
   );
@@ -107,11 +108,14 @@ export async function ThemedPage({
   theme,
   username,
   active,
+  boardSlug,
   children,
 }: {
   theme: "light" | "dark";
   username: string | null;
   active?: "home" | "boards" | "thread" | "new";
+  /** When set, the compose button opens the form with this board preselected. */
+  boardSlug?: string;
   children: ReactNode;
 }) {
   const [boards, locale] = await Promise.all([boardSummaries(), getLocale()]);
@@ -181,7 +185,12 @@ export async function ThemedPage({
 
       {children}
 
-      <Link className="fab" href="/new" aria-label={copy.newThread} title={copy.newThread}>
+      <Link
+        className="fab"
+        href={boardSlug ? `/new?board=${boardSlug}` : "/new"}
+        aria-label={copy.newThread}
+        title={copy.newThread}
+      >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
           <path d="M12 5v14M5 12h14" />
         </svg>

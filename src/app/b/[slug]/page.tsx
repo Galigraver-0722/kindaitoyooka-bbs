@@ -145,7 +145,7 @@ export default async function BoardPage({
     order === "rising" ? copy.feed.rising : order === "hot" ? copy.feed.hot : copy.feed.latest;
 
   return (
-    <ThemedPage theme={theme} username={user?.username ?? null} active="boards">
+    <ThemedPage theme={theme} username={user?.username ?? null} active="boards" boardSlug={board.slug}>
       <main>
         <section className="banner">
           <div className="page-head">

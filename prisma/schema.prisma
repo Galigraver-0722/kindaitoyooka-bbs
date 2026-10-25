@@ -46,6 +46,7 @@ model User {
   threadBookmarks ThreadBookmark[]
   threadReads     ThreadRead[]
   threadLikes     ThreadLike[]
+  ownedBoards     Board[]       @relation("BoardOwner")
   auditLogs       AuditLog[]       @relation("AuditActor")
 }
 
@@ -66,6 +67,8 @@ model Board {
   name        String
   description String
   kind        BoardKind @default(OFFICIAL)
+  ownerId     String?
+  owner       User?     @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   sortOrder     Int      @default(0)
   isArchived    Boolean  @default(false)
   // Comma-separated tag hints for the compose form, e.g. "質問,試験,宿題".
@@ -103,6 +106,9 @@ model Post {
   id        String     @id @default(cuid())
   threadId  String
   thread    Thread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Post?      @relation("PostReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Post[]     @relation("PostReplies")
   authorId  String
   author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
   body      String
@@ -113,6 +119,7 @@ model Post {
   likes     PostLike[]
 
   @@index([threadId, createdAt])
+  @@index([parentId])
 }
 
 model Tag {
