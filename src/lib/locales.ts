@@ -355,8 +355,16 @@ const en = {
     termsPrivacy: "privacy notice",
     termsSuffix: ".",
   },
+  docs: {
+    crumb: "Documents",
+    contents: "Contents",
+    documents: "All documents",
+  },
   moderation: {
     title: "Moderation",
+    report: "Report",
+    queue: "Review queue",
+    auditRecent: "Audit log",
     signedInAs: (username: string) =>
       `Signed in as ${username}. Every action is attributed to your account in the database.`,
     openReports: "Open reports",
@@ -759,8 +767,16 @@ const ja: typeof en = {
     termsPrivacy: "プライバシー通知",
     termsSuffix: "に同意したものとみなします。",
   },
+  docs: {
+    crumb: "文書",
+    contents: "目次",
+    documents: "文書一覧",
+  },
   moderation: {
     title: "モデレーション",
+    report: "通報",
+    queue: "未処理の通報",
+    auditRecent: "監査ログ",
     signedInAs: (username: string) =>
       `${username} としてログイン中です。すべての操作は、アカウントと一緒にデータベースへ記録されます。`,
     openReports: "未処理の通報",

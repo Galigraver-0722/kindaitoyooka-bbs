@@ -39,6 +39,9 @@ export type CommentLabels = {
   commentsSuffix: string;
   admin: string;
   moderator: string;
+  report: string;
+  reportPlaceholder: string;
+  sendReport: string;
 };
 
 const foldListeners = new Set<() => void>();
@@ -132,6 +135,8 @@ function ReplyForm({
       const data = (await response.json()) as { comment: CommentData };
       onPosted(data.comment);
       setValue("");
+      // Keep the cached copy of this thread in step with the server.
+      router.refresh();
       event.currentTarget.closest("details")?.removeAttribute("open");
     } catch {
       setError(true);
@@ -167,12 +172,14 @@ function Comment({
   threadId,
   canReply,
   labels,
+  viewer,
   onReply,
 }: {
   data: CommentData;
   threadId: string;
   canReply: boolean;
   labels: CommentLabels;
+  viewer: string | null;
   onReply: (parentId: string, comment: CommentData) => void;
 }) {
   const storageKey = `fold:${threadId}:${data.id}`;
@@ -253,6 +260,26 @@ function Comment({
               </details>
             ) : null}
           </div>
+          {viewer && viewer !== data.author.username ? (
+            <details className="report-box">
+              <summary className="act report-btn">
+                <span>{labels.report}</span>
+              </summary>
+              <form className="reply-form" action="/api/reports" method="post">
+                <input type="hidden" name="postId" value={data.id} />
+                <textarea
+                  name="reason"
+                  required
+                  minLength={3}
+                  maxLength={500}
+                  rows={2}
+                  placeholder={labels.reportPlaceholder}
+                  aria-label={labels.reportPlaceholder}
+                />
+                <button className="btn btn-p" type="submit">{labels.sendReport}</button>
+              </form>
+            </details>
+          ) : null}
 
           {data.children.length > 0 ? (
             <div className="cmt-kids">
@@ -263,6 +290,7 @@ function Comment({
                   threadId={threadId}
                   canReply={canReply}
                   labels={labels}
+                  viewer={viewer}
                   onReply={onReply}
                 />
               ))}
@@ -283,6 +311,7 @@ export function CommentSection({
   emptyText,
   loginText,
   loginLabel,
+  viewer,
 }: {
   threadId: string;
   initial: CommentData[];
@@ -291,6 +320,7 @@ export function CommentSection({
   emptyText: string;
   loginText: string;
   loginLabel: string;
+  viewer: string | null;
 }) {
   const [comments, setComments] = useState<CommentData[]>(initial);
 
@@ -318,6 +348,7 @@ export function CommentSection({
               threadId={threadId}
               canReply={canReply}
               labels={labels}
+              viewer={viewer}
               onReply={(parentId, posted) => add(parentId, posted)}
             />
           ))}

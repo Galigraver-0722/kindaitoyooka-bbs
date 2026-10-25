@@ -79,6 +79,9 @@ export function ToggleAction({
       if (typeof data.count === "number") {
         setCount(Math.max(0, data.count));
       }
+      // Store the new numbers in the Router Cache too, so going back to this
+      // list does not show the pre-click count.
+      router.refresh();
     } catch {
       setActive(!next);
       setCount((value) => Math.max(0, value + (next ? -1 : 1)));

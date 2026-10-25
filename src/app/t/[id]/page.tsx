@@ -46,6 +46,7 @@ export default async function ThreadPage({
   ]);
   const copy = t(locale).shell;
   const pages = t(locale).pages;
+  const threadCopy = t(locale).thread;
 
   const [thread, user] = await Promise.all([
     prisma.thread.findUnique({
@@ -109,6 +110,9 @@ export default async function ThreadPage({
     sendError: pages.sendError,
     admin: pages.role.admin,
     moderator: pages.role.moderator,
+    report: threadCopy.report,
+    reportPlaceholder: threadCopy.reportPlaceholder,
+    sendReport: threadCopy.sendReport,
   };
 
   const toComment = (node: TreeNode<PostRow>): CommentData => ({
@@ -210,6 +214,26 @@ export default async function ThreadPage({
                 </a>
               ) : null}
             </div>
+            {user && user.username !== root.author.username && !thread.isLocked ? (
+              <details className="report-box">
+                <summary className="act report-btn">
+                  <span>{threadCopy.report}</span>
+                </summary>
+                <form className="reply-form" action="/api/reports" method="post">
+                  <input type="hidden" name="postId" value={root.id} />
+                  <textarea
+                    name="reason"
+                    required
+                    minLength={3}
+                    maxLength={500}
+                    rows={2}
+                    placeholder={threadCopy.reportPlaceholder}
+                    aria-label={threadCopy.reportPlaceholder}
+                  />
+                  <button className="btn btn-p" type="submit">{threadCopy.sendReport}</button>
+                </form>
+              </details>
+            ) : null}
           </article>
         ) : null}
 
@@ -224,6 +248,7 @@ export default async function ThreadPage({
             emptyText={copy.noComments}
             loginText={copy.loginToReply}
             loginLabel={t(locale).nav.logIn}
+            viewer={user?.username ?? null}
           />
         )}
       </main>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LanguageToggle } from "@/components/theme/language-toggle";
 import { BackButton } from "@/components/theme/nav-buttons";
+import { RouteFreshness } from "@/components/theme/route-freshness";
 import { ScrollHeader } from "@/components/theme/scroll-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { homeDCss } from "@/components/home/home-d-css";
@@ -128,6 +129,7 @@ export async function ThemedPage({
   return (
     <div className={wrap} data-active={active ?? "home"} lang={locale}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
+      <RouteFreshness />
       {theme === "light" ? (
         <ScrollHeader>
           <header className="top">

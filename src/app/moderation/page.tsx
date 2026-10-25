@@ -1,10 +1,12 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Crumb, ThemedPage } from "@/components/theme/themed-page";
 import { getCurrentUser, isModerator } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { getLocale, t } from "@/lib/i18n";
+import { getTheme } from "@/lib/theme";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -14,8 +16,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = "force-dynamic";
 
 export default async function ModerationPage() {
-  const [user, locale] = await Promise.all([getCurrentUser(), getLocale()]);
-  const m = t(locale);
+  const [user, locale, theme] = await Promise.all([getCurrentUser(), getLocale(), getTheme()]);
+  const m = t(locale).moderation;
+  const audit = t(locale).audit;
+  const copy = t(locale).shell;
 
   if (!user) {
     redirect("/login?next=/moderation");
@@ -53,128 +57,103 @@ export default async function ModerationPage() {
   ]);
 
   return (
-    <main className="shell page">
-      <header className="border-b border-line pb-8">
-        <p className="eyebrow">{m.moderation.title}</p>
-        <h1 className="title-page mt-3">{m.moderation.title}</h1>
-        <p className="meta mt-3">{m.moderation.signedInAs(user.username)}</p>
-      </header>
+    <ThemedPage theme={theme} username={user.username}>
+      <main>
+        <section className="banner">
+          <div className="page-head">
+            <Crumb items={[{ href: "/", label: copy.boards }, { label: m.title }]} />
+            <h1>{m.title}</h1>
+            <p className="lede">{m.signedInAs(user.username)}</p>
+            <div className="board-stats">
+              <div className="bs">
+                <span>{m.queue}</span>
+                <b>{reports.length}</b>
+              </div>
+              <div className="bs">
+                <span>{audit.title}</span>
+                <b>{auditLogs.length}</b>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <section className="mt-10">
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 className="title-section">{m.moderation.openReports}</h2>
-          <span className="num">{String(reports.length).padStart(2, "0")}</span>
-        </div>
-
-        {reports.length === 0 ? (
-          <p className="mt-4 border-t border-line pt-6 text-[14px] text-muted">
-            {m.moderation.empty}
-          </p>
-        ) : (
-          <ul className="mt-2">
-            {reports.map((report) => (
-              <li key={report.id} className="border-t border-line py-7">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                    {report.source === "AUTO" ? (
-                      <span className="border border-accent/35 px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.12em] text-accent">
-                        {m.moderation.autoDetected}
-                      </span>
-                    ) : null}
-                    <span className="meta">
+        <section className="mod-sec">
+          <h2 className="sec-head"><span className="tick" />{m.queue}</h2>
+          {reports.length === 0 ? (
+            <p className="empty">{m.empty}</p>
+          ) : (
+            <ul className="mod-list">
+              {reports.map((report) => (
+                <li key={report.id} className="mod-card">
+                  <div className="mod-top">
+                    <span className="pill kind">
+                      {report.source === "AUTO" ? m.autoDetected : m.report}
+                    </span>
+                    <span className="when">
                       {report.source === "AUTO"
                         ? formatDateTime(report.createdAt, locale)
-                        : m.moderation.reportedBy(
-                            report.reporter?.username ?? "",
-                            formatDateTime(report.createdAt, locale),
-                          )}
+                        : m.reportedBy(report.reporter?.username ?? "", formatDateTime(report.createdAt, locale))}
                     </span>
+                    <Link className="pill open" href={`/t/${report.post.thread.id}#p-${report.post.id}`}>
+                      {m.openThread}
+                    </Link>
                   </div>
-                  <Link
-                    href={`/t/${report.post.thread.id}#p-${report.post.id}`}
-                    className="btn-quiet"
-                  >
-                    {m.moderation.openThread}
-                  </Link>
-                </div>
 
-                <p className="mt-4 border-l-2 border-accent pl-4 text-[14.5px] leading-[1.85] text-ink">
-                  {report.reason}
-                </p>
+                  <p className="mod-reason">{report.reason}</p>
 
-                <div className="mt-4 border border-line bg-surface p-4">
-                  <p className="meta">
-                    {m.moderation.postContext(
-                      report.post.author.username,
-                      report.post.thread.title,
-                      report.post.thread.board.name,
-                    )}
-                    {report.post.thread.isDeleted
-                      ? ` — ${m.moderation.removedThread}`
-                      : null}
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap break-words text-[14.5px] leading-[1.9] text-ink/80">
-                    {report.post.isDeleted ? m.moderation.removedPost : report.post.body}
-                  </p>
-                </div>
+                  <div className="mod-quote">
+                    <p className="src">
+                      {m.postContext(
+                        report.post.author.username,
+                        report.post.thread.title,
+                        report.post.thread.board.name,
+                      )}
+                      {report.post.thread.isDeleted ? ` — ${m.removedThread}` : null}
+                    </p>
+                    <p className="text">{report.post.isDeleted ? m.removedPost : report.post.body}</p>
+                  </div>
 
-                {!report.post.isDeleted ? (
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <form action={`/api/reports/${report.id}/resolve`} method="post">
-                      <input type="hidden" name="action" value="remove" />
-                      <button type="submit" className="btn btn-danger px-3 py-2 text-[13px]">
-                        {m.moderation.removePost}
-                      </button>
-                    </form>
+                  <div className="mod-acts">
+                    {!report.post.isDeleted ? (
+                      <form action={`/api/reports/${report.id}/resolve`} method="post">
+                        <input type="hidden" name="action" value="remove" />
+                        <button type="submit" className="btn danger">{m.removePost}</button>
+                      </form>
+                    ) : null}
                     <form action={`/api/reports/${report.id}/resolve`} method="post">
                       <input type="hidden" name="action" value="dismiss" />
-                      <button type="submit" className="btn btn-secondary px-3 py-2 text-[13px]">
-                        {m.moderation.dismiss}
+                      <button type="submit" className="btn ghost">
+                        {report.post.isDeleted ? m.closeReport : m.dismiss}
                       </button>
                     </form>
                   </div>
-                ) : (
-                  <form action={`/api/reports/${report.id}/resolve`} method="post" className="mt-4">
-                    <input type="hidden" name="action" value="dismiss" />
-                    <button type="submit" className="btn btn-secondary px-3 py-2 text-[13px]">
-                      {m.moderation.closeReport}
-                    </button>
-                  </form>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
-      <section className="mt-14">
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 className="title-section">{m.audit.title}</h2>
-          <span className="num">{String(auditLogs.length).padStart(2, "0")}</span>
-        </div>
-        {auditLogs.length === 0 ? (
-          <p className="mt-4 border-t border-line pt-6 text-[14px] text-muted">{m.audit.empty}</p>
-        ) : (
-          <ul className="mt-2">
-            {auditLogs.map((log) => (
-              <li
-                key={log.id}
-                className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-line py-3"
-              >
-                <span className="text-[14px] text-ink">
-                  {m.audit.actions[log.action] ?? log.action}
-                  <span className="ml-3 font-mono text-[11px] text-muted">
-                    {log.targetType}:{log.targetId.slice(0, 8)}
+        <section className="mod-sec">
+          <h2 className="sec-head"><span className="tick" />{audit.title}</h2>
+          {auditLogs.length === 0 ? (
+            <p className="empty">{audit.empty}</p>
+          ) : (
+            <ol className="audit-list">
+              {auditLogs.map((log) => (
+                <li key={log.id}>
+                  <span className="what">
+                    {audit.actions[log.action] ?? log.action}
+                    <span className="tgt">{log.targetType}:{log.targetId.slice(0, 8)}</span>
                   </span>
-                </span>
-                <span className="meta">
-                  {log.actor?.username ?? "system"} / {formatDateTime(log.createdAt, locale)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </main>
+                  <span className="when">
+                    {log.actor?.username ?? "system"} / {formatDateTime(log.createdAt, locale)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      </main>
+    </ThemedPage>
   );
 }
