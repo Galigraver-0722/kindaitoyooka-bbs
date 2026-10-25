@@ -135,6 +135,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           createdAt: formatDateTime(post.createdAt, await getLocale()),
           likeCount: 0,
           liked: false,
+          isDeleted: false,
           children: [],
         },
       },

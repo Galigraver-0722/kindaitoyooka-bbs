@@ -150,7 +150,7 @@ export const pagesDCss = `
 .tw-d .cmt-who{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink);font-size:12px}
 .tw-d .cmt-who .dot{width:20px;height:20px;border-radius:50%;background:var(--sky);border:1.5px solid var(--line);display:grid;place-items:center;font-size:8px;font-weight:800}
 .tw-d .cmt-body{margin-top:9px;font-size:14.5px;line-height:1.85;white-space:pre-wrap;word-break:break-word}
-.tw-d .cmt-acts{margin-top:10px}
+.tw-d .cmt-acts{margin-top:10px;flex-wrap:wrap}
 .tw-d .cmt-kids{margin-top:10px;margin-left:10px;padding-left:16px;border-left:2px solid rgba(6,35,48,.22);display:flex;flex-direction:column;gap:12px}
 .tw-d .cmt-kids > .cmt{position:relative}
 .tw-d .cmt-kids > .cmt::before{content:"";position:absolute;left:-18px;top:16px;width:12px;height:2px;background:rgba(6,35,48,.22)}
@@ -163,7 +163,7 @@ export const pagesDCss = `
 .tw-d .reply-box{margin:0}
 .tw-d .reply-box > summary{list-style:none}
 .tw-d .reply-box > summary::-webkit-details-marker{display:none}
-.tw-d .reply-box[open]{flex:1 0 100%;margin-top:8px}
+.tw-d .reply-box[open]{flex:1 0 100%;margin-top:8px;min-width:0}
 .tw-d .reply-form{display:flex;flex-direction:column;gap:8px;width:100%}
 .tw-d .reply-form textarea{border:2px solid var(--line);border-radius:12px;background:var(--bg);padding:10px 12px;font:inherit;font-size:13.5px;min-height:80px;resize:vertical}
 .tw-d .reply-form .btn{align-self:flex-start}
@@ -222,6 +222,7 @@ export const pagesDCss = `
 .tw-d .color-field{display:flex;flex-direction:column;gap:6px}
 .tw-d .color-field .field-label{margin-top:0}
 .tw-d .color-field input[type="color"]{width:64px;height:38px;padding:3px;border:2px solid var(--line);border-radius:10px;background:var(--paper);cursor:pointer}
+.tw-d .confirm-portal{display:contents}
 .tw-d .confirm{position:fixed;inset:0;z-index:220;display:grid;place-items:center;padding:20px;background:rgba(6,35,48,.42)}
 .tw-d .confirm-card{width:min(440px,100%);background:var(--paper);border:2px solid var(--line);border-radius:18px;box-shadow:8px 8px 0 var(--line);padding:22px 24px}
 .tw-d .confirm-card h2{font-size:19px;letter-spacing:-.02em}
@@ -303,6 +304,19 @@ export const pagesDCss = `
 .tw-d .audit-list li{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 14px;border-bottom:1.5px solid rgba(6,35,48,.14);padding:9px 0;font-size:13.5px}
 .tw-d .audit-list .tgt{margin-left:10px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
 .tw-d .audit-list .when{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+
+/* Unread notification rows keep a marker until the panel is opened. */
+.tw-d .inbox-list li.is-unread{background:rgba(18,191,209,.07)}
+.tw-d .inbox-list li.is-unread .inbox-msg{font-weight:800}
+.tw-d .inbox-dot{display:inline-block;width:7px;height:7px;margin-right:6px;border-radius:50%;background:var(--cyan);border:1.5px solid var(--line);vertical-align:middle;transform:translateY(-1px)}
+.tw-b .inbox-list li.is-unread{background:rgba(90,230,236,.06);box-shadow:inset 2px 0 0 var(--cyan)}
+.tw-b .inbox-list li.is-unread .inbox-msg{color:#ECFEFF}
+.tw-b .inbox-dot{display:inline-block;width:5px;height:5px;margin-right:6px;border-radius:50%;background:var(--cyan);vertical-align:middle;transform:translateY(-1px)}
+
+/* Delete chip: same footprint as the reaction buttons. */
+.tw-d .act.delete-btn,.tw-b .act.delete-btn{color:#8C2F1B;border-color:rgba(140,47,27,.45)}
+.tw-d .act.delete-btn:hover{background:#FFE3DB;color:#7A1E0C}
+.tw-b .act.delete-btn:hover{background:rgba(220,120,120,.14);color:#F2B8B8;border-color:rgba(220,120,120,.6)}
 
 /* Report control: a chip that opens a plain form under the action row. */
 .tw-d .report-box{margin-top:10px}
@@ -536,7 +550,7 @@ export const pagesBCss = `
 .tw-b .cmt-who{display:inline-flex;align-items:center;gap:6px;color:var(--text);font-size:11px}
 .tw-b .cmt-who .dot{width:18px;height:18px;border-radius:3px;border:1px solid rgba(90,230,236,.4);background:rgba(90,230,236,.14);display:grid;place-items:center;font-size:8px;color:var(--cyan)}
 .tw-b .cmt-body{margin-top:8px;font-size:13.5px;line-height:1.85;white-space:pre-wrap;word-break:break-word;color:var(--text)}
-.tw-b .cmt-acts{margin-top:9px}
+.tw-b .cmt-acts{margin-top:9px;flex-wrap:wrap}
 .tw-b .cmt-kids{margin-top:10px;margin-left:10px;padding-left:16px;border-left:2px solid rgba(90,230,236,.3);display:flex;flex-direction:column;gap:10px}
 .tw-b .cmt-kids > .cmt{position:relative}
 .tw-b .cmt-kids > .cmt::before{content:"";position:absolute;left:-18px;top:14px;width:12px;height:1px;background:rgba(90,230,236,.3)}
@@ -549,7 +563,7 @@ export const pagesBCss = `
 .tw-b .reply-box{margin:0}
 .tw-b .reply-box > summary{list-style:none}
 .tw-b .reply-box > summary::-webkit-details-marker{display:none}
-.tw-b .reply-box[open]{flex:1 0 100%;margin-top:6px}
+.tw-b .reply-box[open]{flex:1 0 100%;margin-top:6px;min-width:0}
 .tw-b .reply-form{display:flex;flex-direction:column;gap:8px;width:100%}
 .tw-b .reply-form textarea{border:1px solid var(--line);border-radius:4px;background:rgba(4,15,22,.6);color:var(--text);padding:9px 11px;font:inherit;font-size:13px;min-height:74px;resize:vertical}
 .tw-b .reply-form .btn{align-self:flex-start}
@@ -597,6 +611,7 @@ export const pagesBCss = `
 .tw-b .color-field{display:flex;flex-direction:column;gap:6px}
 .tw-b .color-field .field-label{margin-top:0}
 .tw-b .color-field input[type="color"]{width:60px;height:34px;padding:2px;border:1px solid var(--line);border-radius:4px;background:rgba(4,15,22,.6);cursor:pointer}
+.tw-b .confirm-portal{display:contents}
 .tw-b .confirm{position:fixed;inset:0;z-index:220;display:grid;place-items:center;padding:20px;background:rgba(2,8,12,.72)}
 .tw-b .confirm-card{width:min(440px,100%);background:#071A23;border:1px solid var(--line);border-radius:6px;padding:20px 22px;box-shadow:0 30px 60px -30px rgba(0,0,0,.9)}
 .tw-b .confirm-card h2{font-family:var(--mono);font-size:13px;letter-spacing:.08em;color:var(--cyan)}

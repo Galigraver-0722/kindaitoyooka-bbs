@@ -13,6 +13,8 @@ export type NotificationItem = {
   postId?: string;
   /** First characters of the reply or comment, for context in the list. */
   excerpt?: string;
+  /** Arrived after the reader last opened the inbox. */
+  unread: boolean;
 };
 
 export type NotificationFeed = {
@@ -140,7 +142,7 @@ export async function getNotifications(
     prisma.user.findUnique({ where: { id: userId }, select: { notificationsSeenAt: true } }),
   ]);
 
-  const items: NotificationItem[] = [
+  const raw: Omit<NotificationItem, "unread">[] = [
     ...replies.map((post) => ({
       id: `reply:${post.id}`,
       kind: "reply" as const,
@@ -195,7 +197,11 @@ export async function getNotifications(
     .slice(0, limit);
 
   const seenAt = user?.notificationsSeenAt?.getTime() ?? 0;
-  const unseen = items.filter((item) => item.createdAt.getTime() > seenAt).length;
+  const withSeen: NotificationItem[] = raw.map((item) => ({
+    ...item,
+    unread: item.createdAt.getTime() > seenAt,
+  }));
+  const unseen = withSeen.filter((item) => item.unread).length;
 
-  return { items, unseen };
+  return { items: withSeen, unseen };
 }

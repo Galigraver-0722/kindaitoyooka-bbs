@@ -800,6 +800,47 @@ if the derived queries become the slowest part of a page.
 
 ---
 
+## ADR-0026 — Authors may remove their own posts, and a removal always lands somewhere visible
+
+**Context.** Only moderators could set `isDeleted`. A student who posted a wrong answer, a typo,
+or a personal detail had no self-service way out: they had to report themselves and wait. The
+removal flow was also only half honest — a deleted post rendered as a placeholder, but its body
+still travelled to the browser inside the RSC payload, and the redirect after deleting dropped
+the reader at the top of the thread with no sign of what had changed.
+
+**Decision.**
+
+1. `POST /api/posts/[id]/delete` and `POST /api/threads/[id]/delete` accept the author as well as
+   `MODERATOR` / `ADMIN`. The rule is one line: `isModerator(user) || authorId === user.id`.
+2. A removed post renders as a localized placeholder, and its body is replaced with an empty
+   string **before** the data is serialized to the client. Replies keep hanging under the
+   placeholder; the body, like, reply, report, and delete controls disappear.
+3. The redirect after removing a post goes to `/t/<threadId>#p-<postId>`, so the reader lands on
+   the placeholder that replaced their post and the anchor flash marks it.
+4. The confirmation dialog is portalled to `<body>` with the scoped theme class, the same way the
+   notification panel is. Inside the comment tree it was at the mercy of an ancestor's clipping or
+   containing block; from `<body>` it always covers the viewport.
+
+**Consequences.**
+
+- Self-service removal is instant and does not depend on a moderator being awake. The audit row
+  records the actor, so moderators can still see who removed what (`post.remove`, `thread.remove`).
+- Content is still soft-deleted: the row and its body remain in the database for accountability.
+  The body simply never leaves the server for deleted rows.
+- Removing the opening post of a thread leaves the title and replies intact, with the root rendered
+  as a placeholder. Removing the whole thread is a separate action.
+- A removal is not undoable from the UI; restoring takes a moderator and a database write. That is
+  intentional, so "delete" means the same thing for a fourteen-year-old and for a teacher.
+
+**Alternatives considered.** Hard delete (destroys moderation evidence), moderator-only removal
+(defensible, but it teaches students to report themselves and wait), hiding deleted bodies with
+CSS only (the text still reaches the browser — the version shipped first, and fixed here).
+
+**Revisit if.** The school wants a short undo window (say 10 minutes after posting), or if
+moderators find that author removal is used to erase evidence before a report is filed.
+
+---
+
 ## Template for new decisions
 
 ```markdown

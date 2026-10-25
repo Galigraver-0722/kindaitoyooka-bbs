@@ -11,6 +11,7 @@ export type InboxItem = {
   when: string;
   href: string;
   excerpt?: string;
+  unread?: boolean;
 };
 
 /** Badge label; anything above 99 would stretch the pill, so it is capped. */
@@ -183,7 +184,7 @@ export function NotificationInbox({
           ) : (
             <ul className="inbox-list">
               {items.map((item) => (
-                <li key={item.id}>
+                <li key={item.id} className={item.unread ? "is-unread" : ""}>
                   <a href={item.href} onClick={(event) => openItem(event, item.href)}>
                     <span className={`inbox-icon k-${item.kind}`} aria-hidden="true">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -191,7 +192,10 @@ export function NotificationInbox({
                       </svg>
                     </span>
                     <span className="inbox-text">
-                      <span className="inbox-msg">{item.message}</span>
+                      <span className="inbox-msg">
+                        {item.unread ? <span className="inbox-dot" aria-hidden="true" /> : null}
+                        {item.message}
+                      </span>
                       {item.excerpt ? <span className="inbox-excerpt">{item.excerpt}</span> : null}
                       <span className="inbox-when">{item.when}</span>
                     </span>

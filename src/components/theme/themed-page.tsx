@@ -4,6 +4,7 @@ import { LanguageToggle } from "@/components/theme/language-toggle";
 import { BackButton } from "@/components/theme/nav-buttons";
 import { NotificationInbox, type InboxItem } from "@/components/theme/notification-inbox";
 import { AnchorHighlight } from "@/components/theme/anchor-highlight";
+import { AutoRefresh } from "@/components/theme/auto-refresh";
 import { RouteFreshness } from "@/components/theme/route-freshness";
 import { getNotifications } from "@/lib/notifications";
 import { ScrollHeader } from "@/components/theme/scroll-header";
@@ -137,6 +138,7 @@ export async function ThemedPage({
     when: timeAgo(item.createdAt, locale),
     href: `/t/${item.threadId}${item.postId ? `#p-${item.postId}` : ""}`,
     excerpt: item.excerpt,
+    unread: item.unread,
   }));
   const inboxLabels = {
     title: inboxCopy.title,
@@ -154,6 +156,7 @@ export async function ThemedPage({
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <RouteFreshness />
       <AnchorHighlight />
+      <AutoRefresh />
       {theme === "light" ? (
         <ScrollHeader>
           <header className="top">

@@ -9,6 +9,7 @@ import { errorMessage, noticeMessage } from "@/lib/messages";
 import { markThreadRead } from "@/lib/read-state";
 import { normalizeHighlightTerm } from "@/lib/highlight";
 import { Highlight } from "@/components/theme/highlight";
+import { DeleteButton } from "@/components/theme/delete-button";
 import { getLocale, t } from "@/lib/i18n";
 import { getTheme } from "@/lib/theme";
 import { buildThreadTree, type TreeNode } from "@/lib/thread-tree";
@@ -29,6 +30,7 @@ type PostRow = {
   parentId: string | null;
   body: string;
   likeCount: number;
+  isDeleted: boolean;
   createdAt: Date;
   author: { username: string; role: string; avatarColor: string | null; avatarRing: string | null };
 };
@@ -116,12 +118,15 @@ export default async function ThreadPage({
     report: threadCopy.report,
     reportPlaceholder: threadCopy.reportPlaceholder,
     sendReport: threadCopy.sendReport,
+    delete: pages.actions.delete,
+    removedPost: threadCopy.removed,
+    confirmDelete: pages.confirmDelete,
   };
 
   const toComment = (node: TreeNode<PostRow>): CommentData => ({
     id: node.post.id,
     number: node.number,
-    body: node.post.body,
+    body: node.post.isDeleted ? "" : node.post.body,
     author: {
       username: node.post.author.username,
       role: node.post.author.role,
@@ -131,6 +136,7 @@ export default async function ThreadPage({
     createdAt: formatDateTime(node.post.createdAt, locale),
     likeCount: node.post.likeCount,
     liked: likedPostIds.has(node.post.id),
+    isDeleted: node.post.isDeleted,
     children: node.children.map(toComment),
   });
 
@@ -181,6 +187,16 @@ export default async function ThreadPage({
               large
             />
             {canEdit ? <Link className="btn" href={`/t/${thread.id}/edit`}>{pages.actions.edit}</Link> : null}
+            {user && (user.username === thread.author.username || canModerate) ? (
+              <DeleteButton
+                action={`/api/threads/${thread.id}/delete`}
+                label={pages.actions.delete}
+                title={pages.confirmDelete.title}
+                text={pages.confirmDelete.thread}
+                confirm={pages.confirmDelete.confirm}
+                cancel={pages.confirmDelete.cancel}
+              />
+            ) : null}
             {canModerate ? <Link className="btn" href="/moderation">{pages.actions.moderation}</Link> : null}
           </div>
         </div>
@@ -208,16 +224,22 @@ export default async function ThreadPage({
               <span className="cmt-time">{formatDateTime(root.createdAt, locale)}</span>
               <span className="root-tag">{copy.rootPost}</span>
             </div>
-            <div className="root-body"><Highlight text={root.body} term={highlightTerm} /></div>
-            <div className="acts cmt-acts">
-              {canReply ? (
-                <a className="act reply-btn" href="#reply-form">
-                  {replyIcon}
-                  <span>{copy.reply}</span>
-                </a>
-              ) : null}
-            </div>
-            {user && user.username !== root.author.username && !thread.isLocked ? (
+            {root.isDeleted ? (
+              <div className="root-body removed">{threadCopy.removed}</div>
+            ) : (
+              <div className="root-body"><Highlight text={root.body} term={highlightTerm} /></div>
+            )}
+            {root.isDeleted ? null : (
+              <div className="acts cmt-acts">
+                {canReply ? (
+                  <a className="act reply-btn" href="#reply-form">
+                    {replyIcon}
+                    <span>{copy.reply}</span>
+                  </a>
+                ) : null}
+              </div>
+            )}
+            {!root.isDeleted && user && user.username !== root.author.username && !thread.isLocked ? (
               <details className="report-box">
                 <summary className="act report-btn">
                   <span>{threadCopy.report}</span>
@@ -253,6 +275,7 @@ export default async function ThreadPage({
             loginLabel={t(locale).nav.logIn}
             viewer={user?.username ?? null}
             highlight={highlightTerm}
+            moderator={canModerate}
           />
         )}
       </main>

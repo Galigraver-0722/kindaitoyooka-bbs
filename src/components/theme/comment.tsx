@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { ToggleAction } from "@/components/theme/actions";
 import { Highlight } from "@/components/theme/highlight";
+import { DeleteButton } from "@/components/theme/delete-button";
 import { readableInk } from "@/lib/color";
 
 const replyIcon = (
@@ -25,6 +26,7 @@ export type CommentData = {
   createdAt: string;
   likeCount: number;
   liked: boolean;
+  isDeleted?: boolean;
   children: CommentData[];
 };
 
@@ -43,6 +45,9 @@ export type CommentLabels = {
   report: string;
   reportPlaceholder: string;
   sendReport: string;
+  delete: string;
+  removedPost: string;
+  confirmDelete: { title: string; post: string; thread: string; confirm: string; cancel: string };
 };
 
 const foldListeners = new Set<() => void>();
@@ -110,6 +115,9 @@ function ReplyForm({
 
     setBusy(true);
     setError(false);
+    // `event.currentTarget` is cleared once the handler yields, so keep the
+    // form now and close its <details> after the request resolves.
+    const form = event.currentTarget;
 
     const body = new FormData();
     body.set("body", value);
@@ -136,9 +144,9 @@ function ReplyForm({
       const data = (await response.json()) as { comment: CommentData };
       onPosted(data.comment);
       setValue("");
+      form.closest("details")?.removeAttribute("open");
       // Keep the cached copy of this thread in step with the server.
       router.refresh();
-      event.currentTarget.closest("details")?.removeAttribute("open");
     } catch {
       setError(true);
     } finally {
@@ -175,6 +183,7 @@ function Comment({
   labels,
   viewer,
   highlight,
+  moderator = false,
   onReply,
 }: {
   data: CommentData;
@@ -183,6 +192,7 @@ function Comment({
   labels: CommentLabels;
   viewer: string | null;
   highlight?: string;
+  moderator?: boolean;
   onReply: (parentId: string, comment: CommentData) => void;
 }) {
   const storageKey = `fold:${threadId}:${data.id}`;
@@ -238,8 +248,11 @@ function Comment({
 
       {collapsed ? null : (
         <>
-          <div className="cmt-body"><Highlight text={data.body} term={highlight} /></div>
+          <div className={`cmt-body${data.isDeleted ? " removed" : ""}`}>
+            {data.isDeleted ? labels.removedPost : <Highlight text={data.body} term={highlight} />}
+          </div>
 
+          {data.isDeleted ? null : (
           <div className="acts cmt-acts">
             <ToggleAction
               kind="like"
@@ -248,6 +261,17 @@ function Comment({
               initialActive={data.liked}
               label={labels.like}
             />
+            {viewer && (viewer === data.author.username || moderator) ? (
+              <DeleteButton
+                compact
+                action={`/api/posts/${data.id}/delete`}
+                label={labels.delete}
+                title={labels.confirmDelete.title}
+                text={labels.confirmDelete.post}
+                confirm={labels.confirmDelete.confirm}
+                cancel={labels.confirmDelete.cancel}
+              />
+            ) : null}
             {canReply ? (
               <details className="reply-box">
                 <summary className="act reply-btn">
@@ -263,7 +287,8 @@ function Comment({
               </details>
             ) : null}
           </div>
-          {viewer && viewer !== data.author.username ? (
+          )}
+          {!data.isDeleted && viewer && viewer !== data.author.username ? (
             <details className="report-box">
               <summary className="act report-btn">
                 <span>{labels.report}</span>
@@ -295,6 +320,7 @@ function Comment({
                   labels={labels}
                   viewer={viewer}
                   highlight={highlight}
+                  moderator={moderator}
                   onReply={onReply}
                 />
               ))}
@@ -327,6 +353,7 @@ export function CommentSection({
   loginLabel: string;
   viewer: string | null;
   highlight?: string;
+  moderator?: boolean;
 }) {
   const [comments, setComments] = useState<CommentData[]>(initial);
 

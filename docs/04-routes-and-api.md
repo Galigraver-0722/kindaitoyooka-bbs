@@ -251,14 +251,19 @@ success so the browser performs a `GET`.
 
 ### `POST /api/threads/[id]/delete`
 
-- Auth: `MODERATOR` or `ADMIN`. No body.
+- Auth: the thread author, or `MODERATOR` / `ADMIN`. No body.
 - Sets `isDeleted = true` and redirects to the board.
 - Failure codes: `forbidden`, `thread-not-found`.
 
 ### `POST /api/posts/[id]/delete`
 
-- Auth: `MODERATOR` or `ADMIN`. No body.
-- Sets `isDeleted = true` and redirects to the thread. The post stays visible as a placeholder.
+- Auth: the post author, or `MODERATOR` / `ADMIN`. No body.
+- Sets `isDeleted = true` and redirects to `/t/<threadId>#p-<postId>`. The anchor matters: the
+  reader lands on the placeholder that replaced the post instead of being sent back to the top of
+  the thread, so the click always produces a visible result.
+- The post stays visible as a localized placeholder, but its body is removed both from the
+  rendered page and from the RSC payload sent to the browser — "deleted" is not just hidden by
+  CSS. Replies keep hanging under the placeholder and stay readable.
 - Failure codes: `forbidden`, `not-found`.
 
 ### `POST /api/posts/[id]/like`

@@ -210,14 +210,15 @@
 
 ### `POST /api/threads/[id]/delete`
 
-- 認証: `MODERATOR` または `ADMIN`。本文は不要です。
+- 認証: スレッドの投稿者本人、または `MODERATOR` / `ADMIN`。本文は不要です。
 - `isDeleted = true` にして、ボードへリダイレクトします。
 - 失敗コード: `forbidden`、`thread-not-found`。
 
 ### `POST /api/posts/[id]/delete`
 
-- 認証: `MODERATOR` または `ADMIN`。本文は不要です。
-- `isDeleted = true` にして、スレッドへリダイレクトします。投稿はプレースホルダーとして表示され続けます。
+- 認証: 投稿者本人、または `MODERATOR` / `ADMIN`。本文は不要です。
+- `isDeleted = true` にして `/t/<threadId>#p-<postId>` へリダイレクトします。アンカーまで戻すのが要点で、スレッド先頭に飛ばされるのではなく、その投稿が置き換わったプレースホルダーの位置に着地します。クリックの結果が必ず目に見える形になります。
+- 投稿は言語に合わせたプレースホルダーとして残りますが、本文は描画結果からもブラウザへ送る RSC ペイロードからも取り除かれます。CSS で隠しているだけではありません。返信はプレースホルダーの下にぶら下がったまま読めます。
 - 失敗コード: `forbidden`、`not-found`。
 
 ### `POST /api/posts/[id]/like`

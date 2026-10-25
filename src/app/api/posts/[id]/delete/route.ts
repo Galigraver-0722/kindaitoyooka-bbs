@@ -14,17 +14,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!user) {
     return seeOther(request, `/login?error=login-required&next=${encodeURIComponent("/moderation")}`);
   }
-  if (!isModerator(user)) {
-    return seeOther(request, `/t/${id}?error=forbidden`);
-  }
-
   const post = await prisma.post.findUnique({
     where: { id },
-    select: { threadId: true },
+    select: { threadId: true, authorId: true },
   });
 
   if (!post) {
     return seeOther(request, "/?error=not-found");
+  }
+
+  // Authors may remove their own posts; moderators may remove anyone's.
+  if (!isModerator(user) && post.authorId !== user.id) {
+    return seeOther(request, `/t/${post.threadId}?error=forbidden`);
   }
 
   await prisma.$transaction(async (tx) => {
@@ -38,5 +39,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     });
   });
 
-  return seeOther(request, `/t/${post.threadId}`);
+  // Land on the placeholder itself: the reader keeps their place in the thread
+  // and sees what the click did, instead of being thrown back to the top.
+  return seeOther(request, `/t/${post.threadId}#p-${id}`);
 }
