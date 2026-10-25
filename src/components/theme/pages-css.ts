@@ -88,7 +88,6 @@ export const pagesDCss = `
 .tw-d .board-stats b{font-size:18px;letter-spacing:-.02em}
 @media (max-width:720px){.tw-d .board-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
-.tw-d .pill-action{background:var(--cyan);font-weight:800;color:var(--ink)}
 .tw-d .bd-drawer{display:none}
 @media (max-width:1040px){
   .tw-d .bd-drawer{display:block;position:static}
@@ -332,7 +331,6 @@ export const pagesBCss = `
 .tw-b .board-stats b{font-family:var(--mono);font-size:15px;color:var(--text)}
 @media (max-width:720px){.tw-b .board-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
-.tw-b .pill-action{color:var(--cyan);border-color:rgba(90,230,236,.5);font-weight:600}
 .tw-b .bd-drawer{display:none}
 @media (max-width:900px){
   .tw-b .bd-drawer{display:block;position:static;order:2}

@@ -200,7 +200,6 @@ export default async function BoardPage({
               {suggested.map((tag) => (
                 <Link className="pill" href={`/?q=${encodeURIComponent(`#${tag}`)}`} key={tag}>#{tag}</Link>
               ))}
-              <Link className="pill pill-action" href={`/new?board=${board.slug}`}>{copy.newThread}</Link>
             </div>
           </div>
         </section>
