@@ -767,6 +767,39 @@ archive for a graduating cohort. Both are configuration and a script flag away.
 
 ---
 
+## ADR-0025 — The notification inbox is derived from existing rows
+
+**Context.** Readers asked for an inbox in the header covering replies, comments, likes, and
+saves. The obvious design is a `Notification` table written whenever one of those events happens,
+which means touching five write paths, backfilling nothing existing, and accepting that the log
+can drift from the rows it summarizes.
+
+**Decision.** Derive the feed at read time. Five small queries (replies to my posts, top-level
+posts in my threads, likes on my posts, likes on my threads, bookmarks of my threads) return the
+newest rows each; the results are merged, sorted, and cut to 12. The only stored state is
+`User.notificationsSeenAt`, set by `POST /api/notifications/seen` when the panel opens.
+
+**Consequences.**
+
+- No write paths changed, no backfill, and no way for the inbox to disagree with the forum:
+  deleting a post removes its notifications because nothing was copied.
+- Cost is five indexed queries per page render for signed-in readers. At school traffic this is
+  invisible; it is the first thing to cache if a profile shows up.
+- Only the newest events exist; there is no history page, no per-event read flag, and no email.
+  The panel is a glance, not an archive.
+- "Seen" is coarse: opening the panel clears the badge for everything up to now, including a
+  notification that arrived while the panel was open (it will show on the next open).
+
+**Alternatives considered.** A `Notification` table with per-row read flags (more precise, five
+write paths, drift risk), notifications in the RSC payload only (no unread count across pages),
+a third-party service (a dependency for a feature that is a few joins), and polling for new items
+(no background job infrastructure yet).
+
+**Revisit if.** Readers want per-item read state, email digests, or a "all notifications" page, or
+if the derived queries become the slowest part of a page.
+
+---
+
 ## Template for new decisions
 
 ```markdown

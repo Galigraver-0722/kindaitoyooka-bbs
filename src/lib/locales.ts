@@ -9,6 +9,23 @@ export function isLocale(value: string | null | undefined): value is Locale {
 }
 
 const en = {
+  notifications: {
+    title: "Notifications",
+    empty: "Nothing yet. Replies, comments, likes and saves land here.",
+    open: "Open",
+    close: "Close",
+    markSeen: "Mark as read",
+    unread: (count: number) => `${count} unread`,
+    unreadWord: "unread",
+    kinds: {
+      reply: (actor: string) => `${actor} replied to your post`,
+      comment: (actor: string) => `${actor} commented in your thread`,
+      like: (actor: string) => `${actor} liked your thread`,
+      "post-like": (actor: string) => `${actor} liked your reply`,
+      bookmark: (actor: string) => `${actor} saved your thread`,
+    },
+  },
+
   meta: {
     title: "Toyooka BBS",
     description:
@@ -440,6 +457,23 @@ const en = {
 };
 
 const ja: typeof en = {
+  notifications: {
+    title: "通知",
+    empty: "まだ通知はありません。返信・コメント・いいね・保存がここに届きます。",
+    open: "開く",
+    close: "閉じる",
+    markSeen: "すべて既読にする",
+    unread: (count: number) => `未読 ${count} 件`,
+    unreadWord: "件未読",
+    kinds: {
+      reply: (actor: string) => `${actor} があなたの投稿に返信しました`,
+      comment: (actor: string) => `${actor} があなたのスレッドにコメントしました`,
+      like: (actor: string) => `${actor} があなたのスレッドにいいねしました`,
+      "post-like": (actor: string) => `${actor} があなたの投稿にいいねしました`,
+      bookmark: (actor: string) => `${actor} があなたのスレッドを保存しました`,
+    },
+  },
+
   meta: {
     title: "Toyooka BBS",
     description: "近畿大学附属豊岡中学校・高等学校の生徒が使う、学校コミュニティの掲示板です。",

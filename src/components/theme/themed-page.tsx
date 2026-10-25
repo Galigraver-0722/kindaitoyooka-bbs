@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LanguageToggle } from "@/components/theme/language-toggle";
 import { BackButton } from "@/components/theme/nav-buttons";
+import { NotificationInbox, type InboxItem } from "@/components/theme/notification-inbox";
 import { RouteFreshness } from "@/components/theme/route-freshness";
+import { getNotifications } from "@/lib/notifications";
 import { ScrollHeader } from "@/components/theme/scroll-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { homeDCss } from "@/components/home/home-d-css";
@@ -118,11 +120,30 @@ export async function ThemedPage({
   const me = username
     ? await prisma.user.findUnique({
         where: { username },
-        select: { avatarColor: true, avatarRing: true },
+        select: { id: true, avatarColor: true, avatarRing: true },
       })
     : null;
   const copy = t(locale).shell;
   const pages = t(locale).pages;
+  const inboxCopy = t(locale).notifications;
+  const noticeFeed = me ? await getNotifications(me.id) : { items: [], unseen: 0 };
+  const inboxItems: InboxItem[] = noticeFeed.items.map((item) => ({
+    id: item.id,
+    kind: item.kind,
+    actor: item.actor,
+    message: inboxCopy.kinds[item.kind](item.actor),
+    when: timeAgo(item.createdAt, locale),
+    href: `/t/${item.threadId}${item.postId ? `#p-${item.postId}` : ""}`,
+    excerpt: item.excerpt,
+  }));
+  const inboxLabels = {
+    title: inboxCopy.title,
+    empty: inboxCopy.empty,
+    markSeen: inboxCopy.markSeen,
+    open: inboxCopy.open,
+    close: inboxCopy.close,
+    unreadWord: inboxCopy.unreadWord,
+  };
   const css = theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss;
   const wrap = theme === "light" ? "tw-d" : "tw-b";
 
@@ -148,6 +169,7 @@ export async function ThemedPage({
               </div>
             </details>
             <div className="tools">
+              {username ? <NotificationInbox items={inboxItems} unseen={noticeFeed.unseen} labels={inboxLabels} themeClass="tw-d" /> : null}
               <form className="search" action="/" method="get" role="search">
                 {searchIcon}
                 <input name="q" maxLength={100} placeholder={copy.search} aria-label={copy.search} />
@@ -188,6 +210,7 @@ export async function ThemedPage({
                 <BoardLinks boards={boards} />
               </div>
             </details>
+            {username ? <NotificationInbox items={inboxItems} unseen={noticeFeed.unseen} labels={inboxLabels} themeClass="tw-b" /> : null}
             <form className="cmd" action="/" method="get" role="search">
               <span>&gt;</span>
               <input name="q" maxLength={100} placeholder={copy.search} aria-label={copy.search} />

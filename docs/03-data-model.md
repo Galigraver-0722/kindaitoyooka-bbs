@@ -40,6 +40,7 @@ erDiagram
 | `avatarColor` | string? | `#rrggbb` background for the avatar; `NULL` falls back to the theme palette |
 | `avatarRing` | string? | `#rrggbb` ring colour; same fallback |
 | `bio` | string? | ≤ 200 chars, shown on the profile page |
+| `notificationsSeenAt` | datetime? | When the reader last opened the header inbox; newer events count as unseen |
 | `createdAt` | datetime | |
 
 No real name, grade, class, birthday, or photo. Those fields are intentionally absent: the
@@ -194,6 +195,14 @@ Primary key is `(userId, threadId)`. A thread is "New" when this row is missing 
 `Thread.lastPostAt` is newer than `lastReadAt`. Guests have no rows. The marker is written on
 every thread view, and the feed and board lists read it to render the "新着" badge. It stores
 no URLs, durations, or device information.
+
+### Notifications
+
+There is no notification table. The inbox is derived from rows that already exist:
+`Post` (a reply to one of your posts, or a top-level post in your thread), `PostLike`,
+`ThreadLike`, and `ThreadBookmark`. Each query is limited to the newest rows and the merged list
+is capped at 12, which is why only `User.notificationsSeenAt` needs storing. Deleting or hiding a
+post removes its notifications with it, because nothing was copied.
 
 ### RateLimit
 

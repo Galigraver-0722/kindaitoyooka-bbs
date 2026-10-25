@@ -23,6 +23,7 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/threads` | Public | Redirects to `/`, keeping `q`, `filter`, and `sort` |
 | `/search` | Public | Redirects to `/` with `q`; `tag` becomes a `#tag` query |
 | `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
+| any signed-in page | Signed-in | The header shows a notification inbox (replies, comments, likes, saves) with an unread count |
 | `/moderation` | Moderator / Admin | Open reports (10 per page, `page` parameter), automatic flags, the recent audit log, and — for administrators — the student-board archive controls |
 | `/rules` | Public | Community rules, in the current interface language |
 | `/privacy` | Public | Privacy notice: stored data, cookies, retention, access |
@@ -184,6 +185,13 @@ success so the browser performs a `GET`.
 - Success: redirects to `/u/<username>?notice=profile-saved`.
 - Avatar text colour is derived from the background by luminance, so no colour field is stored
   for it.
+
+### `POST /api/notifications/seen`
+
+- Auth: signed-in user. No body.
+- Sets `User.notificationsSeenAt` to now, which clears the unread badge. The events themselves
+  are derived, so nothing is created or deleted.
+- `Accept: application/json` answers `{ok:true}` (401 for a guest); otherwise redirects to `/`.
 
 ### `POST /api/boards/[id]/archive`
 

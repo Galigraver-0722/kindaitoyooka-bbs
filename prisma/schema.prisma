@@ -39,6 +39,9 @@ model User {
   avatarColor     String?
   avatarRing      String?
   bio             String?
+  // Last time the reader opened the notification inbox. Anything newer is
+  // counted as unseen; the events themselves are derived from existing rows.
+  notificationsSeenAt DateTime?
   createdAt       DateTime         @default(now())
   sessions        Session[]
   threads         Thread[]

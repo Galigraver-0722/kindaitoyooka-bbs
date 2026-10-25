@@ -39,6 +39,7 @@ erDiagram
 | `avatarColor` | string? | アバターの背景色 `#rrggbb`。`NULL` のときはテーマの配色を使う |
 | `avatarRing` | string? | アバターの縁の色 `#rrggbb`。扱いは同じ |
 | `bio` | string? | 200 文字まで。プロフィールページに出す |
+| `notificationsSeenAt` | datetime? | ヘッダーの通知を最後に開いた時刻。これより新しい出来事が未読になる |
 | `createdAt` | datetime | |
 
 本名、学年、クラス、誕生日、写真は持ちません。これらの列は意図的に置いていません。個人情報を守るいちばん安い方法は、最初から集めないことです。
@@ -181,6 +182,10 @@ erDiagram
 | `lastReadAt` | datetime | ログイン中の利用者がスレッドを開いたときに更新する |
 
 主キーは `(userId, threadId)` です。この行がないとき、または `Thread.lastPostAt` が `lastReadAt` より新しいときが「新着」に当たります。記録はスレッドを開いたときに書き、フィードとボードの一覧がそれを読んで「新着」バッジを出します。ゲストは行を持ちません。URL、滞在時間、端末の情報は保存しません。
+
+### 通知
+
+通知のテーブルはありません。受信箱は既にある行から組み立てます。`Post`（自分の投稿への返信、自分のスレッドへの新規投稿）、`PostLike`、`ThreadLike`、`ThreadBookmark` です。それぞれ直近の行だけを取り、統合して 12 件に切るので、保存する状態は `User.notificationsSeenAt` だけで足ります。投稿を削除すれば通知も消えます。何も複製していないからです。
 
 ### RateLimit
 

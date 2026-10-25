@@ -53,6 +53,9 @@ thread, and where students can report problems without confronting anyone. See
   `/moderation`.
 - "New" badges on the feed and board lists for signed-in readers, driven by the read markers
   written when a thread is opened.
+- A notification inbox in the header, left of the search box: replies, comments, likes, and saves
+  on your posts, with an unread count that clears when the panel opens. The events are derived
+  from existing rows (ADR-0025).
 - Reports are deduplicated per reader and post, and the moderation queue paginates at 10 rows.
 - Rate-limit counters live in SQLite, so a restart does not refund an attacker; the client
   address is only trusted behind a proxy (`TRUST_PROXY=1`).

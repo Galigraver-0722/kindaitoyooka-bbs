@@ -325,6 +325,35 @@ export const pagesDCss = `
 .tw-d .board-admin form{margin-left:auto}
 .tw-d .board-admin .btn{padding:7px 14px;font-size:12px;border-radius:10px;box-shadow:2px 2px 0 var(--line)}
 
+/* Notification inbox (shared markup, per-theme skin). */
+.tw-d .inbox{position:relative;flex:none}
+.tw-d .inbox-btn{position:relative;display:grid;place-items:center;width:38px;height:38px;border:2px solid var(--line);border-radius:50%;background:var(--paper);box-shadow:2px 2px 0 var(--line);color:var(--ink);cursor:pointer;transition:.14s}
+.tw-d .inbox-btn:hover{background:var(--sky);transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--line)}
+.tw-d .inbox.open .inbox-btn{background:var(--cyan)}
+.tw-d .inbox-count{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border:2px solid var(--line);border-radius:999px;background:var(--cyan);color:var(--ink);font-family:var(--mono);font-size:9.5px;font-weight:800;line-height:14px;text-align:center}
+.tw-d .inbox-panel{position:fixed;z-index:200;width:360px;max-height:min(70vh,460px);overflow:auto;background:var(--paper);border:2px solid var(--line);border-radius:16px;box-shadow:6px 6px 0 var(--line)}
+.tw-d .inbox-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:2px solid var(--line);position:sticky;top:0;background:var(--paper)}
+.tw-d .inbox-head b{font-size:13px;font-weight:800;letter-spacing:-.01em}
+.tw-d .inbox-close{border:0;background:none;font-size:18px;line-height:1;color:var(--muted);cursor:pointer}
+.tw-d .inbox-empty{padding:20px 16px;font-size:12.5px;line-height:1.7;color:var(--muted)}
+.tw-d .inbox-list li+li{border-top:1.5px solid rgba(6,35,48,.12)}
+.tw-d .inbox-list a{display:flex;gap:10px;padding:11px 14px;transition:.12s}
+.tw-d .inbox-list a:hover{background:var(--sky)}
+.tw-d .inbox-icon{flex:none;display:grid;place-items:center;width:26px;height:26px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--cyan-deep)}
+.tw-d .inbox-icon.k-like,.tw-d .inbox-icon.k-post-like{color:#C2410C}
+.tw-d .inbox-icon.k-bookmark{color:var(--ink)}
+.tw-d .inbox-text{display:grid;gap:2px;min-width:0}
+.tw-d .inbox-msg{font-size:12.5px;font-weight:700;line-height:1.5}
+.tw-d .inbox-excerpt{font-size:11.5px;line-height:1.55;color:#3A5E6C;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tw-d .inbox-when{font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+@media (max-width:720px){
+  .tw-d .tools .search{order:-1;width:100%}
+  .tw-d .tools .inbox{order:0}
+  .tw-d .inbox-panel.sheet{left:12px;right:12px;width:auto;top:auto;bottom:12px;max-height:70vh;box-shadow:0 -4px 0 var(--line)}
+}
+
+.inbox-portal{display:contents}
+
 `;
 
 export const pagesBCss = `
@@ -660,5 +689,28 @@ export const pagesBCss = `
 .tw-b .board-admin form{margin-left:auto}
 .tw-b .board-admin .btn{border:1px solid var(--line);padding:7px 12px;font-size:10px}
 .tw-b .board-admin .btn:hover{border-color:rgba(90,230,236,.5);color:var(--cyan)}
+
+/* Notification inbox (shared markup, per-theme skin). */
+.tw-b .inbox{position:relative;flex:none}
+.tw-b .inbox-btn{position:relative;display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:4px;background:rgba(90,230,236,.03);color:var(--muted);cursor:pointer;transition:.18s}
+.tw-b .inbox-btn:hover{color:var(--cyan);border-color:rgba(90,230,236,.5)}
+.tw-b .inbox-count{position:absolute;top:-5px;right:-5px;min-width:15px;height:15px;padding:0 3px;border:1px solid #04121A;border-radius:999px;background:var(--cyan);color:#04121A;font-family:var(--mono);font-size:8.5px;font-weight:700;line-height:13px;text-align:center}
+.tw-b .inbox-panel{position:fixed;z-index:200;width:360px;max-height:min(70vh,440px);overflow:auto;background:#061821;border:1px solid var(--line);border-radius:6px;box-shadow:0 18px 40px -12px rgba(0,0,0,.85)}
+.tw-b .inbox-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#061821}
+.tw-b .inbox-head b{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:500}
+.tw-b .inbox-close{border:0;background:none;font-size:17px;line-height:1;color:var(--muted);cursor:pointer}
+.tw-b .inbox-empty{padding:18px 14px;font-size:12px;line-height:1.75;color:var(--muted)}
+.tw-b .inbox-list li+li{border-top:1px solid var(--line-soft)}
+.tw-b .inbox-list a{display:flex;gap:10px;padding:10px 12px}
+.tw-b .inbox-list a:hover{background:rgba(90,230,236,.06)}
+.tw-b .inbox-icon{flex:none;display:grid;place-items:center;width:24px;height:24px;border:1px solid var(--line);border-radius:3px;color:var(--teal)}
+.tw-b .inbox-icon.k-like,.tw-b .inbox-icon.k-post-like{color:#F2A48B;border-color:rgba(242,164,139,.35)}
+.tw-b .inbox-text{display:grid;gap:2px;min-width:0}
+.tw-b .inbox-msg{font-size:12px;line-height:1.55;color:var(--ink)}
+.tw-b .inbox-excerpt{font-size:11px;line-height:1.6;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tw-b .inbox-when{font-family:var(--mono);font-size:9.5px;color:#56757F}
+@media (max-width:900px){
+  .tw-b .inbox-panel.sheet{left:12px;right:12px;width:auto;top:auto;bottom:12px;max-height:70vh}
+}
 
 `;
