@@ -10,19 +10,10 @@ import { markThreadRead } from "@/lib/read-state";
 import { getLocale, t } from "@/lib/i18n";
 import { getTheme } from "@/lib/theme";
 import { buildThreadTree, countComments, type TreeNode } from "@/lib/thread-tree";
+import { ToggleAction } from "@/components/theme/actions";
 
 export const dynamic = "force-dynamic";
 
-const heart = (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-    <path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9Z" />
-  </svg>
-);
-const bookmark = (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round">
-    <path d="M7 4h10v17l-5-4-5 4Z" />
-  </svg>
-);
 const replyIcon = (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
     <path d="M20 15a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3Z" />
@@ -91,11 +82,12 @@ function CommentNode({
       <div className="cmt-body">{post.body}</div>
 
       <div className="acts cmt-acts">
-        <form action={`/api/posts/${post.id}/like`} method="post" className="contents">
-          <button className={`act like${liked ? " on" : ""}`} aria-pressed={liked} aria-label="like">
-            {heart}<span>{post.likeCount}</span>
-          </button>
-        </form>
+        <ToggleAction
+          kind="like"
+          endpoint={`/api/posts/${post.id}/like`}
+          initialCount={post.likeCount}
+          initialActive={liked}
+        />
         {canReply ? (
           <details className="reply-box">
             <summary className="act reply-btn">{replyIcon}<span>{labels.reply}</span></summary>
@@ -219,16 +211,20 @@ export default async function ThreadPage({
             ))}
           </div>
           <div className="detail-actions">
-            <form action={`/api/threads/${thread.id}/like`} method="post">
-              <button className={`act act-lg like${likedThread ? " on" : ""}`} aria-pressed={likedThread} aria-label="like">
-                {heart}<span>{thread.likeCount}</span>
-              </button>
-            </form>
-            <form action={`/api/threads/${thread.id}/bookmark`} method="post">
-              <button className={`act act-lg save${bookmarked ? " on" : ""}`} aria-pressed={bookmarked} aria-label={bookmarked ? "saved" : "save"}>
-                {bookmark}<span>{thread.bookmarkCount}</span>
-              </button>
-            </form>
+            <ToggleAction
+              kind="like"
+              endpoint={`/api/threads/${thread.id}/like`}
+              initialCount={thread.likeCount}
+              initialActive={likedThread}
+              large
+            />
+            <ToggleAction
+              kind="save"
+              endpoint={`/api/threads/${thread.id}/bookmark`}
+              initialCount={thread.bookmarkCount}
+              initialActive={bookmarked}
+              large
+            />
             {canEdit ? <Link className="btn" href={`/t/${thread.id}/edit`}>{locale === "ja" ? "編集する" : "Edit"}</Link> : null}
             {canModerate ? <Link className="btn" href="/moderation">{locale === "ja" ? "モデレーション" : "Moderation"}</Link> : null}
           </div>
@@ -250,11 +246,6 @@ export default async function ThreadPage({
             </div>
             <div className="root-body">{root.body}</div>
             <div className="acts cmt-acts">
-              <form action={`/api/posts/${root.id}/like`} method="post" className="contents">
-                <button className={`act like${likedPostIds.has(root.id) ? " on" : ""}`} aria-pressed={likedPostIds.has(root.id)} aria-label="like">
-                  {heart}<span>{root.likeCount}</span>
-                </button>
-              </form>
               {canReply ? (
                 <details className="reply-box">
                   <summary className="act reply-btn">{replyIcon}<span>{copy.reply}</span></summary>

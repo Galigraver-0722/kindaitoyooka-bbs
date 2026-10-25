@@ -19,11 +19,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   const user = await getCurrentUser();
+  const json = wantsJson(request);
   if (!user) {
+    if (json) {
+      return Response.json({ error: "login-required" }, { status: 401 });
+    }
     return seeOther(request, `/login?next=${encodeURIComponent(`/t/${post.threadId}`)}`);
   }
 
-  const json = wantsJson(request);
   const limit = checkRateLimit(
     `like:${user.id}`,
     RATE_LIMITS.like.limit,
@@ -47,17 +50,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (existing) {
       await tx.postLike.delete({ where: key });
       await tx.post.update({ where: { id: post.id }, data: { likeCount: { decrement: 1 } } });
-      await tx.thread.update({
-        where: { id: post.threadId },
-        data: { likeCount: { decrement: 1 } },
-      });
     } else {
       await tx.postLike.create({ data: { userId: user.id, postId: post.id } });
       await tx.post.update({ where: { id: post.id }, data: { likeCount: { increment: 1 } } });
-      await tx.thread.update({
-        where: { id: post.threadId },
-        data: { likeCount: { increment: 1 } },
-      });
     }
 
     const updated = await tx.post.findUniqueOrThrow({

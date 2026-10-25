@@ -20,11 +20,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   const user = await getCurrentUser();
+  const json = wantsJson(request);
   if (!user) {
+    if (json) {
+      return Response.json({ error: "login-required" }, { status: 401 });
+    }
     return seeOther(request, `/login?next=${encodeURIComponent(`/t/${id}`)}`);
   }
 
-  const json = wantsJson(request);
   const limit = checkRateLimit(
     `like:${user.id}`,
     RATE_LIMITS.like.limit,

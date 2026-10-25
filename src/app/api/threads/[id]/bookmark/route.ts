@@ -19,11 +19,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   const user = await getCurrentUser();
+  const json = wantsJson(request);
   if (!user) {
+    if (json) {
+      return Response.json({ error: "login-required" }, { status: 401 });
+    }
     return seeOther(request, `/login?next=${encodeURIComponent(`/t/${thread.id}`)}`);
   }
 
-  const json = wantsJson(request);
   const limit = checkRateLimit(
     `bookmark:${user.id}`,
     RATE_LIMITS.bookmark.limit,

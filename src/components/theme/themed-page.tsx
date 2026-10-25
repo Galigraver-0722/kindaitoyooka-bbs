@@ -6,23 +6,14 @@ import { homeDCss } from "@/components/home/home-d-css";
 import { homeBCss } from "@/components/home/home-b-css";
 import { pagesDCss, pagesBCss } from "@/components/theme/pages-css";
 import type { HomeThread } from "@/components/home/types";
+import { ToggleAction } from "@/components/theme/actions";
 import { prisma } from "@/lib/db";
 import { getLocale, t } from "@/lib/i18n";
 import { timeAgo } from "@/lib/time-ago";
 
-const heart = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-    <path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9Z" />
-  </svg>
-);
 const replyIcon = (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
     <path d="M20 15a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3Z" />
-  </svg>
-);
-const bookmark = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round">
-    <path d="M7 4h10v17l-5-4-5 4Z" />
   </svg>
 );
 const searchIcon = (
@@ -206,24 +197,18 @@ export function BoardNav({ boards, activeSlug }: { boards: BoardSummary[]; activ
 function ThreadActions({ thread }: { thread: HomeThread }) {
   return (
     <div className="acts">
-      <form action={`/api/threads/${thread.id}/like`} method="post" className="contents">
-        <button
-          className={`act like${thread.liked ? " on" : ""}`}
-          aria-pressed={thread.liked}
-          aria-label="like"
-        >
-          {heart}<span>{thread.likeCount}</span>
-        </button>
-      </form>
-      <form action={`/api/threads/${thread.id}/bookmark`} method="post" className="contents">
-        <button
-          className={`act save${thread.bookmarked ? " on" : ""}`}
-          aria-pressed={thread.bookmarked}
-          aria-label="save"
-        >
-          {bookmark}<span>{thread.bookmarkCount}</span>
-        </button>
-      </form>
+      <ToggleAction
+        kind="like"
+        endpoint={`/api/threads/${thread.id}/like`}
+        initialCount={thread.likeCount}
+        initialActive={thread.liked}
+      />
+      <ToggleAction
+        kind="save"
+        endpoint={`/api/threads/${thread.id}/bookmark`}
+        initialCount={thread.bookmarkCount}
+        initialActive={thread.bookmarked}
+      />
     </div>
   );
 }
