@@ -12,7 +12,7 @@ export function SiteHeader({ user, locale }: { user: SessionUser | null; locale:
   const canModerate = user?.role === "MODERATOR" || user?.role === "ADMIN";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-sm">
+    <header className="site-header sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-sm">
       <div className="shell flex flex-wrap items-center gap-x-4 gap-y-2 py-2.5">
         <Link href="/" className="flex items-baseline gap-1.5">
           <span className="text-[16px] font-semibold tracking-[-0.03em] text-ink">
@@ -23,14 +23,14 @@ export function SiteHeader({ user, locale }: { user: SessionUser | null; locale:
         <nav
           className="order-3 flex w-full items-center gap-x-5 gap-y-2 border-t border-line pt-2.5 text-[13.5px] sm:order-none sm:w-auto sm:border-0 sm:pt-0"
         >
-          <Link href="/" className={linkClass}>
+          <Link href="/boards" className={linkClass}>
             {m.nav.boards}
           </Link>
           <Link href="/new" className={linkClass}>
             {m.nav.newThread}
           </Link>
           {user ? (
-            <Link href="/bookmarks" className={linkClass}>
+            <Link href="/?filter=saved" className={linkClass}>
               {m.nav.bookmarks}
             </Link>
           ) : null}
@@ -42,7 +42,7 @@ export function SiteHeader({ user, locale }: { user: SessionUser | null; locale:
         </nav>
 
         <form
-          action="/search"
+          action="/"
           method="get"
           role="search"
           className="order-4 flex w-full items-center gap-1.5 border border-line bg-surface px-2.5 py-1 lg:order-none lg:w-auto"

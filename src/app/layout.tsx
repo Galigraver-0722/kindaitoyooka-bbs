@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { getLocale, t } from "@/lib/i18n";
+import { getTheme } from "@/lib/theme";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -20,11 +21,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [user, locale] = await Promise.all([getCurrentUser(), getLocale()]);
+  const [user, locale, theme] = await Promise.all([getCurrentUser(), getLocale(), getTheme()]);
   const m = t(locale);
 
   return (
-    <html lang={locale}>
+    <html lang={locale} data-theme={theme}>
       <body className="flex min-h-screen flex-col bg-bg text-ink antialiased">
         <SiteHeader user={user} locale={locale} />
         <div className="flex-1">{children}</div>

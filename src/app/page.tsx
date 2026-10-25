@@ -1,144 +1,229 @@
 import Link from "next/link";
-import { ThreadRow } from "@/components/thread-row";
+import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
+import {
+  BoardNav,
+  ThemedPage,
+  ThreadCards,
+  ThreadRows,
+  type BoardSummary,
+} from "@/components/theme/themed-page";
+import type { HomeThread } from "@/components/home/types";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
 import { prisma } from "@/lib/db";
+import { sortByHot } from "@/lib/hot";
+import { sortByRising } from "@/lib/rising";
 import { getLocale, t } from "@/lib/i18n";
-import { noticeMessage } from "@/lib/messages";
-import { getUnreadThreadIds } from "@/lib/read-state";
+import { getTheme } from "@/lib/theme";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: t(locale).meta.title };
+}
 
 export const dynamic = "force-dynamic";
+
+const FEED_INCLUDE = {
+  board: { select: { slug: true, name: true } },
+  author: { select: { username: true } },
+  tags: { select: { name: true } },
+  _count: { select: { posts: true } },
+} satisfies Prisma.ThreadInclude;
+
+type FeedRow = Prisma.ThreadGetPayload<{ include: typeof FEED_INCLUDE }>;
+
+const num = (value: number) => new Intl.NumberFormat("ja-JP").format(value);
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ q?: string; filter?: string; sort?: string }>;
 }) {
-  const [{ notice }, locale] = await Promise.all([searchParams, getLocale()]);
-  const m = t(locale);
+  const [{ q, filter, sort }, theme] = await Promise.all([searchParams, getTheme()]);
+  const user = await getCurrentUser();
 
-  const [boards, recentThreads, user] = await Promise.all([
-    prisma.board.findMany({
-      where: { isArchived: false },
-      orderBy: { sortOrder: "asc" },
-      include: {
-        _count: { select: { threads: { where: { isDeleted: false } } } },
-      },
-    }),
-    prisma.thread.findMany({
-      where: { isDeleted: false },
+  const query = (q ?? "").trim().slice(0, 100);
+  const view = filter === "saved" || filter === "mine" ? filter : "all";
+  const order = sort === "hot" || sort === "rising" ? sort : "latest";
+  const needsLogin = view !== "all" && !user;
+
+  const boards = await prisma.board.findMany({
+    where: { isArchived: false },
+    orderBy: { sortOrder: "asc" },
+    select: {
+      slug: true,
+      name: true,
+      _count: { select: { threads: { where: { isDeleted: false } } } },
+    },
+  });
+
+  const summaries: BoardSummary[] = boards.map((board) => ({
+    slug: board.slug,
+    name: board.name,
+    count: board._count.threads,
+  }));
+  const totalThreads = summaries.reduce((sum, board) => sum + board.count, 0);
+
+  const [totalPosts, saved] = await Promise.all([
+    prisma.post.count({ where: { isDeleted: false } }),
+    user ? prisma.threadBookmark.count({ where: { userId: user.id } }) : Promise.resolve(0),
+  ]);
+
+  let rows: FeedRow[] = [];
+
+  if (!needsLogin) {
+    const where: Prisma.ThreadWhereInput = { isDeleted: false };
+    if (view === "mine" && user) {
+      where.authorId = user.id;
+    }
+    if (view === "saved" && user) {
+      const bookmarks = await prisma.threadBookmark.findMany({
+        where: { userId: user.id },
+        select: { threadId: true },
+      });
+      where.id = { in: bookmarks.map((row) => row.threadId) };
+    }
+    if (query) {
+      const term = query.startsWith("#") ? query.slice(1) : query;
+      where.OR = [
+        { title: { contains: term } },
+        { posts: { some: { body: { contains: term }, isDeleted: false } } },
+        { tags: { some: { name: { contains: term } } } },
+      ];
+    }
+
+    rows = await prisma.thread.findMany({
+      where,
       orderBy: { lastPostAt: "desc" },
-      take: 8,
-      include: {
-        board: { select: { slug: true, name: true } },
-        author: { select: { username: true } },
-        tags: { select: { name: true } },
-        _count: { select: { posts: true } },
-      },
-    }),
-    getCurrentUser(),
-  ]);
+      take: order === "latest" ? 30 : 100,
+      include: FEED_INCLUDE,
+    });
+  }
 
-  const [unread, bookmarked] = await Promise.all([
-    getUnreadThreadIds(user?.id, recentThreads),
-    getBookmarkedThreadIds(user?.id, recentThreads.map((thread) => thread.id)),
-  ]);
-  const signedOutNotice = noticeMessage(notice, locale);
+  if (order !== "latest") {
+    const ranked = rows.map((row) => ({
+      ...row,
+      replyCount: Math.max(0, row._count.posts - 1),
+    }));
+    const sorted = order === "hot" ? sortByHot(ranked).slice(0, 30) : sortByRising(ranked).slice(0, 30);
+    rows = sorted;
+  }
+
+  const bookmarked = await getBookmarkedThreadIds(user?.id, rows.map((row) => row.id));
+  const list: HomeThread[] = rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    board: row.board,
+    author: row.author,
+    tags: row.tags,
+    likeCount: row.likeCount,
+    replyCount: Math.max(0, row._count.posts - 1),
+    lastPostAt: row.lastPostAt,
+    bookmarked: bookmarked.has(row.id),
+    isUnread: false,
+    excerpt: "",
+  }));
+
+  const href = (patch: { filter?: string; sort?: string }) => {
+    const params = new URLSearchParams();
+    const nextView = patch.filter !== undefined ? patch.filter : view;
+    const nextSort = patch.sort !== undefined ? patch.sort : order;
+    if (query) params.set("q", query);
+    if (nextView !== "all") params.set("filter", nextView);
+    if (nextSort !== "latest") params.set("sort", nextSort);
+    const qs = params.toString();
+    return qs ? `/?${qs}` : "/";
+  };
+
+  const filters = [
+    { key: "all", label: "すべて", href: href({ filter: "" }) },
+    { key: "saved", label: "保存", href: href({ filter: "saved" }) },
+    { key: "mine", label: "自分の投稿", href: href({ filter: "mine" }) },
+  ];
+
+  const heading = query
+    ? `「${query}」の検索結果`
+    : view === "saved"
+      ? "保存したスレッド"
+      : view === "mine"
+        ? "自分の投稿"
+        : order === "rising"
+          ? "急上昇"
+          : order === "hot"
+            ? "人気のスレッド"
+            : "新着スレッド";
 
   return (
-    <main className="shell page">
-      {signedOutNotice ? (
-        <p className="notice notice-success mb-10">{signedOutNotice}</p>
-      ) : null}
-
-      <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-16">
-        <div>
-          <p className="eyebrow">{m.home.eyebrow}</p>
-          <h1 className="hero-title mt-3">{m.home.title}</h1>
-          <p className="mt-3 max-w-[62ch] text-[16px] leading-[1.85] text-muted">
-            {m.home.subtitle}
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link href="/new" className="btn btn-primary">
-              {m.home.startThread}
-            </Link>
-            <Link href="#boards" className="btn btn-secondary">
-              {m.home.browseBoards}
-            </Link>
-          </div>
-        </div>
-
-        <aside
-          id="boards"
-          className="border-t border-line pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0"
-        >
-          <div className="flex items-baseline justify-between">
-            <h2 className="eyebrow">{m.home.boards}</h2>
-            <span className="num">{String(boards.length).padStart(2, "0")}</span>
-          </div>
-
-          <ol className="mt-3">
-            {boards.map((board) => (
-              <li key={board.id} className="border-t border-line first:border-t-0">
-                <Link href={`/b/${board.slug}`} className="group block py-2.5">
-                  <span className="flex items-baseline justify-between gap-3">
-                    <span className="text-[13px] font-medium text-ink transition-colors group-hover:text-accent">
-                      {board.name}
-                    </span>
-                    <span className="num">{String(board._count.threads).padStart(2, "0")}</span>
-                  </span>
-                  <span className="mt-0.5 block line-clamp-1 text-[12.5px] text-muted">
-                    {board.description}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ol>
-        </aside>
-      </section>
-
-      <section className="mt-8 border-t border-line pt-5 sm:mt-10">
-        <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h2 className="title-section">{m.home.recent}</h2>
-          <span className="meta">{m.home.newestThreads(recentThreads.length)}</span>
-        </div>
-
-        {recentThreads.length === 0 ? (
-          <p className="mt-6 border-t border-line pt-6 text-[14px] text-muted">{m.home.empty}</p>
+    <ThemedPage theme={theme} username={user?.username ?? null}>
+      <main>
+        {theme === "light" ? (
+          <section className="cover">
+            <div className="eyebrow">
+              <span className="sticker"><b>●</b> {num(totalThreads)} スレッド</span>
+              <span className="sticker">{num(totalPosts)} 返信</span>
+              <span className="sticker">{num(summaries.length)} ボード</span>
+            </div>
+            <h1>話そう、<mark>学校のこと</mark>。</h1>
+            <p className="lede">質問・部活の連絡・勉強の相談。書いたことは残って、あとから来た人の役に立つ。</p>
+          </section>
         ) : (
-          <ol className="mt-4 border-t border-line">
-            {recentThreads.map((thread, index) => (
-              <ThreadRow
-                key={thread.id}
-                index={index + 1}
-                date={thread.lastPostAt}
-                locale={locale}
-                thread={{
-                  ...thread,
-                  replyCount: Math.max(thread._count.posts - 1, 0),
-                  isUnread: unread.has(thread.id),
-                  bookmarked: user ? bookmarked.has(thread.id) : undefined,
-                }}
-              />
-            ))}
-          </ol>
+          <section className="cover">
+            <p className="kicker"><b>[ 01 ]</b> student network / since 2026</p>
+            <h1>学校の議論は、<span className="fade">止まらない。</span></h1>
+            <p className="lede">質問、部活の連絡、進路の相談。書いたことは残り、あとから来た人が読める。</p>
+            <div className="cover-stats">
+              <span><b>{num(totalThreads)}</b> THREADS</span>
+              <span><b>{num(totalPosts)}</b> REPLIES</span>
+              <span><b>{num(summaries.length)}</b> BOARDS</span>
+              <span><b>{num(saved)}</b> SAVED</span>
+            </div>
+          </section>
         )}
-      </section>
 
-      <section className="mt-8 border-t border-line pt-5 sm:mt-10">
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 className="title-section">{m.home.rulesTitle}</h2>
-          <span className="eyebrow">01—03</span>
+        <div className="feed-cols">
+          <aside className="feed-side">
+            <div>
+              <h2 className="side-title">ボード</h2>
+              <BoardNav boards={summaries} />
+            </div>
+          </aside>
+
+          <div className="feed-body">
+            <div className="feed-bar">
+              <h2><span className="tick" />{heading}</h2>
+              <span className="hub-sort">
+                <Link className={order === "latest" ? "on" : ""} href={href({ sort: "" })}>新着</Link>
+                <Link className={order === "hot" ? "on" : ""} href={href({ sort: "hot" })}>人気</Link>
+                <Link className={order === "rising" ? "on" : ""} href={href({ sort: "rising" })}>急上昇</Link>
+              </span>
+            </div>
+
+            <div className="hub-tabs">
+              {filters.map((tab) => (
+                <Link key={tab.key} className={view === tab.key ? "on" : ""} href={tab.href}>
+                  {tab.label}
+                </Link>
+              ))}
+              {query ? <Link className="hub-clear" href={href({})}>検索を解除</Link> : null}
+            </div>
+
+            {needsLogin ? (
+              <p className="empty">
+                この一覧を見るには <Link href="/login">ログイン</Link> してください。
+              </p>
+            ) : list.length === 0 ? (
+              <p className="empty">
+                {query ? "該当するスレッドはありません。" : view === "saved" ? "保存したスレッドはまだありません。" : view === "mine" ? "まだ投稿していません。" : "まだスレッドがありません。"}
+              </p>
+            ) : theme === "light" ? (
+              <ThreadCards threads={list} />
+            ) : (
+              <ThreadRows threads={list} />
+            )}
+          </div>
         </div>
-        <ol className="mt-6 grid gap-6 sm:grid-cols-3">
-          {m.home.rules.map((rule, index) => (
-            <li key={rule} className="border-t border-line pt-4">
-              <span className="num">{String(index + 1).padStart(2, "0")}</span>
-              <p className="mt-2.5 text-[14px] leading-[1.85] text-ink/80">{rule}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-    </main>
+      </main>
+    </ThemedPage>
   );
 }

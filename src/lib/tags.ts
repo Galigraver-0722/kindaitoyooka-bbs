@@ -21,7 +21,7 @@ export function parseTagInput(value: string): string[] {
 }
 
 export function tagSearchHref(tag: string): string {
-  return `/search?tag=${encodeURIComponent(tag)}`;
+  return `/?q=${encodeURIComponent(`#${tag}`)}`;
 }
 
 /**

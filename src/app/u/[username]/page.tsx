@@ -1,12 +1,12 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { RoleChip } from "@/components/role-chip";
-import { ThreadRow } from "@/components/thread-row";
+import { ThemedPage, ThreadCards, ThreadRows, Crumb } from "@/components/theme/themed-page";
+import type { HomeThread } from "@/components/home/types";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
+import { getTheme } from "@/lib/theme";
 import { getLocale, t } from "@/lib/i18n";
 
 export async function generateMetadata({
@@ -20,147 +20,71 @@ export async function generateMetadata({
 
 export const dynamic = "force-dynamic";
 
-export default async function ProfilePage({
-  params,
-}: {
-  params: Promise<{ username: string }>;
-}) {
-  const [{ username }, locale] = await Promise.all([params, getLocale()]);
-  const m = t(locale);
+export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
+  const [{ username }, theme] = await Promise.all([params, getTheme()]);
 
   const profile = await prisma.user.findUnique({
     where: { username: username.toLowerCase() },
     select: { id: true, username: true, role: true, createdAt: true },
   });
+  if (!profile) notFound();
 
-  if (!profile) {
-    notFound();
-  }
-
-  const [threads, posts, threadCount, postCount] = await Promise.all([
+  const [viewer, threads, threadCount, postCount] = await Promise.all([
+    getCurrentUser(),
     prisma.thread.findMany({
       where: { authorId: profile.id, isDeleted: false },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      select: {
-        id: true,
-        title: true,
-        createdAt: true,
-        likeCount: true,
-        bookmarkCount: true,
+      orderBy: { lastPostAt: "desc" },
+      take: 20,
+      include: {
         board: { select: { slug: true, name: true } },
         author: { select: { username: true } },
         tags: { select: { name: true } },
         _count: { select: { posts: true } },
       },
     }),
-    prisma.post.findMany({
-      where: {
-        authorId: profile.id,
-        isDeleted: false,
-        thread: { isDeleted: false },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      select: {
-        id: true,
-        body: true,
-        createdAt: true,
-        thread: { select: { id: true, title: true } },
-      },
-    }),
     prisma.thread.count({ where: { authorId: profile.id, isDeleted: false } }),
-    prisma.post.count({
-      where: { authorId: profile.id, isDeleted: false, thread: { isDeleted: false } },
-    }),
+    prisma.post.count({ where: { authorId: profile.id, isDeleted: false } }),
   ]);
 
-  const viewer = await getCurrentUser();
-  const bookmarked = await getBookmarkedThreadIds(
-    viewer?.id,
-    threads.map((thread) => thread.id),
-  );
+  const bookmarked = await getBookmarkedThreadIds(viewer?.id, threads.map((thread) => thread.id));
+  const list: HomeThread[] = threads.map((thread) => ({
+    id: thread.id,
+    title: thread.title,
+    board: thread.board,
+    author: thread.author,
+    tags: thread.tags,
+    likeCount: thread.likeCount,
+    replyCount: Math.max(0, thread._count.posts - 1),
+    lastPostAt: thread.lastPostAt,
+    bookmarked: bookmarked.has(thread.id),
+    isUnread: false,
+    excerpt: "",
+  }));
+  const roleLabel = profile.role === "ADMIN" ? "管理者" : profile.role === "MODERATOR" ? "モデレーター" : "生徒";
 
   return (
-    <main className="shell page">
-      <header className="border-b border-line pb-8">
-        <p className="eyebrow">{m.profile.title}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <h1 className="text-[2.2rem] font-semibold leading-none tracking-[-0.04em] text-ink sm:text-[2.8rem]">
-            {profile.username}
-          </h1>
-          <RoleChip role={profile.role} locale={locale} />
+    <ThemedPage theme={theme} username={viewer?.username ?? null}>
+      <main>
+        <div className="page-head">
+          <Crumb items={[{ href: "/", label: "ホーム" }, { label: "プロフィール" }]} />
+          <h1>{profile.username}</h1>
+          <p className="lede">このユーザーが立てたスレッドと活動の記録です。</p>
+          <div className="row-meta">
+            <span className="pill">{roleLabel}</span>
+            <span className="pill">参加 {formatDateTime(profile.createdAt, "ja")}</span>
+            <span className="pill">{threadCount} スレッド</span>
+            <span className="pill">{postCount} 投稿</span>
+          </div>
         </div>
-        <p className="meta mt-3">{m.profile.joined(formatDateTime(profile.createdAt, locale))}</p>
 
-        <dl className="mt-8 flex gap-10 border-t border-line pt-5">
-          <div>
-            <dt className="eyebrow">{m.profile.threadsLabel}</dt>
-            <dd className="mt-1 font-mono text-[24px] leading-none tabular-nums">
-              {String(threadCount).padStart(2, "0")}
-            </dd>
-          </div>
-          <div>
-            <dt className="eyebrow">{m.profile.postsLabel}</dt>
-            <dd className="mt-1 font-mono text-[24px] leading-none tabular-nums">
-              {String(postCount).padStart(2, "0")}
-            </dd>
-          </div>
-        </dl>
-      </header>
-
-      <section className="mt-12">
-        <h2 className="title-section">{m.profile.recentThreads}</h2>
-        {threads.length === 0 ? (
-          <p className="mt-4 border-t border-line pt-4 text-[14px] text-muted">
-            {m.profile.noThreads}
-          </p>
+        {list.length === 0 ? (
+          <p className="empty">まだスレッドを立てていません。</p>
+        ) : theme === "light" ? (
+          <ThreadCards threads={list} />
         ) : (
-          <ol className="mt-4 border-t border-line">
-            {threads.map((thread, index) => (
-              <ThreadRow
-                key={thread.id}
-                index={index + 1}
-                date={thread.createdAt}
-                locale={locale}
-                thread={{
-                  ...thread,
-                  replyCount: Math.max(thread._count.posts - 1, 0),
-                  bookmarked: viewer ? bookmarked.has(thread.id) : undefined,
-                }}
-              />
-            ))}
-          </ol>
+          <ThreadRows threads={list} />
         )}
-      </section>
-
-      <section className="mt-12">
-        <h2 className="title-section">{m.profile.recentPosts}</h2>
-        {posts.length === 0 ? (
-          <p className="mt-4 border-t border-line pt-6 text-[13px] text-muted">
-            {m.profile.noPosts}
-          </p>
-        ) : (
-          <ol className="mt-4 divide-y divide-line border-t border-line">
-            {posts.map((post) => (
-              <li key={post.id} className="py-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <Link
-                    href={`/t/${post.thread.id}#p-${post.id}`}
-                    className="text-[13px] font-medium text-ink transition-colors hover:text-accent"
-                  >
-                    {m.profile.inThread(post.thread.title)}
-                  </Link>
-                  <time className="meta">{formatDateTime(post.createdAt, locale)}</time>
-                </div>
-                <p className="mt-2 line-clamp-4 whitespace-pre-wrap break-words text-[14.5px] leading-[1.9] text-ink/80">
-                  {post.body}
-                </p>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
-    </main>
+      </main>
+    </ThemedPage>
   );
 }
