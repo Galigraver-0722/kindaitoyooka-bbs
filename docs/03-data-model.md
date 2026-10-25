@@ -37,6 +37,9 @@ erDiagram
 | `email` | string?, unique | Optional; nullable uniques allow many `NULL`s in SQLite |
 | `passwordHash` | string | `scrypt:<salt-hex>:<key-hex>` |
 | `role` | enum | `STUDENT` (default), `MODERATOR`, `ADMIN` |
+| `avatarColor` | string? | `#rrggbb` background for the avatar; `NULL` falls back to the theme palette |
+| `avatarRing` | string? | `#rrggbb` ring colour; same fallback |
+| `bio` | string? | ≤ 200 chars, shown on the profile page |
 | `createdAt` | datetime | |
 
 No real name, grade, class, birthday, or photo. Those fields are intentionally absent: the
@@ -58,7 +61,9 @@ cheapest way to protect personal data is not to collect it.
 | `id` | string (cuid) | |
 | `slug` | string, unique | URL segment, e.g. `study` |
 | `name` | string | Display name |
-| `description` | string | One sentence shown on the home page |
+| `description` | string | One sentence shown on the board page |
+| `kind` | enum | `OFFICIAL` (default) or `COMMUNITY`; drives the badge and the default ordering |
+| `ownerId` | string? | FK → User for a community board; `NULL` for an official one |
 | `sortOrder` | int | Lower first |
 | `isArchived` | boolean | Archived boards disappear from navigation and reject new threads |
 | `suggestedTags` | string | Comma-separated tag hints for the compose form, e.g. `質問,試験` |
@@ -75,6 +80,8 @@ cheapest way to protect personal data is not to collect it.
 | `isPinned` | boolean | Pinned threads sort first; no pin UI in v0.1 |
 | `isLocked` | boolean | Replies rejected while true |
 | `isDeleted` | boolean | Soft delete; hidden from lists and thread view |
+| `likeCount` | int | Likes on the opening post; denormalized |
+| `bookmarkCount` | int | Bookmarks of the whole thread; denormalized |
 | `createdAt` | datetime | Also the start of the 15-minute edit window |
 | `lastPostAt` | datetime | Updated on each reply; drives ordering |
 | `editedAt` | datetime? | Set when the author saves an edit; rendered as an "edited" marker |
@@ -85,6 +92,7 @@ cheapest way to protect personal data is not to collect it.
 | --- | --- | --- |
 | `id` | string (cuid) | |
 | `threadId` | string | FK → Thread |
+| `parentId` | string? | FK → Post; the reply this one answers. `NULL` means it answers the thread |
 | `authorId` | string | FK → User |
 | `body` | string | Plain text, 1–10,000 chars |
 | `isDeleted` | boolean | Soft delete; rendered as a placeholder |
@@ -139,6 +147,17 @@ dedicated `tags` field on the compose and reply forms, not from hashtags in the 
 accepts space- or comma-separated tokens, strips a leading `#`, and keeps the first five valid
 1–30 character tokens.
 
+### ThreadLike
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `userId` | string | FK → User |
+| `threadId` | string | FK → Thread |
+| `createdAt` | datetime | |
+
+Composite primary key `(userId, threadId)`: one like per account and thread. The count is
+denormalized into `Thread.likeCount`.
+
 ### PostLike
 
 | Column | Type | Notes |
@@ -168,8 +187,9 @@ Primary key is `(userId, threadId)`. The `/bookmarks` page lists these rows, new
 | `lastReadAt` | datetime | Updated when the signed-in user opens the thread |
 
 Primary key is `(userId, threadId)`. A thread is "New" when this row is missing or
-`Thread.lastPostAt` is newer than `lastReadAt`. Guests have no rows, so unread badges are only
-rendered for signed-in users. The table stores no URLs, durations, or device information.
+`Thread.lastPostAt` is newer than `lastReadAt`. Guests have no rows. The marker is written on
+every thread view, but no list renders a "new replies" badge yet, so nothing reads the table
+today. It stores no URLs, durations, or device information.
 
 ## 3. Invariants
 
@@ -247,7 +267,6 @@ rendered for signed-in users. The table stores no URLs, durations, or device inf
 | `Notification` | Reply to my thread / mention. |
 | `Attachment` | Images and files. Requires object storage, size limits, EXIF stripping, and a much stricter safety review. |
 | `BoardModerator` | Per-board moderation instead of global roles. |
-| `Board.ownerId` / `Board.kind` | User-created boards, separated from official boards. See `docs/10`. |
 | `Quote` | A repost that embeds another post with commentary. |
 
 ## 8. Data retention proposal

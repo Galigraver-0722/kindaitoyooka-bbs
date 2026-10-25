@@ -26,7 +26,7 @@ export default async function NewBoardPage({
     getLocale(),
     getCurrentUser(),
   ]);
-  const copy = t(locale).shell;
+  const copy = t(locale).pages.boardNew;
 
   if (!user) {
     redirect(`/login?next=${encodeURIComponent("/boards/new")}`);
@@ -39,35 +39,35 @@ export default async function NewBoardPage({
     <ThemedPage theme={theme} username={user.username} active="boards">
       <main>
         <div className="page-head">
-          <Crumb items={[{ href: "/", label: copy.boards }, { label: copy.createBoard }]} />
-          <h1>{copy.createBoard}</h1>
-          <p className="lede">{copy.boardLimit}</p>
+          <Crumb items={[{ href: "/", label: copy.crumbBoards }, { label: copy.title }]} />
+          <h1>{copy.title}</h1>
+          <p className="lede">{copy.limit}</p>
           <div className="row-meta">
             <span className="pill">{owned} / 3</span>
-            <Link className="pill" href="/">← {copy.boards}</Link>
+            <Link className="pill" href="/">← {copy.back}</Link>
           </div>
         </div>
 
         {errorText ? <p className="notice error">{errorText}</p> : null}
 
         <form className="form-card" action="/api/boards" method="post">
-          <label className="field-label" htmlFor="name">{copy.boardName}</label>
-          <input id="name" name="name" required minLength={2} maxLength={30} placeholder="軽音部" />
+          <label className="field-label" htmlFor="name">{copy.name}</label>
+          <input id="name" name="name" required minLength={2} maxLength={30} placeholder={copy.namePlaceholder} />
 
-          <label className="field-label" htmlFor="slug">{copy.boardSlug}</label>
+          <label className="field-label" htmlFor="slug">{copy.slug}</label>
           <input id="slug" name="slug" required minLength={3} maxLength={30} pattern="[a-z0-9][a-z0-9-]{1,28}[a-z0-9]" placeholder="light-music" />
-          <p className="hint">/b/light-music</p>
+          <p className="hint">{copy.slugHint}</p>
 
-          <label className="field-label" htmlFor="description">{copy.boardDescription}</label>
-          <input id="description" name="description" required minLength={2} maxLength={200} placeholder="部員向けの連絡と、ライブの告知。" />
+          <label className="field-label" htmlFor="description">{copy.description}</label>
+          <input id="description" name="description" required minLength={2} maxLength={200} placeholder={copy.descriptionPlaceholder} />
 
-          <label className="field-label" htmlFor="tags">{copy.boardTags}</label>
-          <input id="tags" name="tags" maxLength={150} placeholder="部活,ライブ,練習" />
-          <p className="hint">スペースかカンマで区切って最大 8 個。</p>
+          <label className="field-label" htmlFor="tags">{copy.tags}</label>
+          <input id="tags" name="tags" maxLength={150} placeholder={t(locale).pages.compose.tagsPlaceholder} />
+          <p className="hint">{copy.tagsHint}</p>
 
           <div className="form-foot">
-            <button className="btn btn-p" type="submit">{copy.boardSubmit}</button>
-            <Link className="hint" href="/">{copy.boards}</Link>
+            <button className="btn btn-p" type="submit">{copy.submit}</button>
+            <Link className="hint" href="/">{copy.back}</Link>
           </div>
         </form>
       </main>

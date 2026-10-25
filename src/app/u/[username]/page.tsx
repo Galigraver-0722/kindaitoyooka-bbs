@@ -40,6 +40,9 @@ export default async function ProfilePage({
     getLocale(),
   ]);
   const view = tab === "replies" ? "replies" : "threads";
+  const copy = t(locale).pages.profile;
+  const pages = t(locale).pages;
+  const roles = t(locale).pages.role;
 
   const profile = await prisma.user.findUnique({
     where: { username: username.toLowerCase() },
@@ -112,15 +115,14 @@ export default async function ProfilePage({
     replyCount: Math.max(0, thread._count.posts - 1),
     lastPostAt: thread.lastPostAt,
     bookmarked: bookmarked.has(thread.id),
-    isUnread: false,
-    excerpt: "",
+        excerpt: "",
   }));
 
   const replies = replyRows
     .filter((row) => row.thread.posts[0]?.id !== row.id)
     .slice(0, 20);
 
-  const roleLabel = profile.role === "ADMIN" ? "管理者" : profile.role === "MODERATOR" ? "モデレーター" : "生徒";
+  const roleLabel = profile.role === "ADMIN" ? roles.admin : profile.role === "MODERATOR" ? roles.moderator : roles.student;
   const isOwner = viewer?.id === profile.id;
   const noticeText = noticeMessage(notice, locale);
   const avatarColor = profile.avatarColor ?? undefined;
@@ -132,7 +134,7 @@ export default async function ProfilePage({
     <ThemedPage theme={theme} username={viewer?.username ?? null}>
       <main>
         <div className="profile-page">
-          <Crumb items={[{ href: "/", label: "ホーム" }, { label: "プロフィール" }]} />
+          <Crumb items={[{ href: "/", label: pages.home }, { label: t(locale).profile.title }]} />
 
           <section className="profile-banner">
             <span
@@ -153,7 +155,7 @@ export default async function ProfilePage({
               </div>
               <p className="profile-handle">@{profile.username}</p>
               <p className="profile-bio">
-                {profile.bio ?? "このユーザーが立てたスレッドと活動の記録です。"}
+                {profile.bio ?? copy.guestBio}
               </p>
             </div>
 
@@ -165,40 +167,51 @@ export default async function ProfilePage({
                     bio={profile.bio ?? ""}
                     avatarColor={profile.avatarColor ?? "#12BFD1"}
                     avatarRing={profile.avatarRing ?? "#062330"}
+                    labels={{
+                      edit: copy.edit,
+                      title: copy.editTitle,
+                      close: copy.close,
+                      bio: copy.bio,
+                      bioPlaceholder: copy.bioPlaceholder,
+                      avatarColor: copy.avatarColor,
+                      ringColor: copy.ringColor,
+                      cancel: copy.cancel,
+                      save: copy.save,
+                    }}
                   />
                   <LogoutButton
-                    label="ログアウト"
-                    title="ログアウトしますか？"
-                    text="この端末からログアウトします。書きかけの内容は保存されません。あとでまたログインできます。"
-                    confirm="ログアウト"
-                    cancel="キャンセル"
+                    label={copy.logout}
+                    title={copy.logoutTitle}
+                    text={copy.logoutText}
+                    confirm={copy.logout}
+                    cancel={copy.cancel}
                   />
                 </>
               ) : viewer ? (
-                <Link className="btn" href={`/u/${viewer.username}`}>自分のページ</Link>
+                <Link className="btn" href={`/u/${viewer.username}`}>{copy.ownPage}</Link>
               ) : (
                 <>
-                  <Link className="btn btn-p" href={`/login?next=${encodeURIComponent(baseHref)}`}>ログイン</Link>
-                  <Link className="btn" href="/register">新規登録</Link>
+                  <Link className="btn btn-p" href={`/login?next=${encodeURIComponent(baseHref)}`}>{copy.login}</Link>
+                  <Link className="btn" href="/register">{copy.register}</Link>
                 </>
               )}
             </div>
 
             <div className="board-stats profile-stats">
               <div className="bs">
-                <span>スレッド</span>
+                <span>{copy.threads}</span>
                 <b>{threadCount}</b>
               </div>
               <div className="bs">
-                <span>投稿</span>
+                <span>{copy.posts}</span>
                 <b>{postCount}</b>
               </div>
               <div className="bs">
-                <span>いいね</span>
+                <span>{copy.likes}</span>
                 <b>{likeSum._sum.likeCount ?? 0}</b>
               </div>
               <div className="bs">
-                <span>参加</span>
+                <span>{copy.joined}</span>
                 <b>{profile.createdAt.toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, ".")}</b>
               </div>
             </div>
@@ -207,20 +220,20 @@ export default async function ProfilePage({
           {noticeText ? <p className="notice">{noticeText}</p> : null}
 
           <div className="hub-tabs profile-tabs">
-            <Link className={view === "threads" ? "on" : ""} href={tabHref("threads")}>スレッド</Link>
-            <Link className={view === "replies" ? "on" : ""} href={tabHref("replies")}>返信</Link>
+            <Link className={view === "threads" ? "on" : ""} href={tabHref("threads")}>{copy.threads}</Link>
+            <Link className={view === "replies" ? "on" : ""} href={tabHref("replies")}>{copy.replies}</Link>
           </div>
 
           {view === "threads" ? (
             list.length === 0 ? (
-              <p className="empty">まだスレッドを立てていません。</p>
+              <p className="empty">{copy.noThreads}</p>
             ) : theme === "light" ? (
-              <ThreadCards threads={list} />
+              <ThreadCards threads={list} locale={locale} />
             ) : (
-              <ThreadRows threads={list} />
+              <ThreadRows threads={list} locale={locale} />
             )
           ) : replies.length === 0 ? (
-            <p className="empty">まだ返信していません。</p>
+            <p className="empty">{copy.noReplies}</p>
           ) : (
             <div className="profile-replies">
               {replies.map((reply) => (
@@ -231,8 +244,8 @@ export default async function ProfilePage({
                   <p className="reply-body">{reply.body}</p>
                   <div className="reply-meta">
                     <span>{reply.thread.board.name}</span>
-                    <span>{timeAgo(reply.createdAt)}</span>
-                    {reply.parentId ? <span className="reply-kind">返信</span> : null}
+                    <span>{timeAgo(reply.createdAt, locale)}</span>
+                    {reply.parentId ? <span className="reply-kind">{copy.replyTag}</span> : null}
                   </div>
                 </article>
               ))}

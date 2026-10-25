@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, type MouseEvent } from "react";
 
 const SCROLL_KEY = "theme-scroll";
 
-export function ThemeToggle({ theme }: { theme: "light" | "dark" }) {
+export function ThemeToggle({ theme, labels }: { theme: "light" | "dark"; labels: { dark: string; light: string } }) {
   const busy = useRef(false);
   const isDark = theme === "dark";
 
@@ -72,7 +72,7 @@ export function ThemeToggle({ theme }: { theme: "light" | "dark" }) {
       type="button"
       className="theme-btn"
       onClick={flip}
-      aria-label={isDark ? "ライトモードに切り替える" : "ダークモードに切り替える"}
+      aria-label={isDark ? labels.light : labels.dark}
     >
       {isDark ? (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

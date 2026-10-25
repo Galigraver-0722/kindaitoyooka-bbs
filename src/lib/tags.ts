@@ -20,10 +20,6 @@ export function parseTagInput(value: string): string[] {
   return [...found];
 }
 
-export function tagSearchHref(tag: string): string {
-  return `/?q=${encodeURIComponent(`#${tag}`)}`;
-}
-
 /**
  * Board-level hints stored as a comma-separated string. Unlike `parseTagInput`
  * this does not cap the list; it only removes duplicates and invalid tokens.

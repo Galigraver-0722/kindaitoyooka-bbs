@@ -581,6 +581,81 @@ instead of copying the pattern into every button.
 
 ---
 
+## ADR-0020 — One feed and one board page as the whole information architecture
+
+**Context.** The first build had four competing lists: a home page with the newest threads, a
+`/threads` hub, a `/search` results page, and `/bookmarks`. A board had its own list on top of
+that, so the same thread could be reached from three places with three different sort states.
+Students who tested it asked where "everything" lived, and the "rising" view had no home.
+Reddit and Tieba both solve this with one ranked feed per scope.
+
+**Decision.** `/` is the only cross-board list. It carries the three sorts (`latest`, `hot`,
+`rising`) and the three filters (`all`, `saved`, `mine`), plus the search box. `/b/[slug]` is
+the only per-board list and mirrors the same sort control. `/threads`, `/search`, `/bookmarks`,
+and `/boards` remain as redirects that keep their query parameters, so old links and old
+bookmarks still land on the right view. Creating a thread has exactly one entry point: the
+floating ＋ button, which pre-selects the board when opened from a board page. The board list
+lives in the sidebar and the mobile drawer; it does not get a page of its own.
+
+**Consequences.**
+
+- Every list question — "what is new", "what is popular", "what did I save" — is a change of
+  query parameters on one page, so the sort and filter state is always visible and shareable.
+- The feed is capped at 30 threads; it is a reading surface, not an archive. Board pages keep
+  numbered pagination for depth.
+- Redirects keep four URLs alive forever. They are three lines each and documented in
+  `docs/04`.
+- A board page and the feed now share the sort labels, the thread card, and the browser
+  behaviour, which removes a class of "this looks different here" bugs.
+
+**Alternatives considered.** Keeping `/threads` as a second, richer list: two places to fix and
+two states to explain. A single list with a board filter chip instead of board pages: board
+identity (banner, description, member count, suggested tags) has nowhere to go, and the site is
+organised by board. A separate "discover" page for rising threads: the third sort tab does the
+same job without a new route.
+
+**Revisit if.** The feed grows past a few hundred active threads and needs real pagination, or
+students ask for a cross-board view of one tag. Both are query parameters plus a page control,
+not a new page.
+
+---
+
+## ADR-0021 — Students open their own boards without an approval step
+
+**Context.** Clubs and class groups kept asking for a board. The original plan made board
+creation staff-only, with an approval queue, which would have stalled every new club for days
+and left the moderation work with one teacher. The schema already separates official and
+community boards.
+
+**Decision.** Any signed-in student can create a `COMMUNITY` board from `/boards/new`, with a
+name, a slug, a description, and optional suggested tags. Limits hold the shape of the site:
+three owned boards per account, five creations per hour, unique slugs that cannot collide with
+reserved routes. Official boards keep `kind = OFFICIAL` and no owner. The board page shows a
+「コミュニティ」 badge so a student-run board is never mistaken for an official one.
+
+**Consequences.**
+
+- A club can have its own space the same afternoon it asks, without waiting for staff.
+- Nothing is approved before it exists, so the moderation team sees new boards after the fact.
+  The audit log and the report queue are the safety net.
+- Abuse is bounded by the two limits and by the fact that a board cannot delete other people's
+  posts; that power stays with the global moderator role.
+- There is no owner dashboard yet: renaming, archiving, and deleting an owned board are not
+  implemented for either students or staff. The schema already has `isArchived`, so the screen
+  is the next piece of work on this path.
+
+**Alternatives considered.** An approval queue with an `approvalStatus` column: safer, but it
+adds a state machine, a staff screen, and a waiting period for a club that wants to post a
+notice today. Staff-only creation: no ownership, but one teacher becomes the bottleneck for
+every club. No community boards at all: students would keep using group chats, which is exactly
+what this site exists to replace.
+
+**Revisit if.** A created board is used for harassment or spam, or if the number of boards
+outgrows the sidebar. The first response is a staff-side archive action; the schema already
+supports it without a migration.
+
+---
+
 ## Template for new decisions
 
 ```markdown

@@ -9,17 +9,20 @@ public API. A future mobile client would need a JSON API with explicit versionin
 
 | Path | Access | Purpose |
 | --- | --- | --- |
-| `/` | Public | Hero, eight newest threads, board list, posting rules |
-| `/b/[slug]` | Public | Visible threads in a board, 20 per page; pinned first, then by activity or popularity |
-| `/t/[id]` | Public | Thread with all posts, reply form, report controls |
+| `/` | Public | The one cross-board feed. `sort=latest\|hot\|rising`, `filter=all\|saved\|mine`, `q` search over titles, bodies, and tags; at most 30 threads |
+| `/b/[slug]` | Public | Board home: identity banner with thread, member, post, and last-activity counts, then the board's threads 20 per page; pinned first, then by activity, popularity, or rising |
+| `/boards` | Public | Redirects to `/`; the board list lives in the sidebar and the mobile drawer |
+| `/boards/new` | Signed-in | Create a community board. Three owned boards per account, five per hour, slug taken from the form |
+| `/t/[id]` | Public | Thread with all posts in a numbered tree, reply form, reaction controls |
 | `/t/[id]/edit` | Author | Edit the title, opening post, and tags within 15 minutes of posting |
 | `/t/[id]/export` | Public | Download the thread as a plain-text file |
-| `/u/[username]` | Public | Profile: join date, visible thread/post counts, recent threads and posts |
+| `/u/[username]` | Public | Profile: identity banner, four counts (threads, posts, likes received, join date), recent threads and recent replies as two tabs |
 | `/new` | Signed-in | Create a thread; guests are redirected to `/login?next=/new` |
 | `/login` | Public | Login form; redirects signed-in users away |
 | `/register` | Public | Registration form; first account becomes `ADMIN` |
-| `/bookmarks` | Signed-in | Threads the signed-in user saved |
-| `/search` | Public | Search title/body, filter by tag, sort newest or popular |
+| `/threads` | Public | Redirects to `/`, keeping `q`, `filter`, and `sort` |
+| `/search` | Public | Redirects to `/` with `q`; `tag` becomes a `#tag` query |
+| `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
 | `/moderation` | Moderator / Admin | Open reports, automatic flags, and the recent audit log |
 | `/rules` | Public | Community rules, in the current interface language |
 | `/privacy` | Public | Privacy notice: stored data, cookies, retention, access |
@@ -42,6 +45,7 @@ generous because a class can share one school IP:
 | Reply | 60 / hour per account |
 | Report | 30 / day per account |
 | Like / bookmark | 300 / hour per account |
+| New board | 5 / hour per account, three owned boards |
 
 A successful login clears that IP + username bucket, so a mistyped password followed by the
 correct one does not count toward a lockout. A blocked form submission redirects with
@@ -56,12 +60,25 @@ Each pair is overridable without a code change: `RATE_LIMIT_<NAME>_LIMIT` and
 
 ### Search and sorting
 
-`/search` accepts `q` (≤ 100 chars), `tag` (normalized lowercase), and `sort=latest|hot`.
-`q` matches a thread title or any visible reply body with a `contains` comparison; results are
-capped at 100. `hot` sorts by `likes × 3 + bookmarks × 2 + replies + recency`, where recency adds
-up to 3 points for activity in the last 72 hours. Board pages accept the same `sort` parameter and `page` (1-based). The page size is 20. `page`
-is clamped to the last page; page 1 is the canonical URL without `?page=1`. With `sort=hot`, the
-ranking is computed over the top 100 candidates and then split into pages.
+The feed (`/`) is the only list: it takes `q` (≤ 100 chars), `filter=all|saved|mine`, and
+`sort=latest|hot|rising`. `q` matches a thread title, any visible post body, or a tag with a
+`contains` comparison; a query that starts with `#` matches tags first. `saved` and `mine`
+require a signed-in user; guests see a login prompt instead of an empty list.
+
+- `latest` orders by `lastPostAt` and shows at most 30 threads.
+- `hot` sorts by `likes × 3 + bookmarks × 2 + replies + recency`, where recency adds up to 3
+  points for activity in the last 72 hours, computed over the 100 most recent threads and cut
+  to 30.
+- `rising` divides engagement (`likes × 2 + replies × 3 + 1`) by the hours since the last post
+  plus six, so a new thread with a few replies outranks an old popular one; threads without
+  activity in the last 72 hours drop out.
+
+Board pages accept the same `sort` values plus `page` (1-based). The page size is 20. `page` is
+clamped to the last page; page 1 is the canonical URL without `?page=1`. With `sort=hot` or
+`sort=rising`, the ranking is computed over the top 100 candidates and then split into pages.
+
+`/threads`, `/search`, and `/bookmarks` are redirects that keep their old query parameters, so a
+link shared before the feed was consolidated still lands on the right filter.
 
 The policy pages are static bilingual content from `src/lib/policies.ts`; their wording is code,
 so both languages change in the same commit. The advisor still has to approve that wording before
@@ -129,6 +146,34 @@ success so the browser performs a `GET`.
 - Failure: `/new?board=<slug>&error=<code>`.
 - Codes: `board-not-found`, `invalid-input`, `login-required`.
 
+### `POST /api/boards`
+
+| Field | Required | Rules |
+| --- | --- | --- |
+| `name` | yes | 2–30 chars, shown as-is |
+| `slug` | yes | 3–30 chars, `^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])$`, lowercased, not reserved, unique |
+| `description` | yes | 2–200 chars |
+| `tags` | no | Space- or comma-separated, max 8; suggested tags for new threads |
+
+- Auth: signed-in user. Guests are redirected to `/login?next=/boards/new`.
+- Success: creates a `COMMUNITY` board owned by the caller and redirects to `/b/<slug>`.
+- Limits: three owned boards per account, five creations per hour per account.
+- Failure: `/boards/new?error=<code>`; codes `invalid-slug`, `slug-taken`, `invalid-input`,
+  `rate-limited`, `board-limit`.
+
+### `POST /api/profile`
+
+| Field | Required | Rules |
+| --- | --- | --- |
+| `bio` | no | ≤ 200 chars, trimmed; empty clears it |
+| `avatarColor` | no | `#rrggbb`; anything else resets to the default palette |
+| `avatarRing` | no | `#rrggbb`; same fallback |
+
+- Auth: signed-in user; saves only the caller's own profile.
+- Success: redirects to `/u/<username>?notice=profile-saved`.
+- Avatar text colour is derived from the background by luminance, so no colour field is stored
+  for it.
+
 ### `POST /api/threads/[id]/posts`
 
 | Field | Required | Rules |
@@ -140,6 +185,9 @@ success so the browser performs a `GET`.
 - Preconditions: thread exists, not deleted, not locked.
 - Success: inserts `Post` and updates `Thread.lastPostAt` in one transaction, redirects to
   `/t/<id>#p-<postId>`.
+- With `Accept: application/json`, answers `{comment}` — the new post in the shape the comment
+  tree renders, including its localized timestamp — instead of redirecting, and `401` for a
+  guest. The reply form uses it to insert the post without a full page load.
 - Failure codes: `thread-locked`, `invalid-input`, `thread-not-found`.
 
 ### `POST /api/threads/[id]/edit`
@@ -178,8 +226,8 @@ success so the browser performs a `GET`.
 ### `POST /api/posts/[id]/like`
 
 - Auth: signed-in user. No body.
-- Toggles one like per user and post, updating `Post.likeCount` and the thread's total
-  `Thread.likeCount` in one transaction.
+- Toggles one like per user and post, updating `Post.likeCount` only. `Thread.likeCount` counts
+  likes on the opening post, so liking a reply never changes the thread total.
 - Redirects back to `/t/<threadId>#p-<postId>`.
 - When the request sends `Accept: application/json`, answers `{active, count}` instead of
   redirecting (429 when rate-limited). The HTML form remains the no-JavaScript fallback.

@@ -12,6 +12,7 @@ import { ToggleAction } from "@/components/theme/actions";
 import { prisma } from "@/lib/db";
 import { getLocale, t } from "@/lib/i18n";
 import { timeAgo } from "@/lib/time-ago";
+import type { Locale } from "@/lib/locales";
 import { readableInk } from "@/lib/color";
 
 const replyIcon = (
@@ -120,6 +121,7 @@ export async function ThemedPage({
       })
     : null;
   const copy = t(locale).shell;
+  const pages = t(locale).pages;
   const css = theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss;
   const wrap = theme === "light" ? "tw-d" : "tw-b";
 
@@ -149,11 +151,11 @@ export async function ThemedPage({
                 <input name="q" maxLength={100} placeholder={copy.search} aria-label={copy.search} />
               </form>
               <LanguageToggle locale={locale} />
-              <ThemeToggle theme="light" />
+              <ThemeToggle theme="light" labels={{ dark: pages.toDark, light: pages.toLight }} />
               <Link
                 className="ava"
                 href={username ? `/u/${username}` : "/login"}
-                aria-label="account"
+                aria-label={pages.account}
                 style={{
                   background: me?.avatarColor ?? undefined,
                   borderColor: me?.avatarRing ?? undefined,
@@ -190,11 +192,11 @@ export async function ThemedPage({
               <kbd>⌘K</kbd>
             </form>
             <LanguageToggle locale={locale} />
-            <ThemeToggle theme="dark" />
+            <ThemeToggle theme="dark" labels={{ dark: pages.toDark, light: pages.toLight }} />
             <Link
               className="who"
               href={username ? `/u/${username}` : "/login"}
-              aria-label="account"
+              aria-label={pages.account}
               style={{
                 background: me?.avatarColor ? `${me.avatarColor}22` : undefined,
                 borderColor: me?.avatarRing ?? undefined,
@@ -233,7 +235,7 @@ export function BoardNav({ boards, activeSlug }: { boards: BoardSummary[]; activ
   return <BoardLinks boards={boards} activeSlug={activeSlug} />;
 }
 
-function ThreadActions({ thread }: { thread: HomeThread }) {
+function ThreadActions({ thread, likeLabel, saveLabel }: { thread: HomeThread; likeLabel: string; saveLabel: string }) {
   return (
     <div className="acts">
       <ToggleAction
@@ -241,12 +243,14 @@ function ThreadActions({ thread }: { thread: HomeThread }) {
         endpoint={`/api/threads/${thread.id}/like`}
         initialCount={thread.likeCount}
         initialActive={thread.liked}
+        label={likeLabel}
       />
       <ToggleAction
         kind="save"
         endpoint={`/api/threads/${thread.id}/bookmark`}
         initialCount={thread.bookmarkCount}
         initialActive={thread.bookmarked}
+        label={saveLabel}
       />
     </div>
   );
@@ -265,7 +269,8 @@ export function Crumb({ items }: { items: { href?: string; label: string }[] }) 
   );
 }
 
-export function ThreadCards({ threads }: { threads: HomeThread[] }) {
+export function ThreadCards({ threads, locale }: { threads: HomeThread[]; locale: Locale }) {
+  const copy = t(locale).pages;
   return (
     <div className="cards">
       {threads.map((thread, index) => (
@@ -295,10 +300,10 @@ export function ThreadCards({ threads }: { threads: HomeThread[] }) {
               >
                 {thread.author.username.slice(0, 1).toUpperCase()}
               </span>
-              {thread.author.username}・{timeAgo(thread.lastPostAt)}
+              {thread.author.username}・{timeAgo(thread.lastPostAt, locale)}
             </span>
             <span className="metric">{replyIcon}{thread.replyCount}</span>
-            <ThreadActions thread={thread} />
+            <ThreadActions thread={thread} likeLabel={copy.actions.like} saveLabel={copy.actions.save} />
           </div>
         </article>
       ))}
@@ -306,7 +311,8 @@ export function ThreadCards({ threads }: { threads: HomeThread[] }) {
   );
 }
 
-export function ThreadRows({ threads }: { threads: HomeThread[] }) {
+export function ThreadRows({ threads, locale }: { threads: HomeThread[]; locale: Locale }) {
+  const copy = t(locale).pages;
   return (
     <section className="list">
       <div className="thead" aria-hidden="true">
@@ -327,9 +333,9 @@ export function ThreadRows({ threads }: { threads: HomeThread[] }) {
             </div>
             <span className="leader" />
             <span className="bname"><i />{thread.board.name}</span>
-            <span className="time">{timeAgo(thread.lastPostAt)}</span>
+            <span className="time">{timeAgo(thread.lastPostAt, locale)}</span>
             <span className="num"><b>{thread.replyCount}</b></span>
-            <ThreadActions thread={thread} />
+            <ThreadActions thread={thread} likeLabel={copy.actions.like} saveLabel={copy.actions.save} />
           </li>
         ))}
       </ol>

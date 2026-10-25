@@ -45,6 +45,7 @@ export default async function ThreadPage({
     getLocale(),
   ]);
   const copy = t(locale).shell;
+  const pages = t(locale).pages;
 
   const [thread, user] = await Promise.all([
     prisma.thread.findUnique({
@@ -104,8 +105,10 @@ export default async function ThreadPage({
     expand: copy.expand,
     foldedSuffix: copy.foldedSuffix,
     commentsSuffix: copy.commentsSuffix,
-    admin: locale === "ja" ? "管理者" : "Admin",
-    moderator: locale === "ja" ? "モデレーター" : "Moderator",
+    like: pages.actions.like,
+    sendError: pages.sendError,
+    admin: pages.role.admin,
+    moderator: pages.role.moderator,
   };
 
   const toComment = (node: TreeNode<PostRow>): CommentData => ({
@@ -118,7 +121,7 @@ export default async function ThreadPage({
       avatarColor: node.post.author.avatarColor,
       avatarRing: node.post.author.avatarRing,
     },
-    createdAt: formatDateTime(node.post.createdAt, "ja"),
+    createdAt: formatDateTime(node.post.createdAt, locale),
     likeCount: node.post.likeCount,
     liked: likedPostIds.has(node.post.id),
     children: node.children.map(toComment),
@@ -145,8 +148,8 @@ export default async function ThreadPage({
           <h1>{thread.title}</h1>
           <div className="row-meta">
             <span className="pill">{thread.author.username}</span>
-            <span className="pill">{formatDateTime(thread.createdAt, "ja")}</span>
-            {thread.isLocked ? <span className="pill">{locale === "ja" ? "ロック中" : "Locked"}</span> : null}
+            <span className="pill">{formatDateTime(thread.createdAt, locale)}</span>
+            {thread.isLocked ? <span className="pill">{pages.actions.locked}</span> : null}
             {thread.tags.map((tag) => (
               <Link className="pill" href={`/?q=${encodeURIComponent(`#${tag.name}`)}`} key={tag.name}>
                 #{tag.name}
@@ -159,6 +162,7 @@ export default async function ThreadPage({
               endpoint={`/api/threads/${thread.id}/like`}
               initialCount={thread.likeCount}
               initialActive={likedThread}
+              label={t(locale).pages.actions.like}
               large
             />
             <ToggleAction
@@ -166,10 +170,11 @@ export default async function ThreadPage({
               endpoint={`/api/threads/${thread.id}/bookmark`}
               initialCount={thread.bookmarkCount}
               initialActive={bookmarked}
+              label={t(locale).pages.actions.save}
               large
             />
-            {canEdit ? <Link className="btn" href={`/t/${thread.id}/edit`}>{locale === "ja" ? "編集する" : "Edit"}</Link> : null}
-            {canModerate ? <Link className="btn" href="/moderation">{locale === "ja" ? "モデレーション" : "Moderation"}</Link> : null}
+            {canEdit ? <Link className="btn" href={`/t/${thread.id}/edit`}>{pages.actions.edit}</Link> : null}
+            {canModerate ? <Link className="btn" href="/moderation">{pages.actions.moderation}</Link> : null}
           </div>
         </div>
 
@@ -193,7 +198,7 @@ export default async function ThreadPage({
                 </span>
                 {root.author.username}
               </span>
-              <span className="cmt-time">{formatDateTime(root.createdAt, "ja")}</span>
+              <span className="cmt-time">{formatDateTime(root.createdAt, locale)}</span>
               <span className="root-tag">{copy.rootPost}</span>
             </div>
             <div className="root-body">{root.body}</div>
@@ -209,7 +214,7 @@ export default async function ThreadPage({
         ) : null}
 
         {thread.isLocked ? (
-          <p className="notice">{locale === "ja" ? "このスレッドはロックされています。新しい返信はできません。" : "This thread is locked."}</p>
+          <p className="notice">{pages.actions.lockedNotice}</p>
         ) : (
           <CommentSection
             threadId={thread.id}

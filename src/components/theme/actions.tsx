@@ -25,12 +25,14 @@ export function ToggleAction({
   endpoint,
   initialCount,
   initialActive,
+  label,
   large = false,
 }: {
   kind: "like" | "save";
   endpoint: string;
   initialCount: number;
   initialActive: boolean;
+  label: string;
   large?: boolean;
 }) {
   const router = useRouter();
@@ -38,8 +40,6 @@ export function ToggleAction({
   const [count, setCount] = useState(initialCount);
   const [busy, setBusy] = useState(false);
   const [pulse, setPulse] = useState(false);
-
-  const label = kind === "like" ? "いいね" : "保存";
 
   async function toggle() {
     if (busy) {

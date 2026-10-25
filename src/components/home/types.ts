@@ -12,7 +12,6 @@ export type HomeThread = {
   replyCount: number;
   lastPostAt: Date;
   bookmarked: boolean;
-  isUnread: boolean;
   excerpt: string;
 };
 

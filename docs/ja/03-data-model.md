@@ -36,6 +36,9 @@ erDiagram
 | `email` | string?、一意 | 任意。SQLite では null 許容の一意制約により複数の `NULL` を許す |
 | `passwordHash` | string | `scrypt:<salt-hex>:<key-hex>` |
 | `role` | enum | `STUDENT`（既定）、`MODERATOR`、`ADMIN` |
+| `avatarColor` | string? | アバターの背景色 `#rrggbb`。`NULL` のときはテーマの配色を使う |
+| `avatarRing` | string? | アバターの縁の色 `#rrggbb`。扱いは同じ |
+| `bio` | string? | 200 文字まで。プロフィールページに出す |
 | `createdAt` | datetime | |
 
 本名、学年、クラス、誕生日、写真は持ちません。これらの列は意図的に置いていません。個人情報を守るいちばん安い方法は、最初から集めないことです。
@@ -56,7 +59,9 @@ erDiagram
 | `id` | string（cuid） | |
 | `slug` | string、一意 | URL の一部。例: `study` |
 | `name` | string | 表示名 |
-| `description` | string | ホームページに出す 1 文 |
+| `description` | string | ボードページに出す 1 文 |
+| `kind` | enum | `OFFICIAL`（既定）または `COMMUNITY`。バッジと既定の並び順を決める |
+| `ownerId` | string? | コミュニティボードの持ち主 FK → User。公式ボードでは `NULL` |
 | `sortOrder` | int | 値が小さい順 |
 | `isArchived` | boolean | アーカイブしたボードはナビゲーションから消え、新しいスレッドも受け付けない |
 | `suggestedTags` | string | 投稿フォームに出すタグのヒント。カンマ区切り（例: `質問,試験`） |
@@ -73,6 +78,8 @@ erDiagram
 | `isPinned` | boolean | 固定したスレッドは先頭に並ぶ。v0.1 に固定用の UI はない |
 | `isLocked` | boolean | true の間は返信を受け付けない |
 | `isDeleted` | boolean | 論理削除。一覧にもスレッド表示にも出ない |
+| `likeCount` | int | 最初の投稿へのいいね数。非正規化した値 |
+| `bookmarkCount` | int | スレッド全体の保存数。非正規化した値 |
 | `createdAt` | datetime | 15 分間の編集可能時間の起点でもある |
 | `lastPostAt` | datetime | 返信のたびに更新。並び順を決める |
 | `editedAt` | datetime? | 作成者が編集を保存したときに設定。「編集済み」の表示に使う |
@@ -83,6 +90,7 @@ erDiagram
 | --- | --- | --- |
 | `id` | string（cuid） | |
 | `threadId` | string | FK → Thread |
+| `parentId` | string? | FK → Post。この投稿が返信している相手。`NULL` はスレッドへの返信 |
 | `authorId` | string | FK → User |
 | `body` | string | プレーンテキスト、1〜10,000 文字 |
 | `isDeleted` | boolean | 論理削除。プレースホルダーとして描画する |
@@ -132,6 +140,16 @@ erDiagram
 
 タグは暗黙の多対多テーブルでスレッド間で共有します。投稿・返信フォームの専用タグ欄から作られ、本文の `#` はタグになりません。スペースかカンマ区切りで、先頭の `#` は任意、1〜30 文字の有効な語を最大 5 個まで受け付けます。
 
+### ThreadLike
+
+| カラム | 型 | 備考 |
+| --- | --- | --- |
+| `userId` | string | FK → User |
+| `threadId` | string | FK → Thread |
+| `createdAt` | datetime | |
+
+主キーは `(userId, threadId)`。1 アカウント 1 スレッドにつき 1 つだけ持ちます。件数は `Thread.likeCount` に非正規化して保存します。
+
 ### PostLike
 
 | カラム | 型 | 備考 |
@@ -160,7 +178,7 @@ erDiagram
 | `threadId` | string | FK → Thread |
 | `lastReadAt` | datetime | ログイン中の利用者がスレッドを開いたときに更新する |
 
-主キーは `(userId, threadId)` です。この行がないとき、または `Thread.lastPostAt` が `lastReadAt` より新しいときに「新着」と表示します。ゲストは行を持たないため、未読バッジは表示しません。URL、滞在時間、端末の情報は保存しません。
+主キーは `(userId, threadId)` です。この行がないとき、または `Thread.lastPostAt` が `lastReadAt` より新しいときが「新着」に当たります。ただし記録を書くのはスレッドを開いたときだけで、未読バッジを描く一覧はまだありません。現時点でこのテーブルを読むコードはありません。ゲストは行を持ちません。URL、滞在時間、端末の情報は保存しません。
 
 ## 3. 不変条件
 
@@ -219,7 +237,6 @@ erDiagram
 | `Notification` | 自分のスレッドへの返信やメンションの通知 |
 | `Attachment` | 画像とファイル。オブジェクトストレージ、サイズ制限、EXIF の削除、より厳しい安全レビューが必要 |
 | `BoardModerator` | 全体ロールではなく、ボード単位のモデレーション |
-| `Board.ownerId` / `Board.kind` | 利用者が作るボードと、公式ボードの区別。`docs/10` を参照 |
 | `Quote` | 引用付きの転載（引用投稿） |
 
 ## 8. データ保存期間の提案

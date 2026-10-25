@@ -136,8 +136,7 @@ export default async function HomePage({
     replyCount: Math.max(0, row._count.posts - 1),
     lastPostAt: row.lastPostAt,
     bookmarked: bookmarked.has(row.id),
-    isUnread: false,
-    excerpt: "",
+        excerpt: "",
   }));
 
   const href = (patch: { filter?: string; sort?: string }) => {
@@ -264,9 +263,9 @@ export default async function HomePage({
             ) : list.length === 0 ? (
               <p className="empty">{emptyText}</p>
             ) : theme === "light" ? (
-              <ThreadCards threads={list} />
+              <ThreadCards threads={list} locale={locale} />
             ) : (
-              <ThreadRows threads={list} />
+              <ThreadRows threads={list} locale={locale} />
             )}
           </div>
         </div>

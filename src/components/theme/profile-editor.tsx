@@ -8,11 +8,23 @@ export function ProfileEditor({
   bio,
   avatarColor,
   avatarRing,
+  labels,
 }: {
   username: string;
   bio: string;
   avatarColor: string;
   avatarRing: string;
+  labels: {
+    edit: string;
+    title: string;
+    close: string;
+    bio: string;
+    bioPlaceholder: string;
+    avatarColor: string;
+    ringColor: string;
+    cancel: string;
+    save: string;
+  };
 }) {
   const [open, setOpen] = useState(false);
   const [currentBio, setCurrentBio] = useState(bio);
@@ -39,7 +51,7 @@ export function ProfileEditor({
   return (
     <>
       <button type="button" className="btn" onClick={() => setOpen(true)}>
-        編集
+        {labels.edit}
       </button>
 
       {open ? (
@@ -52,8 +64,8 @@ export function ProfileEditor({
             onClick={(event) => event.stopPropagation()}
           >
             <header className="drawer-head">
-              <h2 id="profile-drawer-title">プロフィールを編集</h2>
-              <button type="button" className="drawer-close" aria-label="閉じる" onClick={() => setOpen(false)}>
+              <h2 id="profile-drawer-title">{labels.title}</h2>
+              <button type="button" className="drawer-close" aria-label={labels.close} onClick={() => setOpen(false)}>
                 ×
               </button>
             </header>
@@ -70,7 +82,7 @@ export function ProfileEditor({
                 <span className="drawer-handle">@{username}</span>
               </div>
 
-              <label className="field-label" htmlFor="profile-bio">自己紹介</label>
+              <label className="field-label" htmlFor="profile-bio">{labels.bio}</label>
               <textarea
                 id="profile-bio"
                 name="bio"
@@ -78,13 +90,13 @@ export function ProfileEditor({
                 rows={4}
                 value={currentBio}
                 onChange={(event) => setCurrentBio(event.target.value)}
-                placeholder="部活、好きな科目、ひとこと。"
+                placeholder={labels.bioPlaceholder}
               />
               <p className="hint">{currentBio.length} / 200</p>
 
               <div className="color-row">
                 <label className="color-field">
-                  <span className="field-label">アイコンの色</span>
+                  <span className="field-label">{labels.avatarColor}</span>
                   <input
                     type="color"
                     name="avatarColor"
@@ -93,7 +105,7 @@ export function ProfileEditor({
                   />
                 </label>
                 <label className="color-field">
-                  <span className="field-label">枠の色</span>
+                  <span className="field-label">{labels.ringColor}</span>
                   <input
                     type="color"
                     name="avatarRing"
@@ -105,10 +117,10 @@ export function ProfileEditor({
 
               <div className="drawer-foot">
                 <button type="button" className="btn" onClick={() => setOpen(false)}>
-                  キャンセル
+                  {labels.cancel}
                 </button>
                 <button type="submit" className="btn btn-p">
-                  保存する
+                  {labels.save}
                 </button>
               </div>
             </form>

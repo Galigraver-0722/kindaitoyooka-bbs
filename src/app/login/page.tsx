@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getLocale, t } from "@/lib/i18n";
 import { errorMessage, noticeMessage } from "@/lib/messages";
 import { getTheme } from "@/lib/theme";
-import { LIMITS, safeNextPath } from "@/lib/validation";
+import { safeNextPath } from "@/lib/validation";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -18,12 +18,14 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ error?: string; notice?: string; next?: string }>;
 }) {
-  const [{ error, notice, next }, theme] = await Promise.all([searchParams, getTheme()]);
+  const [{ error, notice, next }, theme, locale] = await Promise.all([searchParams, getTheme(), getLocale()]);
   const user = await getCurrentUser();
   if (user) redirect(safeNextPath(next));
 
-  const errorText = errorMessage(error, "ja");
-  const noticeText = noticeMessage(notice, "ja");
+  const errorText = errorMessage(error, locale);
+  const noticeText = noticeMessage(notice, locale);
+  const copy = t(locale).pages.auth;
+  const pages = t(locale).pages;
   const nextPath = safeNextPath(next);
   const registerHref = nextPath === "/" ? "/register" : `/register?next=${encodeURIComponent(nextPath)}`;
 
@@ -31,11 +33,9 @@ export default async function LoginPage({
     <ThemedPage theme={theme} username={null}>
       <main>
         <div className="page-head">
-          <Crumb items={[{ href: "/", label: "ホーム" }, { label: "ログイン" }]} />
-          <h1>ログイン</h1>
-          <p className="lede">
-            ユーザー名とパスワードを入れてください。ログインすると、返信・いいね・保存ができます。
-          </p>
+          <Crumb items={[{ href: "/", label: pages.home }, { label: copy.loginTitle }]} />
+          <h1>{copy.loginTitle}</h1>
+          <p className="lede">{copy.loginLede}</p>
         </div>
 
         {errorText ? <p className="notice error">{errorText}</p> : null}
@@ -44,37 +44,33 @@ export default async function LoginPage({
         <form className="form-card" action="/api/auth/login" method="post">
           <input type="hidden" name="next" value={nextPath} />
 
-          <label className="field-label" htmlFor="username">ユーザー名</label>
-          <input id="username" name="username" autoComplete="username" placeholder="例: taro_2026" required />
-          <p className="hint">
-            登録したときのユーザー名。半角英数字とアンダースコア（_）で {LIMITS.usernameMin}〜{LIMITS.usernameMax} 文字です。
-          </p>
+          <label className="field-label" htmlFor="username">{copy.username}</label>
+          <input id="username" name="username" autoComplete="username" placeholder="taro_2026" required />
+          <p className="hint">{copy.usernameHint}</p>
 
-          <label className="field-label" htmlFor="password">パスワード</label>
+          <label className="field-label" htmlFor="password">{copy.password}</label>
           <input id="password" name="password" type="password" autoComplete="current-password" required />
-          <p className="hint">
-            {LIMITS.passwordMin} 文字以上。大文字と小文字は区別されます。忘れた場合は自分で再設定できないので、教職員か管理者に連絡してください。
-          </p>
+          <p className="hint">{copy.passwordHint}</p>
 
           <div className="form-foot">
-            <button className="btn btn-p" type="submit">ログイン</button>
-            <span className="hint">アカウントがない方は <Link href={registerHref}>新規登録</Link></span>
+            <button className="btn btn-p" type="submit">{copy.login}</button>
+            <span className="hint">{copy.noAccount} <Link href={registerHref}>{copy.register}</Link></span>
           </div>
         </form>
 
         <div className="form-card">
-          <h2>ログインするとできること</h2>
+          <h2>{copy.canTitle}</h2>
           <ul className="auth-list">
-            <li>スレッドへの返信と、コメントへの返信</li>
-            <li>スレッドの保存（あとで「保存」から読めます）</li>
-            <li>スレッドとコメントへのいいね</li>
-            <li>自分のボードの作成（1 アカウント 3 つまで）</li>
+            <li>{copy.canReplies}</li>
+            <li>{copy.canSaved}</li>
+            <li>{copy.canLikes}</li>
+            <li>{copy.canBoards}</li>
           </ul>
         </div>
 
         <p className="notice">
-          はじめての方は <Link href={registerHref}>新規登録</Link> から。
-          利用前に <Link href="/rules">コミュニティルール</Link> と <Link href="/privacy">プライバシー通知</Link> も確認してください。
+          {copy.firstTime} <Link href={registerHref}>{copy.register}</Link>.{" "}
+          <Link href="/rules">{copy.rules}</Link> · <Link href="/privacy">{copy.privacy}</Link>
         </p>
       </main>
     </ThemedPage>

@@ -22,7 +22,7 @@ export default async function NewThreadPage({
 }: {
   searchParams: Promise<{ board?: string; error?: string }>;
 }) {
-  const [{ board: preferredSlug, error }, theme] = await Promise.all([searchParams, getTheme()]);
+  const [{ board: preferredSlug, error }, theme, locale] = await Promise.all([searchParams, getTheme(), getLocale()]);
   const user = await getCurrentUser();
 
   if (!user) {
@@ -36,46 +36,47 @@ export default async function NewThreadPage({
   });
   const selectedBoard = boards.find((board) => board.slug === preferredSlug) ?? boards[0];
   const suggestedTags = selectedBoard ? parseSuggestedTags(selectedBoard.suggestedTags) : [];
-  const errorText = errorMessage(error, "ja");
+  const errorText = errorMessage(error, locale);
+  const copy = t(locale).pages.compose;
 
   return (
     <ThemedPage theme={theme} username={user.username} active="new">
       <main>
         <div className="page-head">
-          <Crumb items={[{ href: "/", label: "ボード" }, { label: "スレッドを立てる" }]} />
-          <h1>スレッドを立てる</h1>
-          <p className="lede">質問でも連絡でも、まず 1 本立ててみてください。全校生徒が読める場所です。</p>
+          <Crumb items={[{ href: "/", label: copy.crumbBoards }, { label: copy.title }]} />
+          <h1>{copy.title}</h1>
+          <p className="lede">{copy.lede}</p>
         </div>
 
         {errorText ? <p className="notice error">{errorText}</p> : null}
 
         {boards.length === 0 || !selectedBoard ? (
-          <p className="empty">投稿できるボードがまだありません。管理者に連絡してください。</p>
+          <p className="empty">{copy.noBoards}</p>
         ) : (
           <form className="form-card" action="/api/threads" method="post">
-            <label className="field-label" htmlFor="boardId">ボード</label>
+            <label className="field-label" htmlFor="boardId">{copy.board}</label>
             <select id="boardId" name="boardId" defaultValue={selectedBoard.id}>
               {boards.map((board) => (
                 <option key={board.id} value={board.id}>{board.name}</option>
               ))}
             </select>
 
-            <label className="field-label" htmlFor="title">タイトル</label>
-            <input id="title" name="title" required minLength={LIMITS.titleMin} maxLength={LIMITS.titleMax} placeholder="例：文化祭のステージ企画、メンバー募集" />
+            <label className="field-label" htmlFor="title">{copy.threadTitle}</label>
+            <input id="title" name="title" required minLength={LIMITS.titleMin} maxLength={LIMITS.titleMax} placeholder={copy.titlePlaceholder} />
 
-            <label className="field-label" htmlFor="tags">タグ</label>
-            <input id="tags" name="tags" maxLength={150} placeholder="#文化祭 #実行委員" />
-            <p className="hint">スペースかカンマで区切って最大 5 個。</p>
+            <label className="field-label" htmlFor="tags">{copy.tags}</label>
+            <input id="tags" name="tags" maxLength={150} placeholder={copy.tagsPlaceholder} />
+            <p className="hint">{copy.tagsHint}</p>
             {suggestedTags.length > 0 ? (
-              <p className="hint">このボードのおすすめ: {suggestedTags.map((tag) => `#${tag}`).join(" ")}</p>
+              <p className="hint">{copy.suggested}{suggestedTags.map((tag) => `#${tag}`).join(" ")}</p>
             ) : null}
 
-            <label className="field-label" htmlFor="body">本文</label>
+            <label className="field-label" htmlFor="body">{copy.body}</label>
             <textarea id="body" name="body" required maxLength={LIMITS.bodyMax} rows={9} />
 
             <div className="form-foot">
-              <button className="btn btn-p" type="submit">スレッドを立てる</button>
-              <Link className="hint" href={preferredSlug ? `/b/${preferredSlug}` : "/"}>キャンセル</Link>
+              <button className="btn btn-p" type="submit">{copy.submit}</button>
+              <Link className="hint" href={preferredSlug ? `/b/${preferredSlug}` : "/"}>{copy.cancel}</Link>
             </div>
           </form>
         )}

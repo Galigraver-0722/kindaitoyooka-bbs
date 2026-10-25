@@ -48,6 +48,7 @@ export default async function BoardPage({
     getLocale(),
   ]);
   const copy = t(locale).shell;
+  const pages = t(locale).pages;
   const sortCopy = t(locale).sort;
   const order = sort === "hot" || sort === "rising" ? sort : "latest";
 
@@ -151,8 +152,7 @@ export default async function BoardPage({
     replyCount: Math.max(0, thread._count.posts - 1),
     lastPostAt: thread.lastPostAt,
     bookmarked: bookmarked.has(thread.id),
-    isUnread: false,
-    excerpt: "",
+        excerpt: "",
   }));
   const errorText = errorMessage(error, "ja");
   const suggested = parseSuggestedTags(board.suggestedTags).slice(0, 5);
@@ -190,7 +190,7 @@ export default async function BoardPage({
               </div>
               <div className="bs">
                 <span>{copy.statsLast}</span>
-                <b>{lastActive ? timeAgo(lastActive) : "—"}</b>
+                <b>{lastActive ? timeAgo(lastActive, locale) : "—"}</b>
               </div>
             </div>
             <div className="row-meta">
@@ -232,19 +232,19 @@ export default async function BoardPage({
                 <Link href={`/new?board=${board.slug}`}>{copy.newThread}</Link>
               </p>
             ) : theme === "light" ? (
-              <ThreadCards threads={list} />
+              <ThreadCards threads={list} locale={locale} />
             ) : (
-              <ThreadRows threads={list} />
+              <ThreadRows threads={list} locale={locale} />
             )}
 
             {order === "latest" && pageCount > 1 ? (
               <nav className="pager">
                 {currentPage > 1 ? (
-                  <Link href={boardPageHref(board.slug, { page: currentPage - 1, sort: order })}>← {locale === "ja" ? "前へ" : "Prev"}</Link>
+                  <Link href={boardPageHref(board.slug, { page: currentPage - 1, sort: order })}>← {pages.pager.prev}</Link>
                 ) : null}
                 <span>{currentPage} / {pageCount}</span>
                 {currentPage < pageCount ? (
-                  <Link href={boardPageHref(board.slug, { page: currentPage + 1, sort: order })}>{locale === "ja" ? "次へ" : "Next"} →</Link>
+                  <Link href={boardPageHref(board.slug, { page: currentPage + 1, sort: order })}>{pages.pager.next} →</Link>
                 ) : null}
               </nav>
             ) : null}

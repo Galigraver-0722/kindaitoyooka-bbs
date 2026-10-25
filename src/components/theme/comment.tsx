@@ -34,6 +34,8 @@ export type CommentLabels = {
   collapse: string;
   expand: string;
   foldedSuffix: string;
+  like: string;
+  sendError: string;
   commentsSuffix: string;
   admin: string;
   moderator: string;
@@ -154,7 +156,7 @@ function ReplyForm({
         <button className="btn btn-p" type="submit" disabled={busy}>
           {labels.submit}
         </button>
-        {error ? <span className="hint">送信できませんでした。</span> : null}
+        {error ? <span className="hint">{labels.sendError}</span> : null}
       </div>
     </form>
   );
@@ -234,6 +236,7 @@ function Comment({
               endpoint={`/api/posts/${data.id}/like`}
               initialCount={data.likeCount}
               initialActive={data.liked}
+              label={labels.like}
             />
             {canReply ? (
               <details className="reply-box">

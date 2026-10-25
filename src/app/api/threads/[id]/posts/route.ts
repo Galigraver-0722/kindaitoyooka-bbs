@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { detectSensitiveText } from "@/lib/content-filter";
 import { prisma } from "@/lib/db";
 import { formText, isSameOrigin, seeOther, wantsJson } from "@/lib/http";
+import { getLocale } from "@/lib/i18n";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { parseTagInput } from "@/lib/tags";
 import { formatDateTime } from "@/lib/format";
@@ -131,7 +132,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             avatarColor: null,
             avatarRing: null,
           },
-          createdAt: formatDateTime(post.createdAt, "ja"),
+          createdAt: formatDateTime(post.createdAt, await getLocale()),
           likeCount: 0,
           liked: false,
           children: [],
