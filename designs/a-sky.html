@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>豊岡 BBS — A / 空 SKY</title>
+<style>
+  :root{
+    --bg:#F4FBFF;
+    --ink:#0B2A38;
+    --muted:#5E7D8A;
+    --line:rgba(11,42,56,.10);
+    --line-strong:rgba(11,42,56,.18);
+    --cyan:#12B4C9;
+    --deep:#0A6E82;
+    --sky:#7FCBFF;
+    --glass:rgba(255,255,255,.52);
+    --glass-strong:rgba(255,255,255,.74);
+    --sans:"Helvetica Neue","Hiragino Sans","Yu Gothic",Meiryo,"Noto Sans JP",sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Hiragino Kaku Gothic ProN",monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--sans);font-size:15px;line-height:1.7;
+    min-height:100vh;overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  ol,ul{margin:0;padding:0;list-style:none}
+  h1,h2,h3,p{margin:0}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+  /* ── atmosphere ─────────────────────────────────────── */
+  .sky{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .sky::after{
+    content:"";position:absolute;left:0;right:0;top:58%;
+    height:1px;background:linear-gradient(90deg,transparent,rgba(18,180,201,.22),transparent);
+  }
+  .sun{
+    position:absolute;width:760px;height:760px;right:-140px;top:-320px;border-radius:50%;
+    background:radial-gradient(circle at 50% 50%,#D3F0FF 0%,#E9F9FF 52%,rgba(233,249,255,0) 71%);
+    box-shadow:0 0 0 1px rgba(18,180,201,.18),0 0 120px 30px rgba(127,203,255,.25);
+  }
+  .orbit{
+    position:absolute;width:900px;height:900px;right:-160px;top:-390px;border-radius:50%;
+    border:1px dashed rgba(18,180,201,.20);
+    animation:spin 90s linear infinite;
+  }
+  .orbit::before{
+    content:"";position:absolute;top:50%;left:-4px;width:8px;height:8px;border-radius:50%;
+    background:var(--cyan);box-shadow:0 0 18px 2px rgba(18,180,201,.55);
+  }
+  .orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55}
+  .o1{width:520px;height:520px;left:-180px;top:120px;background:#C9EEFF;animation:drift 26s ease-in-out infinite alternate}
+  .o2{width:420px;height:420px;left:52%;top:58%;background:#BFF3F0;animation:drift 32s ease-in-out infinite alternate-reverse}
+  .o3{width:300px;height:300px;right:8%;top:34%;background:#E3F2FF;opacity:.8;animation:drift 22s ease-in-out infinite alternate}
+  @keyframes drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(40px,-30px,0)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── header ─────────────────────────────────────────── */
+  .top{
+    position:sticky;top:0;z-index:30;
+    display:flex;align-items:center;gap:28px;
+    height:72px;padding:0 clamp(20px,4vw,48px);
+    background:rgba(244,251,255,.62);
+    backdrop-filter:blur(18px) saturate(1.2);
+    -webkit-backdrop-filter:blur(18px) saturate(1.2);
+    border-bottom:1px solid rgba(11,42,56,.06);
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.01em}
+  .mark{
+    width:26px;height:26px;border-radius:9px;
+    background:linear-gradient(140deg,#2FD3E2,#5AA9FF);
+    box-shadow:0 6px 18px -6px rgba(18,180,201,.8);
+    position:relative;
+  }
+  .mark::after{content:"";position:absolute;inset:7px;border-radius:50%;border:1.5px solid rgba(255,255,255,.95);border-bottom-color:transparent;transform:rotate(-20deg)}
+  .brand .sub{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--muted);font-weight:500}
+  nav{display:flex;gap:4px;margin-left:8px}
+  nav a{
+    padding:7px 13px;border-radius:999px;font-size:13.5px;color:#335563;
+    transition:background .18s,color .18s;
+  }
+  nav a:hover{background:rgba(255,255,255,.8);color:var(--deep)}
+  nav a.on{background:rgba(255,255,255,.9);color:var(--ink);box-shadow:0 1px 0 rgba(11,42,56,.05)}
+  .tools{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .search{
+    display:flex;align-items:center;gap:9px;width:250px;
+    padding:9px 14px;border-radius:999px;
+    background:rgba(255,255,255,.62);border:1px solid rgba(11,42,56,.08);
+    transition:box-shadow .22s,border-color .22s,background .22s;
+  }
+  .search:focus-within{
+    background:#fff;border-color:rgba(18,180,201,.55);
+    box-shadow:0 0 0 4px rgba(18,180,201,.12),0 12px 30px -18px rgba(10,110,130,.6);
+  }
+  .search svg{flex:none;color:#6C8D9A}
+  .search input{
+    border:0;outline:0;background:none;width:100%;font:inherit;font-size:13.5px;color:var(--ink);
+  }
+  .search input::placeholder{color:#819CA7}
+  .avatar{
+    width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+    background:linear-gradient(150deg,#E8F7FF,#CFF0FA);color:var(--deep);
+    font-size:13px;font-weight:700;border:1px solid rgba(255,255,255,.9);
+    box-shadow:0 4px 14px -6px rgba(10,110,130,.5);
+  }
+
+  /* ── layout ─────────────────────────────────────────── */
+  main{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 clamp(20px,4vw,48px) 120px}
+  .hero{
+    display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:56px;align-items:end;
+    padding:clamp(48px,7vw,86px) 0 clamp(34px,4vw,48px);
+  }
+  .eyebrow{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--deep);display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:"";width:24px;height:1px;background:var(--cyan)}
+  h1{
+    margin-top:20px;font-size:clamp(32px,4.6vw,56px);line-height:1.12;letter-spacing:-.035em;
+    font-weight:600;word-break:auto-phrase;
+  }
+  h1 em{
+    font-style:normal;
+    background:linear-gradient(180deg,transparent 60%,rgba(127,203,255,.62) 60%);
+  }
+  .lede{margin-top:22px;max-width:47ch;color:#41606D;font-size:15.5px;line-height:1.95}
+  .cta{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:999px;
+    font-size:14px;font-weight:600;transition:transform .18s,box-shadow .22s,background .2s;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,#1FC2D4,#3D9BEF);color:#fff;
+    box-shadow:0 16px 34px -16px rgba(18,180,201,.9),inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 22px 40px -18px rgba(18,180,201,.95)}
+  .btn-ghost{background:rgba(255,255,255,.7);border:1px solid rgba(11,42,56,.1);color:#2D5060}
+  .btn-ghost:hover{background:#fff}
+
+  .glass{
+    background:var(--glass);
+    border:1px solid rgba(255,255,255,.9);
+    border-radius:24px;
+    backdrop-filter:blur(16px) saturate(1.1);
+    -webkit-backdrop-filter:blur(16px) saturate(1.1);
+    box-shadow:0 30px 70px -46px rgba(10,110,130,.85),inset 0 1px 0 rgba(255,255,255,.9);
+  }
+  .pulse{padding:22px 22px 18px}
+  .pulse h2{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;color:var(--muted);font-weight:500;text-transform:uppercase}
+  .stat{display:flex;align-items:flex-end;justify-content:space-between;margin-top:14px}
+  .stat b{font-family:var(--mono);font-size:34px;font-weight:500;letter-spacing:-.02em;line-height:1}
+  .stat span{font-size:11.5px;color:var(--muted)}
+  .stat + .stat{margin-top:12px;padding-top:12px;border-top:1px solid rgba(11,42,56,.08)}
+  .bar{height:3px;border-radius:2px;background:rgba(11,42,56,.07);margin-top:14px;overflow:hidden}
+  .bar i{display:block;height:100%;width:64%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--sky))}
+
+  /* ── boards ─────────────────────────────────────────── */
+  .boards{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 40px}
+  .board{
+    display:flex;align-items:center;gap:10px;padding:9px 16px;border-radius:999px;
+    background:rgba(255,255,255,.5);border:1px solid rgba(11,42,56,.07);
+    font-size:13px;color:#2C4E5D;transition:background .2s,border-color .2s,color .2s;
+  }
+  .board i{width:6px;height:6px;border-radius:50%;background:var(--cyan);opacity:.85}
+  .board b{font-family:var(--mono);font-size:11px;font-weight:500;color:#82A0AB}
+  .board:hover{background:#fff;border-color:rgba(18,180,201,.45);color:var(--deep)}
+
+  /* ── feed ───────────────────────────────────────────── */
+  .feed{padding:10px clamp(18px,2.4vw,30px) 8px}
+  .feed-head{display:flex;align-items:baseline;justify-content:space-between;padding:14px 4px 6px}
+  .feed-head h2{font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .feed-head a{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--deep)}
+  .rows li{border-top:1px solid rgba(11,42,56,.075)}
+  .feed-head + .rows{border-top:1px solid rgba(11,42,56,.1)}
+  .row{
+    display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:18px;align-items:start;
+    padding:19px 6px;border-radius:14px;margin:0 -6px;
+    transition:background .2s;
+  }
+  .row:hover{background:rgba(255,255,255,.6)}
+  .idx{font-family:var(--mono);font-size:12px;color:#9FB7BF;padding-top:4px}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .tag{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;color:#2F717E;
+    background:rgba(18,180,201,.09);border:1px solid rgba(18,180,201,.16);
+    padding:2px 8px;border-radius:6px;
+  }
+  .title{font-size:18px;font-weight:600;letter-spacing:-.015em;line-height:1.45;color:var(--ink);transition:color .18s}
+  .row:hover .title{color:var(--deep)}
+  .board-name{font-size:11.5px;color:#5E7D8A;display:flex;align-items:center;gap:6px}
+  .board-name i{width:5px;height:5px;border-radius:50%;background:var(--cyan)}
+  .subline{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:11.5px;color:#7A96A1;flex-wrap:wrap}
+  .subline .dot{width:2px;height:2px;border-radius:50%;background:#A7C0C9}
+  .subline b{font-family:var(--mono);font-weight:500;color:#4F7280}
+  .metrics{display:flex;align-items:center;gap:6px;padding-top:2px}
+  .metric{
+    display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:10px;
+    font-family:var(--mono);font-size:11.5px;color:#6A8893;transition:background .18s,color .18s;
+  }
+  .metric:hover{background:rgba(18,180,201,.09);color:var(--deep)}
+  .metric.liked{color:var(--deep)}
+  .metric.liked svg{fill:rgba(18,180,201,.18)}
+  .save{color:#5E7D8A;border-radius:10px;padding:8px;display:grid;place-items:center;transition:background .18s,color .18s}
+  .save:hover{background:rgba(18,180,201,.1);color:var(--deep)}
+  .save.on{color:var(--deep)}
+  .save.on svg{fill:rgba(18,180,201,.2)}
+
+  .fab{
+    position:fixed;right:clamp(20px,3vw,38px);bottom:clamp(20px,3vw,38px);z-index:40;
+    width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:#fff;
+    background:linear-gradient(140deg,#26C9DA,#4C9CF6);
+    box-shadow:0 20px 44px -14px rgba(18,180,201,.85),0 0 0 1px rgba(255,255,255,.35) inset;
+    transition:transform .2s,box-shadow .2s;
+  }
+  .fab:hover{transform:translateY(-2px) rotate(90deg);box-shadow:0 26px 52px -14px rgba(18,180,201,.95)}
+
+  .rise{animation:rise .8s cubic-bezier(.16,.84,.3,1) both}
+  .rise.d1{animation-delay:.08s}
+  .rise.d2{animation-delay:.16s}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){
+    .orbit,.orb{animation:none}
+    .rise{animation:none}
+  }
+
+  @media (max-width:960px){
+    .hero{grid-template-columns:1fr;gap:34px;align-items:start}
+    .pulse{max-width:420px}
+    nav{display:none}
+  }
+  @media (max-width:640px){
+    .top{height:auto;padding:14px 18px;gap:12px;flex-wrap:wrap}
+    .tools{width:100%;margin-left:0}
+    .search{width:100%}
+    main{padding:0 18px 110px}
+    .hero{padding-top:40px}
+    .row{grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:16px 6px}
+    .idx{display:none}
+    .metrics .metric:nth-child(2){display:none}
+    h1{font-size:34px}
+  }
+</style>
+</head>
+<body>
+  <div class="sky" aria-hidden="true">
+    <div class="sun"></div><div class="orbit"></div>
+    <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>
+  </div>
+
+  <header class="top">
+    <a class="brand" href="#"><span class="mark"></span>豊岡 <span class="sub">BBS / 2026</span></a>
+    <nav>
+      <a class="on" href="#">ホーム</a>
+      <a href="#">ボード</a>
+      <a href="#">新着</a>
+      <a href="#">保存</a>
+    </nav>
+    <div class="tools">
+      <label class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+        <input type="search" placeholder="スレッド・タグを検索" aria-label="検索">
+      </label>
+      <button class="avatar" aria-label="アカウント">み</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="rise">
+        <p class="eyebrow">Student community / Toyooka</p>
+        <h1>学校のみんなが<em>話せる場所</em>。</h1>
+        <p class="lede">質問したり、部活の連絡を共有したり、一緒に勉強する相手を探したり。ここは誰でも読める場所なので、全校生徒が読んでいるつもりで書いています。</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="#">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            スレッドを立てる
+          </a>
+          <a class="btn btn-ghost" href="#boards">ボードを見る →</a>
+        </div>
+      </div>
+
+      <aside class="glass pulse rise d1">
+        <h2>Today</h2>
+        <div class="stat"><b>37</b><span>オンライン</span></div>
+        <div class="stat"><b>128</b><span>スレッド</span></div>
+        <div class="stat"><b>1,042</b><span>返信</span></div>
+        <div class="bar"><i></i></div>
+      </aside>
+    </section>
+
+    <section class="boards rise d1" id="boards" aria-label="ボード">
+      <a class="board" href="#"><i></i>雑談 <b>128</b></a>
+      <a class="board" href="#"><i></i>勉強 <b>96</b></a>
+      <a class="board" href="#"><i></i>部活・行事 <b>74</b></a>
+      <a class="board" href="#"><i></i>落とし物 <b>21</b></a>
+      <a class="board" href="#"><i></i>サイトへの意見 <b>12</b></a>
+      <a class="board" href="#"><i></i>すべてのボード →</a>
+    </section>
+
+    <section class="glass feed rise d2">
+      <div class="feed-head">
+        <h2>最近の投稿</h2>
+        <a href="#">新しいスレッド 7 件 →</a>
+      </div>
+      <ol class="rows">
+        <li>
+          <div class="row">
+            <span class="idx">01</span>
+            <div>
+              <a class="title" href="#">文化祭のステージ企画、まだメンバー足りません！</a>
+              <div class="subline">
+                <span class="board-name"><i></i>部活・行事</span><span class="dot"></span>
+                <span><b>ゆうき</b></span><span class="dot"></span>
+                <span>3 分前</span>
+              </div>
+              <div class="tags"><span class="tag">#文化祭</span><span class="tag">#実行委員</span></div>
+            </div>
+            <div class="metrics">
+              <button class="metric liked" aria-label="いいね">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9Z"/></svg>24
+              </button>
+              <button class="metric" aria-label="返信">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20 15a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3Z"/></svg>12
+              </button>
+              <button class="save" aria-label="保存">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 4h10v17l-5-4-5 4Z"/></svg>
+              </button>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="row">
+            <span class="idx">02</span>
+            <div>
+              <a class="title" href="#">数学の課題プリント、問 3 の解き方わかる人いますか</a>
+              <div class="subline">
+                <span class="board-name"><i></i>勉強</span><span class="dot"></span>
+                <span><b>みさき</b></span><span class="dot"></span>
+                <span>12 分前</span>
+              </div>
+              <div class="tags"><span class="tag">#数学I</span><span class="tag">#課題</span></div>
+            </div>
+            <div class="metrics">
+              <button class="metric" aria-label="いいね">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9Z"/></svg>18
+              </button>
+              <button class="metric" aria-label="返信">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20 15a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3Z"/></svg>9
+              </button>
+              <button class="save on" aria-label="保存済み">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 4h10v17l-5-4-5 4Z"/></svg>
+              </button>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="row">
+            <span class="idx">03</span>
+            <div>
+              <a class="title" href="#">体育館の忘れ物、心当たりある人いませんか</a>
+              <div class="subline">
+                <span class="board-name"><i></i>落とし物</span><span class="dot"></span>
+                <span><b>はると</b></span><span class="dot"></span>
+                <span>28 分前</span>
+              </div>
+              <div class="tags"><span class="tag">#忘れ物</span><span class="tag">#体育館</span></div>
+            </div>
+            <div class="metrics">
+              <button class="metric" aria-label="いいね">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9Z"/></svg>6
+              </button>
+              <button class="metric" aria-label="返信">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20 15a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3Z"/></svg>4
+              </button>
+              <button class="save" aria-label="保存">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 4h10v17l-5-4-5 4Z"/></svg>
+              </button>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="row">
+            <span class="idx">04</span>
+            <div>
+              <a class="title" href="#">冬の校内読書会、課題図書どうしましょう</a>
+              <div class="subline">
+                <span class="board-name"><i></i>雑談</span><span class="dot"></span>
+                <span><b>あおい</b></span><span class="dot"></span>
+                <span>1 時間前</span>
+              </div>
+              <div class="tags"><span class="tag">#読書</span><span class="tag">#冬</span></div>
+            </div>
+            <div class="metrics">
+              <button class="metric" aria-label="いいね">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9Z"/></svg>31
+              </button>
+              <button class="metric" aria-label="返信">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20 15a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3Z"/></svg>15
+              </button>
+              <button class="save" aria-label="保存">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 4h10v17l-5-4-5 4Z"/></svg>
+              </button>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="row">
+            <span class="idx">05</span>
+            <div>
+              <a class="title" href="#">後期の教室割、3 階の空き教室って使えますか</a>
+              <div class="subline">
+                <span class="board-name"><i></i>雑談</span><span class="dot"></span>
+                <span><b>そうた</b></span><span class="dot"></span>
+                <span>2 時間前</span>
+              </div>
+              <div class="tags"><span class="tag">#教室</span><span class="tag">#後期</span></div>
+            </div>
+            <div class="metrics">
+              <button class="metric" aria-label="いいね">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9Z"/></svg>9
+              </button>
+              <button class="metric" aria-label="返信">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20 15a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3Z"/></svg>3
+              </button>
+              <button class="save" aria-label="保存">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 4h10v17l-5-4-5 4Z"/></svg>
+              </button>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="row">
+            <span class="idx">06</span>
+            <div>
+              <a class="title" href="#">卓球部の新歓、日程が決まりました</a>
+              <div class="subline">
+                <span class="board-name"><i></i>部活・行事</span><span class="dot"></span>
+                <span><b>けんと</b></span><span class="dot"></span>
+                <span>3 時間前</span>
+              </div>
+              <div class="tags"><span class="tag">#卓球部</span><span class="tag">#新歓</span></div>
+            </div>
+            <div class="metrics">
+              <button class="metric" aria-label="いいね">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9Z"/></svg>42
+              </button>
+              <button class="metric" aria-label="返信">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20 15a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3Z"/></svg>7
+              </button>
+              <button class="save" aria-label="保存">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 4h10v17l-5-4-5 4Z"/></svg>
+              </button>
+            </div>
+          </div>
+        </li>
+      </ol>
+    </section>
+  </main>
+
+  <button class="fab" aria-label="新しいスレッド">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+</body>
+</html>

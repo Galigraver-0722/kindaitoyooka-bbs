@@ -51,7 +51,7 @@ RATE_LIMIT_LOGIN_WINDOW_MIN=10
 ```bash
 pnpm install
 cp .env.example .env
-pnpm db:push        # create prisma/dev.db
+pnpm db:deploy      # prisma/migrations から prisma/dev.db を作る
 pnpm db:seed        # boards, demo users, sample threads
 pnpm dev            # http://localhost:3000
 ```
@@ -74,7 +74,7 @@ pnpm reset-password <username>   # 手作業の復旧。新しいパスワード
 pnpm backup [dir]                # 動いたまま一貫性のあるバックアップを取る
 pnpm verify-backup <file>        # バックアップの整合性と件数を確認する
 pnpm restore <file> <target> --force   # バックアップを戻す。先にサービスを止める
-pnpm exec prisma migrate dev --name <change>   # after switching to migrations
+pnpm db:migrate --name <change>   # prisma/schema.prisma を直したあと
 ```
 
 ## 4. 最初の本番配備（VPS + Caddy + systemd）
@@ -104,11 +104,11 @@ cd /srv/bbs/app
 pnpm install --frozen-lockfile
 cp .env.example .env
 # edit .env: DATABASE_URL="file:./prod.db"
-pnpm exec prisma migrate deploy   # after the initial migration exists
+pnpm db:deploy   # prisma/migrations のマイグレーションをすべて適用する
 pnpm build
 ```
 
-まだ `db push` を使っている場合（公開前のみ）は、`migrate deploy` の代わりに `pnpm db:push` を実行します。実際の利用者が登録する前に、マイグレーションへ切り替えてください。
+`prisma/migrations` に最初のマイグレーションがあるので、新しいサーバーでも手元と同じスキーマができます。`pnpm db:push` は履歴を残さないので、使い捨ての実験だけに使います。
 
 最初の管理者は、サイト上で登録して作ります。データベースが空のときは、最初のアカウントが `ADMIN` になります。そのあとでデモアカウントを削除してください。
 
@@ -234,10 +234,10 @@ curl -fsS https://bbs.example.com/health
 
 ## 6. マイグレーション
 
-公開前に、最初のマイグレーションを作ります。
+`prisma/migrations/20261025120000_init` が起点です。スキーマが宣言するテーブルをすべて作る内容で、開発用のデータベースは適用済みとして記録してあります。スキーマを変えるときは `prisma/schema.prisma` を直し、新しいマイグレーションを作ります。
 
 ```bash
-pnpm exec prisma migrate dev --name init
+pnpm db:migrate --name <change>
 git add prisma/migrations
 ```
 
@@ -246,9 +246,19 @@ git add prisma/migrations
 ```bash
 git pull
 pnpm install --frozen-lockfile
-pnpm exec prisma migrate deploy
+pnpm db:deploy        # prisma migrate deploy
 pnpm build
 sudo systemctl restart toyooka-bbs
+```
+
+マイグレーションとスキーマが食い違っていないかは、使い捨てのファイルに適用して確かめます。
+
+```bash
+rm -f /tmp/migtest.db
+DATABASE_URL="file:/tmp/migtest.db" pnpm db:deploy
+npx prisma migrate diff --from-migrations prisma/migrations \
+  --to-schema-datamodel prisma/schema.prisma --shadow-database-url "file:/tmp/shadow.db"
+# 「No difference detected.」なら、コミットした SQL はスキーマと一致しています
 ```
 
 ルールは次のとおりです。

@@ -22,7 +22,7 @@ Do not let the codebase answer them by accident.
 | Q13 | Who owns user posts, and what license do users grant? | Implicit, CC BY-SA, school-owned | Reuse in yearbooks or archives | State in the terms: users keep authorship, grant the site a non-exclusive license to display | Advisor | Before launch |
 | Q14 | Can teachers read moderation reports and user emails? | No, advisor only, all staff | Trust and privacy expectations | Advisor can request specific records through the maintainer; no bulk access | Advisor | Before launch |
 | Q15 | Who takes over when the maintainer graduates? | A successor, a club, school IT | Bus factor | Recruit and document a successor in year one | Project owner | End of first year |
-| Q16 | Should students create their own boards? | Official only, approved community boards, open creation | Discovery, moderation load, school approval | Start with an approval workflow: one board per student, staff approves, community badge | Advisor | Phase 5 |
+| Q16 | Should open board creation stay? | Community boards opened directly (current), an approval workflow, official only | Discovery, moderation load, school approval | Keep direct creation with the current caps (three owned boards, five per hour, community badge) and revisit after a term; ADR-0021 records the reasoning | Advisor | After the first term |
 | Q17 | Should "repost" mean a quote post or a share link? | Share link (current), quote post, both | Scope and moderation surface | Keep share links for now; add quote posts only if students ask for commentary threads | Project owner | Phase 5 |
 
 ## How to close a question

@@ -1,9 +1,11 @@
 import { getCurrentUser } from "@/lib/auth";
 import { detectSensitiveText } from "@/lib/content-filter";
 import { prisma } from "@/lib/db";
-import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { formText, isSameOrigin, seeOther, wantsJson } from "@/lib/http";
+import { getLocale } from "@/lib/i18n";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { parseTagInput } from "@/lib/tags";
+import { formatDateTime } from "@/lib/format";
 import { validateBody } from "@/lib/validation";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -43,6 +45,35 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const bodyValue = data.get("body");
   const body = typeof bodyValue === "string" ? bodyValue.trim() : "";
   const tags = parseTagInput(formText(data, "tags"));
+  const parentValue = formText(data, "parentId");
+
+  let parentId: string | null = null;
+
+  if (parentValue) {
+    const parent = await prisma.post.findUnique({
+      where: { id: parentValue },
+      select: { id: true, parentId: true, threadId: true, isDeleted: true },
+    });
+
+    if (!parent || parent.threadId !== id || parent.isDeleted) {
+      return seeOther(request, `/t/${id}?error=invalid-input`);
+    }
+
+    let depth = 0;
+    let cursor: { parentId: string | null } | null = parent;
+    while (cursor?.parentId && depth < 10) {
+      cursor = await prisma.post.findUnique({
+        where: { id: cursor.parentId },
+        select: { parentId: true },
+      });
+      depth += 1;
+    }
+    if (depth >= 10) {
+      return seeOther(request, `/t/${id}?error=invalid-input`);
+    }
+
+    parentId = parent.id;
+  }
 
   if (!validateBody(body)) {
     return seeOther(request, `/t/${id}?error=invalid-input`);
@@ -52,7 +83,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const post = await prisma.$transaction(async (tx) => {
     const created = await tx.post.create({
-      data: { threadId: id, authorId: user.id, body },
+      data: { threadId: id, authorId: user.id, body, parentId },
       select: { id: true, createdAt: true },
     });
 
@@ -82,6 +113,34 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     return created;
   });
+
+  if (wantsJson(request)) {
+    const author = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { username: true, role: true, avatarColor: true, avatarRing: true },
+    });
+
+    return Response.json(
+      {
+        comment: {
+          id: post.id,
+          number: "",
+          body,
+          author: author ?? {
+            username: user.username,
+            role: user.role,
+            avatarColor: null,
+            avatarRing: null,
+          },
+          createdAt: formatDateTime(post.createdAt, await getLocale()),
+          likeCount: 0,
+          liked: false,
+          children: [],
+        },
+      },
+      { status: 201 },
+    );
+  }
 
   return seeOther(request, `/t/${id}#p-${post.id}`);
 }

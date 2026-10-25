@@ -186,7 +186,7 @@ deployment.
 and post; the displayed count is a denormalized total.
 
 **Bookmark.** A private save of a thread for later reading. Bookmarks are visible only to their
-owner and drive the `/bookmarks` page.
+owner and fill the `Saved` filter of the feed (`/bookmarks` redirects there).
 
 **Hashtag.** A `#word` inside a title or reply. Hashtags are normalized and attached to the whole
 thread; they are not a separate field.

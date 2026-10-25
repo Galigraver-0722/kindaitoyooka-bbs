@@ -1,27 +1,33 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@prisma/client";
-import { Breadcrumbs } from "@/components/breadcrumbs";
-import { ThreadRow } from "@/components/thread-row";
+import {
+  BoardNav,
+  Crumb,
+  ThemedPage,
+  ThreadCards,
+  ThreadRows,
+  type BoardSummary,
+} from "@/components/theme/themed-page";
+import type { HomeThread } from "@/components/home/types";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
+import { getLikedThreadIds } from "@/lib/likes";
 import { prisma } from "@/lib/db";
 import { sortByHot } from "@/lib/hot";
-import { getLocale, t } from "@/lib/i18n";
+import { sortByRising } from "@/lib/rising";
 import { errorMessage } from "@/lib/messages";
-import {
-  boardPageHref,
-  parsePage,
-  THREADS_PER_PAGE,
-  totalPages,
-} from "@/lib/pagination";
-import { getUnreadThreadIds } from "@/lib/read-state";
+import { boardPageHref, parsePage, THREADS_PER_PAGE, totalPages } from "@/lib/pagination";
+import { parseSuggestedTags } from "@/lib/tags";
+import { getLocale, t } from "@/lib/i18n";
+import { getTheme } from "@/lib/theme";
+import { timeAgo } from "@/lib/time-ago";
 
 export const dynamic = "force-dynamic";
 
 const THREAD_INCLUDE = {
   board: { select: { slug: true, name: true } },
-  author: { select: { username: true } },
+  author: { select: { username: true, avatarColor: true, avatarRing: true } },
   tags: { select: { name: true } },
   _count: { select: { posts: true } },
 } satisfies Prisma.ThreadInclude;
@@ -35,64 +41,75 @@ export default async function BoardPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ error?: string; sort?: string; page?: string }>;
 }) {
-  const [{ slug }, { error, sort, page }, locale] = await Promise.all([
+  const [{ slug }, { error, sort, page }, theme, locale] = await Promise.all([
     params,
     searchParams,
+    getTheme(),
     getLocale(),
   ]);
-  const order = sort === "hot" ? "hot" : "latest";
-  const m = t(locale);
+  const copy = t(locale).shell;
+  const pages = t(locale).pages;
+  const sortCopy = t(locale).sort;
+  const order = sort === "hot" || sort === "rising" ? sort : "latest";
 
   const [board, user] = await Promise.all([
     prisma.board.findUnique({
       where: { slug },
-      include: {
-        _count: { select: { threads: { where: { isDeleted: false } } } },
-      },
+      include: { _count: { select: { threads: { where: { isDeleted: false } } } } },
     }),
     getCurrentUser(),
   ]);
 
-  if (!board) {
-    notFound();
-  }
+  if (!board) notFound();
+
+  const boards = await prisma.board.findMany({
+    where: { isArchived: false },
+    orderBy: [{ kind: "asc" }, { sortOrder: "asc" }],
+    select: {
+      slug: true,
+      name: true,
+      kind: true,
+      _count: { select: { threads: { where: { isDeleted: false } } } },
+    },
+  });
+  const summaries: BoardSummary[] = boards.map((row) => ({
+    slug: row.slug,
+    name: row.name,
+    count: row._count.threads,
+    kind: row.kind,
+  }));
+
+  const [postCount, threadAuthors, postAuthors, lastActivity] = await Promise.all([
+    prisma.post.count({
+      where: { thread: { boardId: board.id, isDeleted: false }, isDeleted: false },
+    }),
+    prisma.thread.findMany({
+      where: { boardId: board.id, isDeleted: false },
+      select: { authorId: true },
+      distinct: ["authorId"],
+    }),
+    prisma.post.findMany({
+      where: { thread: { boardId: board.id, isDeleted: false }, isDeleted: false },
+      select: { authorId: true },
+      distinct: ["authorId"],
+    }),
+    prisma.thread.aggregate({
+      where: { boardId: board.id, isDeleted: false },
+      _max: { lastPostAt: true },
+    }),
+  ]);
+  const memberCount = new Set([...threadAuthors, ...postAuthors].map((row) => row.authorId)).size;
+  const lastActive = lastActivity._max.lastPostAt;
 
   const where = { boardId: board.id, isDeleted: false };
   const requestedPage = parsePage(page);
   let currentPage = 1;
   let pageCount = 1;
-  let totalCount = 0;
   let threads: BoardThread[] = [];
 
-  if (order === "hot") {
-    // "Hot" is computed in application code over the top 100 candidates, so
-    // paginate the ranked list instead of the database query.
-    const candidates = await prisma.thread.findMany({
-      where,
-      orderBy: { lastPostAt: "desc" },
-      take: 100,
-      include: THREAD_INCLUDE,
-    });
-
-    const ranked = sortByHot(
-      candidates.map((thread) => ({
-        ...thread,
-        replyCount: Math.max(thread._count.posts - 1, 0),
-      })),
-    ).sort((a, b) => Number(b.isPinned) - Number(a.isPinned));
-
-    totalCount = ranked.length;
-    pageCount = totalPages(totalCount);
+  if (order === "latest") {
+    pageCount = totalPages(board._count.threads);
     currentPage = Math.min(requestedPage, pageCount);
-    threads = ranked.slice(
-      (currentPage - 1) * THREADS_PER_PAGE,
-      currentPage * THREADS_PER_PAGE,
-    );
-  } else {
-    totalCount = board._count.threads;
-    pageCount = totalPages(totalCount);
-    currentPage = Math.min(requestedPage, pageCount);
-
     threads = await prisma.thread.findMany({
       where,
       orderBy: [{ isPinned: "desc" }, { lastPostAt: "desc" }],
@@ -100,129 +117,140 @@ export default async function BoardPage({
       take: THREADS_PER_PAGE,
       include: THREAD_INCLUDE,
     });
+  } else {
+    const candidates = await prisma.thread.findMany({
+      where,
+      orderBy: { lastPostAt: "desc" },
+      take: 100,
+      include: THREAD_INCLUDE,
+    });
+    const ranked = candidates.map((thread) => ({
+      ...thread,
+      replyCount: Math.max(thread._count.posts - 1, 0),
+    }));
+    const sorted =
+      order === "hot"
+        ? sortByHot(ranked).slice(0, THREADS_PER_PAGE)
+        : sortByRising(ranked).slice(0, THREADS_PER_PAGE);
+    threads = sorted.sort((a, b) => Number(b.isPinned) - Number(a.isPinned));
   }
 
-  const [unread, bookmarked] = await Promise.all([
-    getUnreadThreadIds(user?.id, threads),
-    getBookmarkedThreadIds(user?.id, threads.map((thread) => thread.id)),
+  const ids = threads.map((thread) => thread.id);
+  const [bookmarked, liked] = await Promise.all([
+    getBookmarkedThreadIds(user?.id, ids),
+    getLikedThreadIds(user?.id, ids),
   ]);
-  const errorText = errorMessage(error, locale);
+  const list: HomeThread[] = threads.map((thread) => ({
+    id: thread.id,
+    title: thread.title,
+    board: thread.board,
+    author: thread.author,
+    tags: thread.tags,
+    likeCount: thread.likeCount,
+    bookmarkCount: thread.bookmarkCount,
+    liked: liked.has(thread.id),
+    replyCount: Math.max(0, thread._count.posts - 1),
+    lastPostAt: thread.lastPostAt,
+    bookmarked: bookmarked.has(thread.id),
+        excerpt: "",
+  }));
+  const errorText = errorMessage(error, "ja");
+  const suggested = parseSuggestedTags(board.suggestedTags).slice(0, 5);
+
+  const sortHref = (next: string) => {
+    const params = new URLSearchParams();
+    if (next !== "latest") params.set("sort", next);
+    const qs = params.toString();
+    return qs ? `/b/${board.slug}?${qs}` : `/b/${board.slug}`;
+  };
+
+  const heading =
+    order === "rising" ? copy.feed.rising : order === "hot" ? copy.feed.hot : copy.feed.latest;
 
   return (
-    <main className="shell page">
-      <Breadcrumbs
-        items={[
-          { href: "/", label: m.board.breadcrumb },
-          { label: board.name },
-        ]}
-      />
-
-      <header className="mt-8 grid gap-8 border-b border-line pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
-        <div>
-          <h1 className="title-page">{board.name}</h1>
-          <p className="mt-3 max-w-[52ch] text-[14px] leading-[1.85] text-muted">
-            {board.description}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-end gap-6">
-          <div className="text-right">
-            <p
-              className="font-mono text-[26px] leading-none tabular-nums"
-              aria-label={m.board.visibleThreads(board._count.threads)}
-            >
-              {String(board._count.threads).padStart(2, "0")}
-            </p>
+    <ThemedPage theme={theme} username={user?.username ?? null} active="boards" boardSlug={board.slug}>
+      <main>
+        <section className="banner">
+          <div className="page-head">
+            <Crumb items={[{ href: "/", label: copy.boards }, { label: board.name }]} />
+            <h1>{board.name}</h1>
+            <p className="lede">{board.description}</p>
+            <div className="board-stats">
+              <div className="bs">
+                <span>{copy.statsThreads}</span>
+                <b>{board._count.threads}</b>
+              </div>
+              <div className="bs">
+                <span>{copy.statsMembers}</span>
+                <b>{memberCount}</b>
+              </div>
+              <div className="bs">
+                <span>{copy.statsPosts}</span>
+                <b>{postCount}</b>
+              </div>
+              <div className="bs">
+                <span>{copy.statsLast}</span>
+                <b>{lastActive ? timeAgo(lastActive, locale) : "—"}</b>
+              </div>
+            </div>
+            <div className="row-meta">
+              <span className={`pill kind ${board.kind === "COMMUNITY" ? "comm" : ""}`}>
+                {board.kind === "COMMUNITY" ? copy.communityTag : copy.official}
+              </span>
+              {suggested.map((tag) => (
+                <Link className="pill" href={`/?q=${encodeURIComponent(`#${tag}`)}`} key={tag}>#{tag}</Link>
+              ))}
+              <Link className="pill pill-action" href={`/new?board=${board.slug}`}>{copy.newThread}</Link>
+            </div>
           </div>
-          <Link href={`/new?board=${board.slug}`} className="btn btn-primary">
-            {m.board.newThread}
-          </Link>
+        </section>
+
+        <div className="feed-cols">
+          <aside className="feed-side">
+            <div>
+              <h2 className="side-title">{copy.boards}</h2>
+              <BoardNav boards={summaries} activeSlug={board.slug} />
+            </div>
+          </aside>
+
+          <div className="feed-body">
+            <div className="feed-bar">
+              <h2><span className="tick" />{heading}</h2>
+              <span className="hub-sort">
+                <Link className={order === "latest" ? "on" : ""} href={sortHref("latest")}>{sortCopy.latest}</Link>
+                <Link className={order === "hot" ? "on" : ""} href={sortHref("hot")}>{sortCopy.hot}</Link>
+                <Link className={order === "rising" ? "on" : ""} href={sortHref("rising")}>{sortCopy.rising}</Link>
+              </span>
+            </div>
+
+            {errorText ? <p className="notice error">{errorText}</p> : null}
+
+            {list.length === 0 ? (
+              <p className="empty">
+                {copy.empty.none}
+                <br />
+                <Link href={`/new?board=${board.slug}`}>{copy.newThread}</Link>
+              </p>
+            ) : theme === "light" ? (
+              <ThreadCards threads={list} locale={locale} />
+            ) : (
+              <ThreadRows threads={list} locale={locale} />
+            )}
+
+            {order === "latest" && pageCount > 1 ? (
+              <nav className="pager">
+                {currentPage > 1 ? (
+                  <Link href={boardPageHref(board.slug, { page: currentPage - 1, sort: order })}>← {pages.pager.prev}</Link>
+                ) : null}
+                <span>{currentPage} / {pageCount}</span>
+                {currentPage < pageCount ? (
+                  <Link href={boardPageHref(board.slug, { page: currentPage + 1, sort: order })}>{pages.pager.next} →</Link>
+                ) : null}
+              </nav>
+            ) : null}
+          </div>
         </div>
-      </header>
-
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-b border-line">
-        <div className="flex gap-6">
-          <Link
-            href={`/b/${board.slug}?sort=latest`}
-            className={`-mb-px border-b-2 pb-3 text-[13.5px] transition-colors ${
-              order === "latest"
-                ? "border-accent text-ink"
-                : "border-transparent text-muted hover:text-ink"
-            }`}
-          >
-            {m.sort.latest}
-          </Link>
-          <Link
-            href={`/b/${board.slug}?sort=hot`}
-            className={`-mb-px border-b-2 pb-3 text-[13.5px] transition-colors ${
-              order === "hot"
-                ? "border-accent text-ink"
-                : "border-transparent text-muted hover:text-ink"
-            }`}
-          >
-            {m.sort.hot}
-          </Link>
-        </div>
-        <span className="meta pb-3">
-          {String(currentPage).padStart(2, "0")} / {String(pageCount).padStart(2, "0")}
-        </span>
-      </div>
-
-      {errorText ? <p className="notice notice-error mt-6">{errorText}</p> : null}
-
-      {totalCount === 0 ? (
-        <p className="mt-6 border-t border-line pt-6 text-[14px] text-muted">
-          {m.board.empty}
-        </p>
-      ) : (
-        <ol className="mt-4 border-t border-line">
-          {threads.map((thread, index) => (
-            <ThreadRow
-              key={thread.id}
-              index={(currentPage - 1) * THREADS_PER_PAGE + index + 1}
-              date={thread.lastPostAt}
-              locale={locale}
-              thread={{
-                ...thread,
-                replyCount: Math.max(thread._count.posts - 1, 0),
-                isUnread: unread.has(thread.id),
-                bookmarked: user ? bookmarked.has(thread.id) : undefined,
-              }}
-            />
-          ))}
-        </ol>
-      )}
-
-      {pageCount > 1 ? (
-        <nav
-          className="mt-8 flex items-center justify-between gap-4 border-t border-line pt-4"
-          aria-label={m.board.pageStatus(currentPage, pageCount)}
-        >
-          {currentPage > 1 ? (
-            <Link
-              href={boardPageHref(board.slug, { page: currentPage - 1, sort: order })}
-              className="btn-quiet"
-            >
-              ← {m.board.pagePrevious}
-            </Link>
-          ) : (
-            <span />
-          )}
-          <span className="meta">
-            {String(currentPage).padStart(2, "0")} / {String(pageCount).padStart(2, "0")}
-          </span>
-          {currentPage < pageCount ? (
-            <Link
-              href={boardPageHref(board.slug, { page: currentPage + 1, sort: order })}
-              className="btn-quiet"
-            >
-              {m.board.pageNext} →
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      ) : null}
-    </main>
+      </main>
+    </ThemedPage>
   );
 }

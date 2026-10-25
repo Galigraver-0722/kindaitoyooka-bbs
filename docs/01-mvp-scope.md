@@ -25,10 +25,12 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 - Board pagination at 20 threads per page, preserving the newest/popular sort.
 - Public community rules, privacy notice, and moderation policy pages, in English and Japanese.
 - An audit log for every moderation action, visible on `/moderation`.
-- Author profile pages at `/u/<username>` with join date and recent threads/posts.
+- Author profile pages at `/u/<username>` with an identity banner, thread/post/like/join-date
+  counts, and recent-thread and recent-reply tabs.
 - Thread editing within 15 minutes of posting, with a visible "edited" marker.
 - Plain-text thread export at `/t/<id>/export`.
-- Unread badges on the home page and board lists for signed-in users.
+- Thread read markers written on view. The "new replies" badge is not rendered yet, so the
+  markers are stored but unread; the badge is on the roadmap.
 - Per-board tag hints on the compose and reply forms.
 - Manual password recovery with a maintenance command, and `GET /health`.
 - Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, reviewed by a human.

@@ -14,6 +14,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum BoardKind {
+  OFFICIAL
+  COMMUNITY
+}
+
 enum Role {
   STUDENT
   MODERATOR
@@ -31,6 +36,9 @@ model User {
   email           String?          @unique
   passwordHash    String
   role            Role             @default(STUDENT)
+  avatarColor     String?
+  avatarRing      String?
+  bio             String?
   createdAt       DateTime         @default(now())
   sessions        Session[]
   threads         Thread[]
@@ -40,6 +48,8 @@ model User {
   postLikes       PostLike[]
   threadBookmarks ThreadBookmark[]
   threadReads     ThreadRead[]
+  threadLikes     ThreadLike[]
+  ownedBoards     Board[]       @relation("BoardOwner")
   auditLogs       AuditLog[]       @relation("AuditActor")
 }
 
@@ -59,6 +69,9 @@ model Board {
   slug        String   @unique
   name        String
   description String
+  kind        BoardKind @default(OFFICIAL)
+  ownerId     String?
+  owner       User?     @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   sortOrder     Int      @default(0)
   isArchived    Boolean  @default(false)
   // Comma-separated tag hints for the compose form, e.g. "質問,試験,宿題".
@@ -86,6 +99,7 @@ model Thread {
   tags          Tag[]
   bookmarks     ThreadBookmark[]
   reads         ThreadRead[]
+  likes         ThreadLike[]
 
   @@index([boardId, lastPostAt])
   @@index([likeCount])
@@ -95,6 +109,9 @@ model Post {
   id        String     @id @default(cuid())
   threadId  String
   thread    Thread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Post?      @relation("PostReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Post[]     @relation("PostReplies")
   authorId  String
   author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
   body      String
@@ -105,6 +122,7 @@ model Post {
   likes     PostLike[]
 
   @@index([threadId, createdAt])
+  @@index([parentId])
 }
 
 model Tag {
@@ -112,6 +130,17 @@ model Tag {
   name      String   @unique
   createdAt DateTime @default(now())
   threads   Thread[]
+}
+
+model ThreadLike {
+  userId    String
+  threadId  String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread    Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, threadId])
+  @@index([threadId])
 }
 
 model PostLike {

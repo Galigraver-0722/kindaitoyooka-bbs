@@ -5,7 +5,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   const m = t(locale).footer;
 
   return (
-    <footer className="mt-24 border-t border-line">
+    <footer className="site-footer mt-24 border-t border-line">
       <div className="shell grid gap-10 py-12 md:grid-cols-12">
         <div className="md:col-span-6">
           <p className="eyebrow">Toyooka BBS</p>

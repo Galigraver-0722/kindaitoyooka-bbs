@@ -1,12 +1,18 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { RoleChip } from "@/components/role-chip";
-import { ThreadRow } from "@/components/thread-row";
+import { ThemedPage, ThreadCards, ThreadRows, Crumb } from "@/components/theme/themed-page";
+import { LogoutButton } from "@/components/theme/logout-button";
+import { ProfileEditor } from "@/components/theme/profile-editor";
+import type { HomeThread } from "@/components/home/types";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
+import { getLikedThreadIds } from "@/lib/likes";
 import { prisma } from "@/lib/db";
-import { formatDateTime } from "@/lib/format";
+import { readableInk } from "@/lib/color";
+import { noticeMessage } from "@/lib/messages";
+import { getTheme } from "@/lib/theme";
+import { timeAgo } from "@/lib/time-ago";
 import { getLocale, t } from "@/lib/i18n";
 
 export async function generateMetadata({
@@ -22,145 +28,231 @@ export const dynamic = "force-dynamic";
 
 export default async function ProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ notice?: string; tab?: string }>;
 }) {
-  const [{ username }, locale] = await Promise.all([params, getLocale()]);
-  const m = t(locale);
+  const [{ username }, { notice, tab }, theme, locale] = await Promise.all([
+    params,
+    searchParams,
+    getTheme(),
+    getLocale(),
+  ]);
+  const view = tab === "replies" ? "replies" : "threads";
+  const copy = t(locale).pages.profile;
+  const pages = t(locale).pages;
+  const roles = t(locale).pages.role;
 
   const profile = await prisma.user.findUnique({
     where: { username: username.toLowerCase() },
-    select: { id: true, username: true, role: true, createdAt: true },
+    select: {
+      id: true,
+      username: true,
+      role: true,
+      createdAt: true,
+      bio: true,
+      avatarColor: true,
+      avatarRing: true,
+    },
   });
+  if (!profile) notFound();
 
-  if (!profile) {
-    notFound();
-  }
-
-  const [threads, posts, threadCount, postCount] = await Promise.all([
+  const [viewer, threads, threadCount, postCount, likeSum, replyRows] = await Promise.all([
+    getCurrentUser(),
     prisma.thread.findMany({
       where: { authorId: profile.id, isDeleted: false },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      select: {
-        id: true,
-        title: true,
-        createdAt: true,
-        likeCount: true,
-        bookmarkCount: true,
+      orderBy: { lastPostAt: "desc" },
+      take: 20,
+      include: {
         board: { select: { slug: true, name: true } },
-        author: { select: { username: true } },
+        author: { select: { username: true, avatarColor: true, avatarRing: true } },
         tags: { select: { name: true } },
         _count: { select: { posts: true } },
       },
     }),
+    prisma.thread.count({ where: { authorId: profile.id, isDeleted: false } }),
+    prisma.post.count({ where: { authorId: profile.id, isDeleted: false } }),
+    prisma.thread.aggregate({
+      where: { authorId: profile.id, isDeleted: false },
+      _sum: { likeCount: true },
+    }),
     prisma.post.findMany({
-      where: {
-        authorId: profile.id,
-        isDeleted: false,
-        thread: { isDeleted: false },
-      },
+      where: { authorId: profile.id, isDeleted: false },
       orderBy: { createdAt: "desc" },
-      take: 10,
+      take: 24,
       select: {
         id: true,
         body: true,
         createdAt: true,
-        thread: { select: { id: true, title: true } },
+        parentId: true,
+        thread: {
+          select: {
+            id: true,
+            title: true,
+            board: { select: { name: true } },
+            posts: { take: 1, orderBy: { createdAt: "asc" }, select: { id: true } },
+          },
+        },
       },
-    }),
-    prisma.thread.count({ where: { authorId: profile.id, isDeleted: false } }),
-    prisma.post.count({
-      where: { authorId: profile.id, isDeleted: false, thread: { isDeleted: false } },
     }),
   ]);
 
-  const viewer = await getCurrentUser();
-  const bookmarked = await getBookmarkedThreadIds(
-    viewer?.id,
-    threads.map((thread) => thread.id),
-  );
+  const ids = threads.map((thread) => thread.id);
+  const [bookmarked, liked] = await Promise.all([
+    getBookmarkedThreadIds(viewer?.id, ids),
+    getLikedThreadIds(viewer?.id, ids),
+  ]);
+  const list: HomeThread[] = threads.map((thread) => ({
+    id: thread.id,
+    title: thread.title,
+    board: thread.board,
+    author: thread.author,
+    tags: thread.tags,
+    likeCount: thread.likeCount,
+    bookmarkCount: thread.bookmarkCount,
+    liked: liked.has(thread.id),
+    replyCount: Math.max(0, thread._count.posts - 1),
+    lastPostAt: thread.lastPostAt,
+    bookmarked: bookmarked.has(thread.id),
+        excerpt: "",
+  }));
+
+  const replies = replyRows
+    .filter((row) => row.thread.posts[0]?.id !== row.id)
+    .slice(0, 20);
+
+  const roleLabel = profile.role === "ADMIN" ? roles.admin : profile.role === "MODERATOR" ? roles.moderator : roles.student;
+  const isOwner = viewer?.id === profile.id;
+  const noticeText = noticeMessage(notice, locale);
+  const avatarColor = profile.avatarColor ?? undefined;
+  const avatarRing = profile.avatarRing ?? undefined;
+  const baseHref = `/u/${profile.username}`;
+  const tabHref = (next: "threads" | "replies") => (next === "threads" ? baseHref : `${baseHref}?tab=replies`);
 
   return (
-    <main className="shell page">
-      <header className="border-b border-line pb-8">
-        <p className="eyebrow">{m.profile.title}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <h1 className="text-[2.2rem] font-semibold leading-none tracking-[-0.04em] text-ink sm:text-[2.8rem]">
-            {profile.username}
-          </h1>
-          <RoleChip role={profile.role} locale={locale} />
-        </div>
-        <p className="meta mt-3">{m.profile.joined(formatDateTime(profile.createdAt, locale))}</p>
+    <ThemedPage theme={theme} username={viewer?.username ?? null}>
+      <main>
+        <div className="profile-page">
+          <Crumb items={[{ href: "/", label: pages.home }, { label: t(locale).profile.title }]} />
 
-        <dl className="mt-8 flex gap-10 border-t border-line pt-5">
-          <div>
-            <dt className="eyebrow">{m.profile.threadsLabel}</dt>
-            <dd className="mt-1 font-mono text-[24px] leading-none tabular-nums">
-              {String(threadCount).padStart(2, "0")}
-            </dd>
+          <section className="profile-banner">
+            <span
+              className="profile-ava"
+              style={{
+                background: avatarColor ?? "var(--sky)",
+                borderColor: avatarRing ?? "var(--line)",
+                color: readableInk(avatarColor),
+              }}
+            >
+              {profile.username.slice(0, 1).toUpperCase()}
+            </span>
+
+            <div className="profile-copy">
+              <div className="profile-title">
+                <h1>{profile.username}</h1>
+                <span className="profile-role">{roleLabel}</span>
+              </div>
+              <p className="profile-handle">@{profile.username}</p>
+              <p className="profile-bio">
+                {profile.bio ?? copy.guestBio}
+              </p>
+            </div>
+
+            <div className="profile-actions">
+              {isOwner ? (
+                <>
+                  <ProfileEditor
+                    username={profile.username}
+                    bio={profile.bio ?? ""}
+                    avatarColor={profile.avatarColor ?? "#12BFD1"}
+                    avatarRing={profile.avatarRing ?? "#062330"}
+                    labels={{
+                      edit: copy.edit,
+                      title: copy.editTitle,
+                      close: copy.close,
+                      bio: copy.bio,
+                      bioPlaceholder: copy.bioPlaceholder,
+                      avatarColor: copy.avatarColor,
+                      ringColor: copy.ringColor,
+                      cancel: copy.cancel,
+                      save: copy.save,
+                    }}
+                  />
+                  <LogoutButton
+                    label={copy.logout}
+                    title={copy.logoutTitle}
+                    text={copy.logoutText}
+                    confirm={copy.logout}
+                    cancel={copy.cancel}
+                  />
+                </>
+              ) : viewer ? (
+                <Link className="btn" href={`/u/${viewer.username}`}>{copy.ownPage}</Link>
+              ) : (
+                <>
+                  <Link className="btn btn-p" href={`/login?next=${encodeURIComponent(baseHref)}`}>{copy.login}</Link>
+                  <Link className="btn" href="/register">{copy.register}</Link>
+                </>
+              )}
+            </div>
+
+            <div className="board-stats profile-stats">
+              <div className="bs">
+                <span>{copy.threads}</span>
+                <b>{threadCount}</b>
+              </div>
+              <div className="bs">
+                <span>{copy.posts}</span>
+                <b>{postCount}</b>
+              </div>
+              <div className="bs">
+                <span>{copy.likes}</span>
+                <b>{likeSum._sum.likeCount ?? 0}</b>
+              </div>
+              <div className="bs">
+                <span>{copy.joined}</span>
+                <b>{profile.createdAt.toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, ".")}</b>
+              </div>
+            </div>
+          </section>
+
+          {noticeText ? <p className="notice">{noticeText}</p> : null}
+
+          <div className="hub-tabs profile-tabs">
+            <Link className={view === "threads" ? "on" : ""} href={tabHref("threads")}>{copy.threads}</Link>
+            <Link className={view === "replies" ? "on" : ""} href={tabHref("replies")}>{copy.replies}</Link>
           </div>
-          <div>
-            <dt className="eyebrow">{m.profile.postsLabel}</dt>
-            <dd className="mt-1 font-mono text-[24px] leading-none tabular-nums">
-              {String(postCount).padStart(2, "0")}
-            </dd>
-          </div>
-        </dl>
-      </header>
 
-      <section className="mt-12">
-        <h2 className="title-section">{m.profile.recentThreads}</h2>
-        {threads.length === 0 ? (
-          <p className="mt-4 border-t border-line pt-4 text-[14px] text-muted">
-            {m.profile.noThreads}
-          </p>
-        ) : (
-          <ol className="mt-4 border-t border-line">
-            {threads.map((thread, index) => (
-              <ThreadRow
-                key={thread.id}
-                index={index + 1}
-                date={thread.createdAt}
-                locale={locale}
-                thread={{
-                  ...thread,
-                  replyCount: Math.max(thread._count.posts - 1, 0),
-                  bookmarked: viewer ? bookmarked.has(thread.id) : undefined,
-                }}
-              />
-            ))}
-          </ol>
-        )}
-      </section>
-
-      <section className="mt-12">
-        <h2 className="title-section">{m.profile.recentPosts}</h2>
-        {posts.length === 0 ? (
-          <p className="mt-4 border-t border-line pt-6 text-[13px] text-muted">
-            {m.profile.noPosts}
-          </p>
-        ) : (
-          <ol className="mt-4 divide-y divide-line border-t border-line">
-            {posts.map((post) => (
-              <li key={post.id} className="py-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <Link
-                    href={`/t/${post.thread.id}#p-${post.id}`}
-                    className="text-[13px] font-medium text-ink transition-colors hover:text-accent"
-                  >
-                    {m.profile.inThread(post.thread.title)}
+          {view === "threads" ? (
+            list.length === 0 ? (
+              <p className="empty">{copy.noThreads}</p>
+            ) : theme === "light" ? (
+              <ThreadCards threads={list} locale={locale} />
+            ) : (
+              <ThreadRows threads={list} locale={locale} />
+            )
+          ) : replies.length === 0 ? (
+            <p className="empty">{copy.noReplies}</p>
+          ) : (
+            <div className="profile-replies">
+              {replies.map((reply) => (
+                <article className="profile-reply" key={reply.id}>
+                  <Link className="reply-thread" href={`/t/${reply.thread.id}#p-${reply.id}`}>
+                    {reply.thread.title}
                   </Link>
-                  <time className="meta">{formatDateTime(post.createdAt, locale)}</time>
-                </div>
-                <p className="mt-2 line-clamp-4 whitespace-pre-wrap break-words text-[14.5px] leading-[1.9] text-ink/80">
-                  {post.body}
-                </p>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
-    </main>
+                  <p className="reply-body">{reply.body}</p>
+                  <div className="reply-meta">
+                    <span>{reply.thread.board.name}</span>
+                    <span>{timeAgo(reply.createdAt, locale)}</span>
+                    {reply.parentId ? <span className="reply-kind">{copy.replyTag}</span> : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    </ThemedPage>
   );
 }

@@ -33,7 +33,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Apply the database schema
-        run: pnpm db:push
+        run: pnpm db:deploy
 
       - name: Lint
         run: pnpm lint

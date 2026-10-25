@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { ThemedPage, Crumb } from "@/components/theme/themed-page";
 import { getCurrentUser } from "@/lib/auth";
 import { getLocale, t } from "@/lib/i18n";
 import { errorMessage } from "@/lib/messages";
-import { LIMITS, safeNextPath } from "@/lib/validation";
+import { getTheme } from "@/lib/theme";
+import { safeNextPath } from "@/lib/validation";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -16,109 +18,60 @@ export default async function RegisterPage({
 }: {
   searchParams: Promise<{ error?: string; next?: string }>;
 }) {
-  const [{ error, next }, locale] = await Promise.all([searchParams, getLocale()]);
-  const m = t(locale);
+  const [{ error, next }, theme, locale] = await Promise.all([searchParams, getTheme(), getLocale()]);
   const user = await getCurrentUser();
-
-  if (user) {
-    redirect(safeNextPath(next));
-  }
+  if (user) redirect(safeNextPath(next));
 
   const errorText = errorMessage(error, locale);
+  const copy = t(locale).pages.auth;
+  const pages = t(locale).pages;
+  const nextPath = safeNextPath(next);
+  const loginHref = nextPath === "/" ? "/login" : `/login?next=${encodeURIComponent(nextPath)}`;
 
   return (
-    <main className="shell page">
-      <div className="grid gap-12 border-t border-line pt-10 lg:grid-cols-2 lg:gap-20">
-        <div className="max-w-md">
-          <p className="eyebrow">Toyooka BBS</p>
-          <h1 className="title-page mt-4">{m.auth.registerTitle}</h1>
-          <p className="mt-4 text-[14px] leading-[1.85] text-muted">{m.auth.registerSubtitle}</p>
+    <ThemedPage theme={theme} username={null}>
+      <main>
+        <div className="page-head">
+          <Crumb items={[{ href: "/", label: pages.home }, { label: copy.registerTitle }]} />
+          <h1>{copy.registerTitle}</h1>
+          <p className="lede">{copy.registerLede}</p>
         </div>
 
-        <div className="w-full max-w-md lg:justify-self-end">
-          {errorText ? <p className="notice notice-error mb-6">{errorText}</p> : null}
+        {errorText ? <p className="notice error">{errorText}</p> : null}
 
-          <form action="/api/auth/register" method="post" className="space-y-5">
-            <input type="hidden" name="next" value={safeNextPath(next)} />
+        <form className="form-card" action="/api/auth/register" method="post">
+          <input type="hidden" name="next" value={nextPath} />
 
-            <div>
-              <label htmlFor="username" className="field-label">
-                {m.auth.username}
-              </label>
-              <input
-                id="username"
-                name="username"
-                autoComplete="username"
-                required
-                minLength={LIMITS.usernameMin}
-                maxLength={LIMITS.usernameMax}
-                pattern="[A-Za-z0-9_]+"
-                className="field mt-2"
-              />
-              <p className="hint">{m.auth.usernameHint}</p>
-            </div>
+          <label className="field-label" htmlFor="username">{copy.username}</label>
+          <input id="username" name="username" autoComplete="username" placeholder="hanako_2026" required />
+          <p className="hint">{copy.usernameHint}</p>
 
-            <div>
-              <label htmlFor="email" className="field-label">
-                {m.auth.email}{" "}
-                <span className="normal-case tracking-normal text-muted">
-                  {m.auth.optional}
-                </span>
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                maxLength={254}
-                className="field mt-2"
-              />
-              <p className="hint">{m.auth.emailHint}</p>
-            </div>
+          <label className="field-label" htmlFor="email">{copy.email}</label>
+          <input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" />
+          <p className="hint">{copy.emailHint}</p>
 
-            <div>
-              <label htmlFor="password" className="field-label">
-                {m.auth.password}
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={LIMITS.passwordMin}
-                maxLength={LIMITS.passwordMax}
-                className="field mt-2"
-              />
-              <p className="hint">{m.auth.passwordHint}</p>
-            </div>
+          <label className="field-label" htmlFor="password">{copy.password}</label>
+          <input id="password" name="password" type="password" autoComplete="new-password" required />
+          <p className="hint">{copy.passwordNewHint}</p>
 
-            <button type="submit" className="btn btn-primary w-full">
-              {m.auth.createButton}
-            </button>
-          </form>
+          <div className="form-foot">
+            <button className="btn btn-p" type="submit">{copy.registerSubmit}</button>
+            <span className="hint">{copy.haveAccount} <Link href={loginHref}>{copy.loginLink}</Link></span>
+          </div>
+        </form>
 
-          <p className="mt-6 text-[12.5px] leading-relaxed text-muted">
-            {m.auth.termsPrefix}
-            <Link href="/rules" className="text-link">
-              {m.auth.termsRules}
-            </Link>
-            {m.auth.termsAnd}
-            <Link href="/privacy" className="text-link">
-              {m.auth.termsPrivacy}
-            </Link>
-            {m.auth.termsSuffix}
-          </p>
-
-          <p className="mt-4 text-[13px] text-muted">
-            {m.auth.haveAccount}{" "}
-            <Link href="/login" className="text-link">
-              {m.auth.loginLink}
-            </Link>
-            {m.auth.sentenceEnd}
-          </p>
+        <div className="form-card">
+          <h2>{copy.noticeTitle}</h2>
+          <ul className="auth-list">
+            <li>{copy.noticePublic}</li>
+            <li>{copy.noticeForbidden}</li>
+            <li>{copy.noticeFirstAdmin}</li>
+            <li>
+              {copy.noticeRules} <Link href="/rules">{copy.rules}</Link> · <Link href="/privacy">{copy.privacy}</Link>
+            </li>
+          </ul>
         </div>
-      </div>
-    </main>
+      </main>
+    </ThemedPage>
   );
 }

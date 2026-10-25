@@ -1,20 +1,35 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Breadcrumbs } from "@/components/breadcrumbs";
-import { ReactionButton } from "@/components/reaction-button";
-import { RoleChip } from "@/components/role-chip";
-import { ShareButton } from "@/components/share-button";
+import { ThemedPage, Crumb } from "@/components/theme/themed-page";
 import { getCurrentUser, isModerator } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canEditThread } from "@/lib/editing";
 import { formatDateTime } from "@/lib/format";
-import { getLocale, t } from "@/lib/i18n";
 import { errorMessage, noticeMessage } from "@/lib/messages";
 import { markThreadRead } from "@/lib/read-state";
-import { parseSuggestedTags, tagSearchHref } from "@/lib/tags";
-import { LIMITS } from "@/lib/validation";
+import { getLocale, t } from "@/lib/i18n";
+import { getTheme } from "@/lib/theme";
+import { buildThreadTree, type TreeNode } from "@/lib/thread-tree";
+import { ToggleAction } from "@/components/theme/actions";
+import { readableInk } from "@/lib/color";
+import { CommentSection, type CommentData, type CommentLabels } from "@/components/theme/comment";
 
 export const dynamic = "force-dynamic";
+
+const replyIcon = (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+    <path d="M20 15a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3Z" />
+  </svg>
+);
+
+type PostRow = {
+  id: string;
+  parentId: string | null;
+  body: string;
+  likeCount: number;
+  createdAt: Date;
+  author: { username: string; role: string; avatarColor: string | null; avatarRing: string | null };
+};
 
 export default async function ThreadPage({
   params,
@@ -23,38 +38,35 @@ export default async function ThreadPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string; notice?: string }>;
 }) {
-  const [{ id }, { error, notice }, locale] = await Promise.all([
+  const [{ id }, { error, notice }, theme, locale] = await Promise.all([
     params,
     searchParams,
+    getTheme(),
     getLocale(),
   ]);
-  const m = t(locale);
+  const copy = t(locale).shell;
+  const pages = t(locale).pages;
 
   const [thread, user] = await Promise.all([
     prisma.thread.findUnique({
       where: { id },
       include: {
-        board: { select: { slug: true, name: true, suggestedTags: true } },
+        board: { select: { slug: true, name: true } },
         author: { select: { username: true } },
         tags: { select: { name: true } },
         posts: {
           orderBy: { createdAt: "asc" },
-          include: { author: { select: { username: true, role: true } } },
+          include: { author: { select: { username: true, role: true, avatarColor: true, avatarRing: true } } },
         },
       },
     }),
     getCurrentUser(),
   ]);
 
-  if (!thread || thread.isDeleted) {
-    notFound();
-  }
+  if (!thread || thread.isDeleted) notFound();
+  if (user) await markThreadRead(user.id, thread.id);
 
-  if (user) {
-    await markThreadRead(user.id, thread.id);
-  }
-
-  const [likedPostIds, bookmarked] = user
+  const [likedPostIds, bookmarked, likedThread] = user
     ? await Promise.all([
         prisma.postLike
           .findMany({
@@ -68,289 +80,153 @@ export default async function ThreadPage({
             select: { userId: true },
           })
           .then(Boolean),
+        prisma.threadLike
+          .findUnique({
+            where: { userId_threadId: { userId: user.id, threadId: thread.id } },
+            select: { userId: true },
+          })
+          .then(Boolean),
       ])
-    : ([new Set<string>(), false] as const);
+    : ([new Set<string>(), false, false] as const);
 
   const canModerate = isModerator(user);
   const canEdit = canEditThread(user?.id, thread);
-  const suggestedTags = parseSuggestedTags(thread.board.suggestedTags);
   const errorText = errorMessage(error, locale);
   const noticeText = noticeMessage(notice, locale);
+  const canReply = Boolean(user) && !thread.isLocked;
+
+  const root = thread.posts[0];
+  const tree = buildThreadTree(thread.posts.slice(1));
+  const labels: CommentLabels = {
+    reply: copy.reply,
+    placeholder: copy.replyPlaceholder,
+    submit: copy.replySend,
+    collapse: copy.collapse,
+    expand: copy.expand,
+    foldedSuffix: copy.foldedSuffix,
+    commentsSuffix: copy.commentsSuffix,
+    like: pages.actions.like,
+    sendError: pages.sendError,
+    admin: pages.role.admin,
+    moderator: pages.role.moderator,
+  };
+
+  const toComment = (node: TreeNode<PostRow>): CommentData => ({
+    id: node.post.id,
+    number: node.number,
+    body: node.post.body,
+    author: {
+      username: node.post.author.username,
+      role: node.post.author.role,
+      avatarColor: node.post.author.avatarColor,
+      avatarRing: node.post.author.avatarRing,
+    },
+    createdAt: formatDateTime(node.post.createdAt, locale),
+    likeCount: node.post.likeCount,
+    liked: likedPostIds.has(node.post.id),
+    children: node.children.map(toComment),
+  });
+
+  const comments = tree.map(toComment);
 
   return (
-    <main className="shell page">
-      <Breadcrumbs
-        items={[
-          { href: "/", label: m.board.breadcrumb },
-          { href: `/b/${thread.board.slug}`, label: thread.board.name },
-          { label: thread.title },
-        ]}
-      />
-
-      <header className="mt-8 border-b border-line pb-8">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_14rem]">
-          <div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="eyebrow">{thread.board.name}</span>
-              {thread.isPinned ? (
-                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-accent">
-                  {m.board.pinned}
-                </span>
-              ) : null}
-              {thread.isLocked ? (
-                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
-                  {m.board.locked}
-                </span>
-              ) : null}
-            </div>
-
-            <h1 className="title-page mt-3 max-w-[24ch]">{thread.title}</h1>
-
-            <p className="meta mt-4 flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span>{m.thread.startedBy(thread.author.username, formatDateTime(thread.createdAt, locale))}</span>
-              <span aria-hidden="true">·</span>
-              <span>♡ {thread.likeCount}</span>
-              {thread.editedAt ? (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span>{m.thread.editedAt(formatDateTime(thread.editedAt, locale))}</span>
-                </>
-              ) : null}
-            </p>
-
-            {thread.tags.length > 0 ? (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {thread.tags.map((tag) => (
-                  <Link key={tag.name} href={tagSearchHref(tag.name)} className="tag">
-                    #{tag.name}
-                  </Link>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="flex flex-wrap items-start gap-x-6 gap-y-3 lg:flex-col lg:border-l lg:border-line lg:pl-6">
-            {user ? (
-              <ReactionButton
-                action={`/api/threads/${thread.id}/bookmark`}
-                initialActive={bookmarked}
-                initialCount={thread.bookmarkCount}
-                activeLabel={m.thread.saved}
-                inactiveLabel={m.thread.save}
-                errorLabel={m.thread.actionFailed}
-                icon="bookmark"
-              />
-            ) : (
-              <span className="text-[14px] text-muted">
-                {m.thread.save} {thread.bookmarkCount}
-              </span>
-            )}
-
-            <a href={`/t/${thread.id}/export`} className="btn-quiet">
-              {m.thread.exportText}
-            </a>
-
-            {canEdit ? (
-              <Link href={`/t/${thread.id}/edit`} className="btn-quiet">
-                {m.thread.edit}
+    <ThemedPage
+      theme={theme}
+      username={user?.username ?? null}
+      active="thread"
+      boardSlug={thread.board.slug}
+    >
+      <main>
+        <div className="page-head">
+          <Crumb
+            items={[
+              { href: "/", label: copy.boards },
+              { href: `/b/${thread.board.slug}`, label: thread.board.name },
+              { label: thread.title },
+            ]}
+          />
+          <h1>{thread.title}</h1>
+          <div className="row-meta">
+            <span className="pill">{thread.author.username}</span>
+            <span className="pill">{formatDateTime(thread.createdAt, locale)}</span>
+            {thread.isLocked ? <span className="pill">{pages.actions.locked}</span> : null}
+            {thread.tags.map((tag) => (
+              <Link className="pill" href={`/?q=${encodeURIComponent(`#${tag.name}`)}`} key={tag.name}>
+                #{tag.name}
               </Link>
-            ) : null}
-
-            {canModerate ? (
-              <div className="mt-2 w-full border-t border-line pt-3">
-                <p className="eyebrow">{m.nav.moderation}</p>
-                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
-                  <form action={`/api/threads/${thread.id}/lock`} method="post">
-                    <button type="submit" className="btn-quiet">
-                      {thread.isLocked ? m.thread.unlockThread : m.thread.lockThread}
-                    </button>
-                  </form>
-                  <form action={`/api/threads/${thread.id}/delete`} method="post">
-                    <button type="submit" className="btn-quiet text-error hover:text-error">
-                      {m.thread.removeThread}
-                    </button>
-                  </form>
-                </div>
-              </div>
-            ) : null}
+            ))}
+          </div>
+          <div className="detail-actions">
+            <ToggleAction
+              kind="like"
+              endpoint={`/api/threads/${thread.id}/like`}
+              initialCount={thread.likeCount}
+              initialActive={likedThread}
+              label={t(locale).pages.actions.like}
+              large
+            />
+            <ToggleAction
+              kind="save"
+              endpoint={`/api/threads/${thread.id}/bookmark`}
+              initialCount={thread.bookmarkCount}
+              initialActive={bookmarked}
+              label={t(locale).pages.actions.save}
+              large
+            />
+            {canEdit ? <Link className="btn" href={`/t/${thread.id}/edit`}>{pages.actions.edit}</Link> : null}
+            {canModerate ? <Link className="btn" href="/moderation">{pages.actions.moderation}</Link> : null}
           </div>
         </div>
-      </header>
 
-      {errorText ? <p className="notice notice-error mt-6">{errorText}</p> : null}
-      {noticeText ? <p className="notice notice-success mt-6">{noticeText}</p> : null}
+        {errorText ? <p className="notice error">{errorText}</p> : null}
+        {noticeText ? <p className="notice">{noticeText}</p> : null}
 
-      <ol className="mt-2">
-        {thread.posts.map((post, index) => {
-          const liked = likedPostIds.has(post.id);
+        {root ? (
+          <article className="root-post" id={`p-${root.id}`}>
+            <div className="root-head">
+              <span className="root-no">0</span>
+              <span className="cmt-who">
+                <span
+                  className="dot"
+                  style={{
+                    background: root.author.avatarColor ?? undefined,
+                    borderColor: root.author.avatarRing ?? undefined,
+                    color: readableInk(root.author.avatarColor),
+                  }}
+                >
+                  {root.author.username.slice(0, 1).toUpperCase()}
+                </span>
+                {root.author.username}
+              </span>
+              <span className="cmt-time">{formatDateTime(root.createdAt, locale)}</span>
+              <span className="root-tag">{copy.rootPost}</span>
+            </div>
+            <div className="root-body">{root.body}</div>
+            <div className="acts cmt-acts">
+              {canReply ? (
+                <a className="act reply-btn" href="#reply-form">
+                  {replyIcon}
+                  <span>{copy.reply}</span>
+                </a>
+              ) : null}
+            </div>
+          </article>
+        ) : null}
 
-          return (
-            <li
-              key={post.id}
-              id={`p-${post.id}`}
-              className="scroll-mt-24 border-t border-line py-8 first:border-t-0"
-            >
-              <article>
-                <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <span className="num">#{String(index + 1).padStart(2, "0")}</span>
-                    <Link
-                      href={`/u/${post.author.username}`}
-                      className="text-[14px] font-medium text-ink transition-colors hover:text-accent"
-                    >
-                      {post.author.username}
-                    </Link>
-                    <RoleChip role={post.author.role} locale={locale} />
-                    {index === 0 ? (
-                      <span className="eyebrow">{m.thread.originalPost}</span>
-                    ) : null}
-                  </div>
-                  <time className="meta">{formatDateTime(post.createdAt, locale)}</time>
-                </header>
-
-                {post.isDeleted ? (
-                  <p className="mt-4 text-[14px] italic text-muted">{m.thread.removed}</p>
-                ) : (
-                  <p
-                    className={`mt-4 whitespace-pre-wrap break-words leading-[1.9] text-ink ${
-                      index === 0 ? "text-[16.5px]" : "text-[16px]"
-                    }`}
-                  >
-                    {post.body}
-                  </p>
-                )}
-
-                {!post.isDeleted ? (
-                  <footer className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
-                    {user ? (
-                      <ReactionButton
-                        action={`/api/posts/${post.id}/like`}
-                        initialActive={liked}
-                        initialCount={post.likeCount}
-                        activeLabel={m.thread.liked}
-                        inactiveLabel={m.thread.like}
-                        errorLabel={m.thread.actionFailed}
-                        icon="heart"
-                      />
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 text-[14px] text-muted">
-                        ♡ {post.likeCount}
-                      </span>
-                    )}
-
-                    <ShareButton
-                      path={`/t/${thread.id}#p-${post.id}`}
-                      label={m.thread.share}
-                      copiedLabel={m.thread.copied}
-                    />
-
-                    {user ? (
-                      <details className="min-w-0">
-                        <summary className="btn-quiet cursor-pointer list-none select-none">
-                          {m.thread.report}
-                        </summary>
-                        <form
-                          action="/api/reports"
-                          method="post"
-                          className="mt-3 flex w-[min(80vw,34rem)] flex-col gap-2 sm:flex-row"
-                        >
-                          <input type="hidden" name="postId" value={post.id} />
-                          <input
-                            name="reason"
-                            required
-                            minLength={LIMITS.reasonMin}
-                            maxLength={LIMITS.reasonMax}
-                            placeholder={m.thread.reportPlaceholder}
-                            className="field flex-1 py-2 text-[14px]"
-                          />
-                          <button type="submit" className="btn btn-primary px-3 py-2 text-[13px]">
-                            {m.thread.sendReport}
-                          </button>
-                        </form>
-                      </details>
-                    ) : null}
-
-                    {canModerate ? (
-                      <form action={`/api/posts/${post.id}/delete`} method="post" className="ml-auto">
-                        <button type="submit" className="btn-quiet text-error hover:text-error">
-                          {m.thread.removePost}
-                        </button>
-                      </form>
-                    ) : null}
-                  </footer>
-                ) : null}
-              </article>
-            </li>
-          );
-        })}
-      </ol>
-
-      <section className="mt-10 border-t border-line pt-8">
         {thread.isLocked ? (
-          <p className="text-[14px] text-muted">{m.thread.lockedNotice}</p>
-        ) : user ? (
-          <>
-            <h2 className="title-section">{m.thread.replyAs(user.username)}</h2>
-            <form
-              action={`/api/threads/${thread.id}/posts`}
-              method="post"
-              className="mt-5 max-w-2xl space-y-5"
-            >
-              <div>
-                <label htmlFor="body" className="field-label">
-                  {m.newThread.message}
-                </label>
-                <textarea
-                  id="body"
-                  name="body"
-                  required
-                  rows={6}
-                  maxLength={LIMITS.bodyMax}
-                  className="field mt-2 min-h-[9rem] resize-y"
-                />
-                <p className="hint">{m.thread.charLimit(LIMITS.bodyMax)}</p>
-              </div>
-
-              <div>
-                <label htmlFor="tags" className="field-label">
-                  {m.tagField.label}
-                </label>
-                <input
-                  id="tags"
-                  name="tags"
-                  maxLength={150}
-                  placeholder={m.tagField.placeholder}
-                  className="field mt-2 py-2 text-[14px]"
-                />
-                <p className="hint">{m.tagField.hint}</p>
-                {suggestedTags.length > 0 ? (
-                  <p className="hint">
-                    {m.tagField.suggested(
-                      thread.board.name,
-                      suggestedTags.map((tag) => `#${tag}`).join(" "),
-                    )}
-                  </p>
-                ) : null}
-              </div>
-
-              <button type="submit" className="btn btn-primary">
-                {m.thread.postReply}
-              </button>
-            </form>
-          </>
+          <p className="notice">{pages.actions.lockedNotice}</p>
         ) : (
-          <p className="text-[14px] text-muted">
-            {m.thread.loginPromptPrefix}
-            <Link
-              href={`/login?next=${encodeURIComponent(`/t/${thread.id}`)}`}
-              className="text-link ml-1"
-            >
-              {m.thread.loginLink}
-            </Link>
-            {m.thread.loginPromptSuffix}
-          </p>
+          <CommentSection
+            threadId={thread.id}
+            initial={comments}
+            canReply={canReply}
+            labels={labels}
+            emptyText={copy.noComments}
+            loginText={copy.loginToReply}
+            loginLabel={t(locale).nav.logIn}
+          />
         )}
-      </section>
-    </main>
+      </main>
+    </ThemedPage>
   );
 }

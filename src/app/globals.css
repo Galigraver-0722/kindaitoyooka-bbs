@@ -43,6 +43,25 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /*
+   * The themed pages set data-theme on <html> on the server, so the very first
+   * paint inside a reload already has the right canvas colour. Without this the
+   * dark theme flashed the warm white body for a frame before its CSS applied.
+   */
+  html[data-theme="dark"] {
+    background-color: #040f16;
+    color-scheme: dark;
+  }
+
+  html[data-theme="dark"] body {
+    background-color: #040f16;
+    color: #dcf6f8;
+  }
+
+  html[data-theme="light"] {
+    color-scheme: light;
+  }
+
   h1,
   h2,
   h3 {
@@ -166,11 +185,9 @@
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateY(6px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 

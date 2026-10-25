@@ -32,9 +32,9 @@ Exit criteria: `pnpm build`, `pnpm lint`, and the end-to-end manual flow all pas
 
 ### Delivered ahead of the roadmap (2026-10-24)
 
-- Post likes, thread bookmarks, a saved-threads page, and a share action.
-- Title/body search with newest and popularity sorting.
-- Hashtag parsing, tag pages through `/search?tag=`, and tag chips on threads.
+- Post likes, thread bookmarks, saved threads as a feed filter, and a share action.
+- Title/body/tag search with newest, popularity, and rising sorting.
+- Hashtags as a dedicated field, tag search through `/?q=#tag`, and tag chips on threads.
 - Fixed-window rate limits on login, registration, posting, reporting, and reactions.
 - Append-only audit log for moderation actions, shown on `/moderation`.
 - Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, curated for school use.
@@ -58,7 +58,7 @@ Deliverables:
    beta rather than editing code.
 4. `AuditLog` table and writes for remove/lock/resolve: shipped with actor, target, and timestamp.
 5. Pagination on board pages and recent activity (20 per page). **Board pagination shipped**;
-   the home page still shows the eight newest threads rather than paging.
+   the feed shows at most 30 threads per sort and stays a reading surface rather than paging.
 6. Privacy notice, community rules, and a moderation policy page in plain English. **Shipped as
    bilingual pages** at `/rules`, `/privacy`, and `/moderation-policy`; the advisor must approve
    the wording.

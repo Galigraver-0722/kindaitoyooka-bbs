@@ -19,11 +19,14 @@ thread, and where students can report problems without confronting anyone. See
 ## What works today
 
 - Username-and-password registration, login, logout with server-side sessions.
-- Five boards, recent activity, and thread lists.
+- Nine boards (five official, four student-run) and one cross-board feed with newest, popular,
+  and rising sorts over all, saved, and own posts.
 - Create a thread, reply, and see replies in chronological order.
 - Like a post, bookmark a thread, copy a permalink, and report a post from one action bar.
-- Saved-threads page at `/bookmarks`.
-- Search titles and replies, sorted by newest or a transparent popularity score.
+- Saved threads are the `Saved` filter of the feed; `/bookmarks` still redirects there, so old
+  links keep working.
+- Search titles, replies, and tags from the feed, sorted by newest, a transparent popularity
+  score, or velocity for the rising list.
 - Tags from a dedicated field, with tag-filtered search and per-board tag hints.
 - Report a post with a reason; moderators review the queue at `/moderation`.
 - Moderator tools: remove post, lock/unlock thread, remove thread, dismiss reports.
@@ -33,20 +36,24 @@ thread, and where students can report problems without confronting anyone. See
 - Board pages paginate at 20 threads, with working newest and popular sorts.
 - Public community rules, privacy notice, and moderation policy at `/rules`, `/privacy`, and
   `/moderation-policy`, in both languages.
-- Profile pages at `/u/<username>` with join date and recent threads/posts; no email or real name.
+- Profile pages at `/u/<username>` with an identity banner, thread/post/like/join-date counts,
+  and separate recent-thread and recent-reply tabs; no email or real name.
 - Thread editing for 15 minutes after posting, with a visible "edited" marker.
 - Plain-text export of a whole thread at `/t/<id>/export`.
-- Unread badges on recent threads and board lists for signed-in users.
 - Fixed-window rate limits on login, registration, posting, reporting, and reactions, tunable
   through environment variables.
 - Audit log for every moderation action, shown on `/moderation`.
 - Manual password recovery with `pnpm reset-password <username>`; no email provider required.
 - `GET /health` reports application and database readiness.
 - Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, with a project-specific ignore list; matches are reviewed by a human, never auto-hidden.
+- Students can open their own community board from `/boards/new` (three per account, five per
+  hour), badged so it is never mistaken for an official board.
 - Responsive UI, plain-text content only, no uploads and no trackers.
 
-Not implemented yet: full-text indexing, quote reposts, user-created boards, email verification
-or self-service password reset, notifications, account bans, and image uploads.
+Not implemented yet: full-text indexing, quote reposts, email verification or self-service
+password reset, notifications, account bans, image uploads, an owner screen for editing or
+archiving a community board, and the "new replies" badge (read markers are stored on thread
+view, but no list renders them yet).
 The full list is in [MVP scope](docs/01-mvp-scope.md).
 
 ## Quick start
@@ -56,7 +63,7 @@ Requirements: **Node.js 22+** and **pnpm 12+**.
 ```bash
 pnpm install
 cp .env.example .env
-pnpm db:push       # create the SQLite database
+pnpm db:deploy     # create the SQLite database from prisma/migrations
 pnpm db:seed       # boards, demo users, sample threads
 pnpm dev           # http://localhost:3000
 ```
@@ -81,7 +88,8 @@ deployment, and never keep these passwords anywhere real.
 | `pnpm start` | Serve the production build |
 | `pnpm lint` | ESLint |
 | `pnpm test` | Unit tests for validation, i18n, tags, pagination, policies, rate limits, editing, and passwords |
-| `pnpm db:push` | Apply the Prisma schema to SQLite (development) |
+| `pnpm db:deploy` | Create or update the SQLite database from `prisma/migrations` |
+| `pnpm db:push` | Push the schema without a migration (quick experiments only) |
 | `pnpm db:seed` | Insert development data |
 | `pnpm db:studio` | Browse the database in Prisma Studio |
 | `pnpm reset-password <username>` | Generate a new password, print it once, and sign the account out everywhere |
@@ -89,7 +97,7 @@ deployment, and never keep these passwords anywhere real.
 | `pnpm verify-backup <file>` | Check integrity and row counts of a backup |
 | `pnpm restore <file> <target> --force` | Restore a backup; stop the app first |
 | `curl -fsS localhost:3000/health` | Check that the app and database respond |
-| `pnpm exec prisma migrate dev --name <change>` | Create a migration (use before production) |
+| `pnpm db:migrate --name <change>` | Create a migration after editing `prisma/schema.prisma` |
 
 ## Documentation
 
