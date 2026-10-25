@@ -9,7 +9,7 @@ public API. A future mobile client would need a JSON API with explicit versionin
 
 | Path | Access | Purpose |
 | --- | --- | --- |
-| `/` | Public | The one cross-board feed. `sort=latest\|hot\|rising`, `filter=all\|saved\|mine`, `q` search over titles, bodies, and tags; at most 30 threads |
+| `/` | Public | The one cross-board feed. `sort=latest\|hot\|rising`, `filter=all\|saved\|mine`, `q` search over titles, bodies, and tags; 30 threads without a query, 20 rows per page with one |
 | `/b/[slug]` | Public | Board home: identity banner with thread, member, post, and last-activity counts, then the board's threads 20 per page; pinned first, then by activity, popularity, or rising |
 | `/boards` | Public | Redirects to `/`; the board list lives in the sidebar and the mobile drawer |
 | `/boards/new` | Signed-in | Create a community board. Three owned boards per account, five per hour, slug taken from the form |
@@ -23,7 +23,7 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/threads` | Public | Redirects to `/`, keeping `q`, `filter`, and `sort` |
 | `/search` | Public | Redirects to `/` with `q`; `tag` becomes a `#tag` query |
 | `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
-| `/moderation` | Moderator / Admin | Open reports, automatic flags, and the recent audit log |
+| `/moderation` | Moderator / Admin | Open reports (10 per page, `page` parameter), automatic flags, the recent audit log, and — for administrators — the student-board archive controls |
 | `/rules` | Public | Community rules, in the current interface language |
 | `/privacy` | Public | Privacy notice: stored data, cookies, retention, access |
 | `/moderation-policy` | Public | How reports, automatic flags, appeals, and escalation work |
@@ -65,17 +65,28 @@ The feed (`/`) is the only list: it takes `q` (≤ 100 chars), `filter=all|saved
 `contains` comparison; a query that starts with `#` matches tags first. `saved` and `mine`
 require a signed-in user; guests see a login prompt instead of an empty list.
 
-- `latest` orders by `lastPostAt` and shows at most 30 threads.
-- `hot` sorts by `likes × 3 + bookmarks × 2 + replies + recency`, where recency adds up to 3
-  points for activity in the last 72 hours, computed over the 100 most recent threads and cut
-  to 30.
-- `rising` divides engagement (`likes × 2 + replies × 3 + 1`) by the hours since the last post
-  plus six, so a new thread with a few replies outranks an old popular one; threads without
-  activity in the last 72 hours drop out.
+Without a query the feed is a reading surface: `latest` shows the 30 most recent threads, and
+`hot`/`rising` rank the 100 newest and cut to 30.
+
+With a query the feed is a search engine:
+
+- Candidate set: every visible thread matching the term, capped at 500 rows pulled for ranking.
+  The 30-row reading limit does not apply, so a thread from last term stays findable.
+- Ranking happens in the application (`src/lib/search.ts`) with published weights: title hit 5
+  each (max 3), exact title 12 bonus, tag hit 3 each, body hit 1 each (max 5), plus a small
+  engagement tiebreak; ties fall back to `lastPostAt`.
+- `sort=latest` keeps the relevance order; `hot` and `rising` reorder the same candidate set.
+- Results paginate at 20 rows (`page`, 1-based, clamped), and the heading shows the match count.
+  Page 1 is canonical without `?page=1`.
 
 Board pages accept the same `sort` values plus `page` (1-based). The page size is 20. `page` is
 clamped to the last page; page 1 is the canonical URL without `?page=1`. With `sort=hot` or
 `sort=rising`, the ranking is computed over the top 100 candidates and then split into pages.
+
+The deliberate trade-off: this is `LIKE` plus in-app ranking, not SQLite FTS. It keeps Japanese
+two-character terms working (a trigram index would not) and stays within budget at this scale.
+The candidate cap and the weight table are the two knobs to revisit first; ADR-0022 records the
+reasoning.
 
 `/threads`, `/search`, and `/bookmarks` are redirects that keep their old query parameters, so a
 link shared before the feed was consolidated still lands on the right filter.
@@ -174,6 +185,19 @@ success so the browser performs a `GET`.
 - Avatar text colour is derived from the background by luminance, so no colour field is stored
   for it.
 
+### `POST /api/boards/[id]/archive`
+
+| Field | Required | Values |
+| --- | --- | --- |
+| `action` | yes | `archive` or `restore` |
+
+- Auth: `ADMIN` only. Moderators get `/moderation?error=forbidden`, because closing a club's
+  board is a site-level decision rather than day-to-day moderation.
+- Success: flips `Board.isArchived`, writes an audit row (`board.archive` / `board.restore`),
+  and redirects to `/moderation?notice=board-archived` (or `board-restored`).
+- The daily `pnpm archive-boards` run performs the same change automatically for community
+  boards quiet for `BOARD_ARCHIVE_DAYS` days.
+
 ### `POST /api/threads/[id]/posts`
 
 | Field | Required | Rules |
@@ -248,6 +272,9 @@ success so the browser performs a `GET`.
 
 - Auth: signed-in user.
 - Success: creates a `Report`, redirects to the thread with `?notice=reported`.
+- One open report per reader and post: a second submission redirects with
+  `?notice=already-reported` and creates no row. The partial unique index
+  `Report_one_open_per_reporter_post` is the race-condition backstop.
 - Failure code: `report-invalid`.
 
 ### `POST /api/reports/[id]/resolve`

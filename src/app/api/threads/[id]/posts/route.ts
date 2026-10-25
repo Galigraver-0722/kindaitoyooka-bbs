@@ -20,7 +20,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return seeOther(request, `/login?next=${encodeURIComponent(`/t/${id}`)}`);
   }
 
-  const limit = checkRateLimit(
+  const limit = await checkRateLimit(
     `reply:${user.id}`,
     RATE_LIMITS.reply.limit,
     RATE_LIMITS.reply.windowMs,

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Crumb, ThemedPage } from "@/components/theme/themed-page";
-import { getCurrentUser, isModerator } from "@/lib/auth";
+import { getCurrentUser, isAdmin, isModerator } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { getLocale, t } from "@/lib/i18n";
@@ -15,8 +15,19 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const dynamic = "force-dynamic";
 
-export default async function ModerationPage() {
-  const [user, locale, theme] = await Promise.all([getCurrentUser(), getLocale(), getTheme()]);
+const REPORTS_PER_PAGE = 10;
+
+export default async function ModerationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; notice?: string; error?: string }>;
+}) {
+  const [{ page, notice, error }, user, locale, theme] = await Promise.all([
+    searchParams,
+    getCurrentUser(),
+    getLocale(),
+    getTheme(),
+  ]);
   const m = t(locale).moderation;
   const audit = t(locale).audit;
   const copy = t(locale).shell;
@@ -28,10 +39,16 @@ export default async function ModerationPage() {
     redirect("/");
   }
 
-  const [reports, auditLogs] = await Promise.all([
+  const admin = isAdmin(user);
+  const requestedPage = Math.max(1, Number.parseInt(page ?? "1", 10) || 1);
+
+  const [openCount, reports, auditLogs, boards] = await Promise.all([
+    prisma.report.count({ where: { resolvedAt: null } }),
     prisma.report.findMany({
       where: { resolvedAt: null },
       orderBy: { createdAt: "asc" },
+      skip: (requestedPage - 1) * REPORTS_PER_PAGE,
+      take: REPORTS_PER_PAGE,
       include: {
         reporter: { select: { username: true } },
         post: {
@@ -54,7 +71,25 @@ export default async function ModerationPage() {
       take: 30,
       include: { actor: { select: { username: true } } },
     }),
+    admin
+      ? prisma.board.findMany({
+          where: { kind: "COMMUNITY" },
+          orderBy: [{ isArchived: "asc" }, { sortOrder: "asc" }],
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            isArchived: true,
+            owner: { select: { username: true } },
+            _count: { select: { threads: true } },
+          },
+        })
+      : Promise.resolve([]),
   ]);
+
+  const pageCount = Math.max(1, Math.ceil(openCount / REPORTS_PER_PAGE));
+  const currentPage = Math.min(requestedPage, pageCount);
+  const pagerHref = (target: number) => (target > 1 ? `/moderation?page=${target}` : "/moderation");
 
   return (
     <ThemedPage theme={theme} username={user.username}>
@@ -64,10 +99,13 @@ export default async function ModerationPage() {
             <Crumb items={[{ href: "/", label: copy.boards }, { label: m.title }]} />
             <h1>{m.title}</h1>
             <p className="lede">{m.signedInAs(user.username)}</p>
+            <div className="row-meta">
+              <span className="pill kind">{admin ? m.roleAdmin : m.roleModerator}</span>
+            </div>
             <div className="board-stats">
               <div className="bs">
                 <span>{m.queue}</span>
-                <b>{reports.length}</b>
+                <b>{openCount}</b>
               </div>
               <div className="bs">
                 <span>{audit.title}</span>
@@ -76,6 +114,10 @@ export default async function ModerationPage() {
             </div>
           </div>
         </section>
+
+        {notice === "board-archived" ? <p className="notice success">{m.boardArchived}</p> : null}
+        {notice === "board-restored" ? <p className="notice success">{m.boardRestored}</p> : null}
+        {error === "forbidden" ? <p className="notice error">{m.forbidden}</p> : null}
 
         <section className="mod-sec">
           <h2 className="sec-head"><span className="tick" />{m.queue}</h2>
@@ -131,7 +173,44 @@ export default async function ModerationPage() {
               ))}
             </ul>
           )}
+          {pageCount > 1 ? (
+            <nav className="pager" aria-label="pager">
+              {currentPage > 1 ? <Link href={pagerHref(currentPage - 1)}>← {t(locale).pages.pager.prev}</Link> : null}
+              <span>{currentPage} / {pageCount}</span>
+              {currentPage < pageCount ? <Link href={pagerHref(currentPage + 1)}>{t(locale).pages.pager.next} →</Link> : null}
+            </nav>
+          ) : null}
         </section>
+
+        {admin ? (
+          <section className="mod-sec">
+            <h2 className="sec-head"><span className="tick" />{m.adminSection}</h2>
+            <p className="mod-hint">{m.adminHint}</p>
+            {boards.length === 0 ? (
+              <p className="empty">{m.emptyBoards}</p>
+            ) : (
+              <ul className="board-admin">
+                {boards.map((board) => (
+                  <li key={board.id} className={board.isArchived ? "is-archived" : ""}>
+                    <div className="ba-main">
+                      <Link href={`/b/${board.slug}`}>{board.name}</Link>
+                      <span className="ba-meta">
+                        /b/{board.slug} · {board.owner?.username ?? "—"} · {board._count.threads}
+                      </span>
+                    </div>
+                    {board.isArchived ? <span className="pill">{m.archivedBadge}</span> : null}
+                    <form action={`/api/boards/${board.id}/archive`} method="post">
+                      <input type="hidden" name="action" value={board.isArchived ? "restore" : "archive"} />
+                      <button type="submit" className={`btn ${board.isArchived ? "" : "ghost"}`}>
+                        {board.isArchived ? m.restoreBoard : m.archiveBoard}
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ) : null}
 
         <section className="mod-sec">
           <h2 className="sec-head"><span className="tick" />{audit.title}</h2>

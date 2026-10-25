@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return seeOther(request, `/login?next=${encodeURIComponent(`/t/${post.threadId}`)}`);
   }
 
-  const limit = checkRateLimit(
+  const limit = await checkRateLimit(
     `report:${user.id}`,
     RATE_LIMITS.report.limit,
     RATE_LIMITS.report.windowMs,
@@ -39,9 +39,28 @@ export async function POST(request: Request) {
     return seeOther(request, `/t/${post.threadId}?error=report-invalid`);
   }
 
-  await prisma.report.create({
-    data: { reporterId: user.id, postId, reason, source: "USER" },
+  // One open report per reader and post: a second click must not stack a
+  // duplicate in the moderator queue. The partial unique index is the backstop
+  // for two clicks racing each other.
+  const open = await prisma.report.findFirst({
+    where: { reporterId: user.id, postId, resolvedAt: null },
+    select: { id: true },
   });
+
+  if (!open) {
+    try {
+      await prisma.report.create({
+        data: { reporterId: user.id, postId, reason, source: "USER" },
+      });
+    } catch {
+      // A concurrent insert hit `Report_one_open_per_reporter_post`; the first
+      // report already carries the information, so this is not an error.
+    }
+  }
+
+  if (open) {
+    return seeOther(request, `/t/${post.threadId}?notice=already-reported`);
+  }
 
   return seeOther(request, `/t/${post.threadId}?notice=reported`);
 }

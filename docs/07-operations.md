@@ -25,10 +25,15 @@ the deployment section but keep the backup and restore rules unchanged.
 | `COOKIE_SECURE` | no | `true` | Defaults to secure in production; `false` only for plain HTTP on a LAN |
 | `RATE_LIMIT_<NAME>_LIMIT` | no | `10` | Overrides one limit; `<NAME>` is `LOGIN`, `REGISTER`, `THREAD`, `REPLY`, `REPORT`, `LIKE`, or `BOOKMARK` |
 | `RATE_LIMIT_<NAME>_WINDOW_MIN` | no | `10` | Window in minutes for the same limit |
+| `TRUST_PROXY` | behind a proxy | `1` | Trust the client address in `X-Forwarded-For`. Off by default: a direct client can forge that header and buy itself a fresh bucket. |
+| `BOARD_ARCHIVE_DAYS` | no | `90` | Quiet window used by `pnpm archive-boards` |
 
-Rate-limit counters live in process memory. A restart resets them, and a second app instance
-would keep its own counters. That is acceptable for one school server; move the counters to a
-shared store before scaling out.
+Rate-limit counters live in the `RateLimit` table, so a restart does not hand an attacker a fresh
+allowance and two processes on one database share the same windows. Expired rows are pruned on
+each login attempt. The counters are keyed by the address in `X-Forwarded-For`, which is only
+read when `TRUST_PROXY=1`; without a trusted proxy every request shares one bucket, so the
+IP-based limits become deliberately conservative while per-account limits keep working. The
+shipped systemd/Caddy setup sets `TRUST_PROXY=1` because Caddy overwrites the header.
 
 The defaults are intentionally loose because a class can share one school IP: 10 login attempts
 per 10 minutes per IP + username, 60 registrations per hour per IP, 10 threads per hour, 60
@@ -243,6 +248,25 @@ The same commands were exercised against the development database without touchi
 
 This proves the scripts, not the server. The production drill still has to run on the real host
 after the first deployment.
+
+## 5.1 Scheduled board archiving
+
+A community board that no longer receives threads should not keep a permanent place in the
+sidebar. `pnpm archive-boards` archives every community board whose newest visible thread is
+older than `BOARD_ARCHIVE_DAYS` (default 90), writes an audit row, and leaves all threads
+readable. Restore a board from `/moderation` (administrators only).
+
+```bash
+# dry run first — it prints what it would change
+pnpm archive-boards --dry-run
+
+# daily at 04:00, as the bbs user
+sudo crontab -u bbs -e
+0 4 * * * cd /srv/bbs/app && pnpm archive-boards >> /var/log/bbs-archive.log 2>&1
+```
+
+A board that never received a thread is left alone until it has one; the rule only looks at the
+newest thread's `lastPostAt`, so a new club board starts with a full window.
 
 ## 6. Migrations
 

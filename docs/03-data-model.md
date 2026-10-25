@@ -120,6 +120,10 @@ Reports are immutable history. Resolution is recorded; nothing is deleted from t
 Automatic flags use the same table with `source = AUTO`, no reporter, and the matched terms in
 `reason`.
 
+A partial unique index, `Report_one_open_per_reporter_post`, covers `(reporterId, postId)` where
+`resolvedAt IS NULL`: one reader holds at most one open report per post, so repeated clicks do
+not stack duplicates in the queue. Automatic flags have no reporter and are exempt.
+
 ### AuditLog
 
 | Column | Type | Notes |
@@ -188,8 +192,21 @@ Primary key is `(userId, threadId)`. The `/bookmarks` page lists these rows, new
 
 Primary key is `(userId, threadId)`. A thread is "New" when this row is missing or
 `Thread.lastPostAt` is newer than `lastReadAt`. Guests have no rows. The marker is written on
-every thread view, but no list renders a "new replies" badge yet, so nothing reads the table
-today. It stores no URLs, durations, or device information.
+every thread view, and the feed and board lists read it to render the "新着" badge. It stores
+no URLs, durations, or device information.
+
+### RateLimit
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `key` | string (PK) | Bucket identity, e.g. `login:<ip>:<username>` or `reply:<userId>` |
+| `count` | int | Calls inside the current window |
+| `resetAt` | datetime | When the window expires |
+| `updatedAt` | datetime | Last write |
+
+Fixed-window counters for login, registration, posting, reporting, and reactions. Keeping them
+in the database means a restart does not reset an attacker's allowance and two processes on one
+database share the same windows; expired rows are deleted on each login attempt.
 
 ## 3. Invariants
 

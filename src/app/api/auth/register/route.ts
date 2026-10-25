@@ -24,8 +24,8 @@ export async function POST(request: Request) {
   const password = typeof passwordValue === "string" ? passwordValue : "";
   const next = safeNextPath(formText(data, "next"), "/");
 
-  const limit = checkRateLimit(
-    `register:${requestIp(request)}`,
+  const limit = await checkRateLimit(
+    `register:${requestIp(request) ?? "shared"}`,
     RATE_LIMITS.register.limit,
     RATE_LIMITS.register.windowMs,
   );

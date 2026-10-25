@@ -12,6 +12,8 @@ import type { HomeThread } from "@/components/home/types";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
 import { getLikedThreadIds } from "@/lib/likes";
+import { getUnreadThreadIds } from "@/lib/read-state";
+import { sortByRelevance } from "@/lib/search";
 import { prisma } from "@/lib/db";
 import { sortByHot } from "@/lib/hot";
 import { sortByRising } from "@/lib/rising";
@@ -24,6 +26,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const dynamic = "force-dynamic";
+
+const FEED_LIMIT = 30;
+const SEARCH_PAGE_SIZE = 20;
+/** Upper bound on rows pulled for in-app ranking; ~50x the seeded corpus. */
+const SEARCH_CANDIDATES = 500;
 
 const FEED_INCLUDE = {
   board: { select: { slug: true, name: true } },
@@ -39,9 +46,9 @@ const num = (value: number) => new Intl.NumberFormat("ja-JP").format(value);
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; filter?: string; sort?: string }>;
+  searchParams: Promise<{ q?: string; filter?: string; sort?: string; page?: string }>;
 }) {
-  const [{ q, filter, sort }, theme, locale] = await Promise.all([
+  const [{ q, filter, sort, page }, theme, locale] = await Promise.all([
     searchParams,
     getTheme(),
     getLocale(),
@@ -102,26 +109,65 @@ export default async function HomePage({
       ];
     }
 
+    // With a search term the candidate set is every match, not the newest 30:
+    // a question from last term must still be findable. Ranking happens below.
     rows = await prisma.thread.findMany({
       where,
       orderBy: { lastPostAt: "desc" },
-      take: order === "latest" ? 30 : 100,
+      take: query ? SEARCH_CANDIDATES : order === "latest" ? 30 : 100,
       include: FEED_INCLUDE,
     });
   }
 
-  if (order !== "latest") {
-    const ranked = rows.map((row) => ({
+  const withReplies = rows.map((row) => ({
+    ...row,
+    replyCount: Math.max(0, row._count.posts - 1),
+  }));
+
+  if (query) {
+    // Bodies are only fetched for search: the plain feed does not need them, and
+    // a candidate set of a few hundred threads would otherwise carry megabytes.
+    const bodies = await prisma.post.findMany({
+      where: { threadId: { in: withReplies.map((row) => row.id) }, isDeleted: false },
+      orderBy: { createdAt: "asc" },
+      select: { threadId: true, body: true },
+    });
+    const bodiesByThread = new Map<string, string[]>();
+    for (const post of bodies) {
+      const list = bodiesByThread.get(post.threadId) ?? [];
+      if (list.length < 8) list.push(post.body);
+      bodiesByThread.set(post.threadId, list);
+    }
+
+    const rankable = withReplies.map((row) => ({
       ...row,
-      replyCount: Math.max(0, row._count.posts - 1),
+      tagNames: row.tags.map((tag) => tag.name),
+      bodies: bodiesByThread.get(row.id) ?? [],
     }));
-    rows = order === "hot" ? sortByHot(ranked).slice(0, 30) : sortByRising(ranked).slice(0, 30);
+
+    const ranked = sortByRelevance(query, rankable);
+    rows =
+      order === "hot" ? sortByHot(ranked) : order === "rising" ? sortByRising(ranked) : ranked;
+  } else if (order !== "latest") {
+    rows = (order === "hot" ? sortByHot(withReplies) : sortByRising(withReplies)).slice(0, 30);
+  } else {
+    rows = withReplies;
+  }
+
+  // Search results paginate; the plain feed stays one reading surface.
+  const totalMatches = rows.length;
+  const pageSize = query ? SEARCH_PAGE_SIZE : FEED_LIMIT;
+  const pageCount = Math.max(1, Math.ceil(totalMatches / pageSize));
+  const currentPage = Math.min(Math.max(1, Number.parseInt(page ?? "1", 10) || 1), pageCount);
+  if (pageCount > 1) {
+    rows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   }
 
   const ids = rows.map((row) => row.id);
-  const [bookmarked, liked] = await Promise.all([
+  const [bookmarked, liked, unread] = await Promise.all([
     getBookmarkedThreadIds(user?.id, ids),
     getLikedThreadIds(user?.id, ids),
+    getUnreadThreadIds(user?.id, rows),
   ]);
 
   const list: HomeThread[] = rows.map((row) => ({
@@ -136,7 +182,8 @@ export default async function HomePage({
     replyCount: Math.max(0, row._count.posts - 1),
     lastPostAt: row.lastPostAt,
     bookmarked: bookmarked.has(row.id),
-        excerpt: "",
+    isUnread: unread.has(row.id),
+    excerpt: "",
   }));
 
   const href = (patch: { filter?: string; sort?: string }) => {
@@ -146,6 +193,16 @@ export default async function HomePage({
     if (query) params.set("q", query);
     if (nextView !== "all") params.set("filter", nextView);
     if (nextSort !== "latest") params.set("sort", nextSort);
+    const qs = params.toString();
+    return qs ? `/?${qs}` : "/";
+  };
+
+  const searchPageHref = (target: number) => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (view !== "all") params.set("filter", view);
+    if (order !== "latest") params.set("sort", order);
+    if (target > 1) params.set("page", String(target));
     const qs = params.toString();
     return qs ? `/?${qs}` : "/";
   };
@@ -239,7 +296,10 @@ export default async function HomePage({
 
           <div className="feed-body">
             <div className="feed-bar">
-              <h2><span className="tick" />{heading}</h2>
+              <h2>
+                <span className="tick" />{heading}
+                {query ? <span className="feed-count">{copy.searchCount(totalMatches)}</span> : null}
+              </h2>
               <span className="hub-sort">
                 <Link className={order === "latest" ? "on" : ""} href={href({ sort: "" })}>{sortCopy.latest}</Link>
                 <Link className={order === "hot" ? "on" : ""} href={href({ sort: "hot" })}>{sortCopy.hot}</Link>
@@ -267,6 +327,18 @@ export default async function HomePage({
             ) : (
               <ThreadRows threads={list} locale={locale} />
             )}
+
+            {query && pageCount > 1 ? (
+              <nav className="pager" aria-label={t(locale).pages.pager.prev}>
+                {currentPage > 1 ? (
+                  <Link href={searchPageHref(currentPage - 1)}>← {t(locale).pages.pager.prev}</Link>
+                ) : null}
+                <span>{currentPage} / {pageCount}</span>
+                {currentPage < pageCount ? (
+                  <Link href={searchPageHref(currentPage + 1)}>{t(locale).pages.pager.next} →</Link>
+                ) : null}
+              </nav>
+            ) : null}
           </div>
         </div>
       </main>

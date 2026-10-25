@@ -44,12 +44,14 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
 const NOTICE_MESSAGES: Record<Locale, Record<string, string>> = {
   en: {
     reported: "Thanks. A moderator will review your report.",
+    "already-reported": "You already reported this post. A moderator will see it.",
     "signed-out": "You have been signed out.",
     "thread-edited": "Your changes are saved.",
     "profile-saved": "Profile saved.",
   },
   ja: {
     reported: "通報を受け付けました。モデレーターが確認します。",
+    "already-reported": "この投稿はすでに通報済みです。モデレーターが確認します。",
     "signed-out": "ログアウトしました。",
     "thread-edited": "変更を保存しました。",
     "profile-saved": "プロフィールを保存しました。",

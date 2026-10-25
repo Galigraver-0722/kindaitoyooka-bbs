@@ -13,6 +13,7 @@ import type { HomeThread } from "@/components/home/types";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
 import { getLikedThreadIds } from "@/lib/likes";
+import { getUnreadThreadIds } from "@/lib/read-state";
 import { prisma } from "@/lib/db";
 import { sortByHot } from "@/lib/hot";
 import { sortByRising } from "@/lib/rising";
@@ -136,9 +137,10 @@ export default async function BoardPage({
   }
 
   const ids = threads.map((thread) => thread.id);
-  const [bookmarked, liked] = await Promise.all([
+  const [bookmarked, liked, unread] = await Promise.all([
     getBookmarkedThreadIds(user?.id, ids),
     getLikedThreadIds(user?.id, ids),
+    getUnreadThreadIds(user?.id, threads),
   ]);
   const list: HomeThread[] = threads.map((thread) => ({
     id: thread.id,
@@ -152,7 +154,8 @@ export default async function BoardPage({
     replyCount: Math.max(0, thread._count.posts - 1),
     lastPostAt: thread.lastPostAt,
     bookmarked: bookmarked.has(thread.id),
-        excerpt: "",
+    isUnread: unread.has(thread.id),
+    excerpt: "",
   }));
   const errorText = errorMessage(error, "ja");
   const suggested = parseSuggestedTags(board.suggestedTags).slice(0, 5);

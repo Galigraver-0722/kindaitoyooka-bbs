@@ -16,6 +16,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "reset-password": "tsx scripts/reset-password.ts",
     "db:studio": "prisma studio",
+    "archive-boards": "tsx scripts/archive-boards.ts",
     "backup": "tsx scripts/backup.ts",
     "verify-backup": "tsx scripts/verify-backup.ts",
     "restore": "tsx scripts/restore.ts",

@@ -25,8 +25,9 @@ thread, and where students can report problems without confronting anyone. See
 - Like a post, bookmark a thread, copy a permalink, and report a post from one action bar.
 - Saved threads are the `Saved` filter of the feed; `/bookmarks` still redirects there, so old
   links keep working.
-- Search titles, replies, and tags from the feed, sorted by newest, a transparent popularity
-  score, or velocity for the rising list.
+- Search titles, replies, and tags from the feed. A query scans every match (up to 500
+  candidates) instead of the newest 30, ranks with published weights, and paginates at 20;
+  newest, popularity, and rising stay available as sorts.
 - Tags from a dedicated field, with tag-filtered search and per-board tag hints.
 - Report a post with a reason; moderators review the queue at `/moderation`.
 - Moderator tools: remove post, lock/unlock thread, remove thread, dismiss reports.
@@ -47,13 +48,20 @@ thread, and where students can report problems without confronting anyone. See
 - `GET /health` reports application and database readiness.
 - Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, with a project-specific ignore list; matches are reviewed by a human, never auto-hidden.
 - Students can open their own community board from `/boards/new` (three per account, five per
-  hour), badged so it is never mistaken for an official board.
+  hour), badged so it is never mistaken for an official board. A board with no thread activity
+  for 90 days is archived by the daily `pnpm archive-boards` run and can be restored from
+  `/moderation`.
+- "New" badges on the feed and board lists for signed-in readers, driven by the read markers
+  written when a thread is opened.
+- Reports are deduplicated per reader and post, and the moderation queue paginates at 10 rows.
+- Rate-limit counters live in SQLite, so a restart does not refund an attacker; the client
+  address is only trusted behind a proxy (`TRUST_PROXY=1`).
+- Moderators handle posts and threads; only administrators close or reopen a board.
 - Responsive UI, plain-text content only, no uploads and no trackers.
 
-Not implemented yet: full-text indexing, quote reposts, email verification or self-service
-password reset, notifications, account bans, image uploads, an owner screen for editing or
-archiving a community board, and the "new replies" badge (read markers are stored on thread
-view, but no list renders them yet).
+Not implemented yet: a full-text index (search is `LIKE` plus in-app ranking, see ADR-0022),
+quote reposts, email verification or self-service password reset, notifications, account bans,
+image uploads, and an owner screen where a club edits its own board.
 The full list is in [MVP scope](docs/01-mvp-scope.md).
 
 ## Quick start

@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     return seeOther(request, `/login?next=${encodeURIComponent("/boards/new")}`);
   }
 
-  const limit = checkRateLimit(`board:${user.id}`, 5, 60 * 60 * 1000);
+  const limit = await checkRateLimit(`board:${user.id}`, 5, 60 * 60 * 1000);
   if (!limit.allowed) {
     return seeOther(request, "/boards/new?error=rate-limited");
   }

@@ -281,6 +281,7 @@ export function ThreadCards({ threads, locale }: { threads: HomeThread[]; locale
             <Link className={`bo${index % 3 === 0 ? " cy" : ""}`} href={`/b/${thread.board.slug}`}>
               <i />{thread.board.name}
             </Link>
+            {thread.isUnread ? <span className="unread" title={t(locale).shell.unread}>{t(locale).shell.unread}</span> : null}
           </div>
           <h3><Link href={`/t/${thread.id}`}>{thread.title}</Link></h3>
           <div className="tags">
@@ -326,6 +327,7 @@ export function ThreadRows({ threads, locale }: { threads: HomeThread[]; locale:
             <span className="id">#{String(index + 1).padStart(4, "0")}</span>
             <div className="subj">
               <Link href={`/t/${thread.id}`}>{thread.title}</Link>
+              {thread.isUnread ? <span className="unread" title={t(locale).shell.unread}>{t(locale).shell.unread}</span> : null}
               <div className="chips">
                 {thread.tags.slice(0, 3).map((tag) => (
                   <span key={tag.name}>#{tag.name}</span>

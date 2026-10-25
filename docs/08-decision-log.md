@@ -656,6 +656,117 @@ supports it without a migration.
 
 ---
 
+## ADR-0022 — Search stays `LIKE` plus a published ranking, without a full-text index
+
+**Context.** The feed's search was `contains` over titles, tags, and bodies, ordered by
+`lastPostAt` and capped at 30 rows. A question from last term could fall outside those 30 matches
+even when its wording was exact, which breaks the product's central promise: what you write stays
+findable. The obvious fix is SQLite FTS5, but neither bundled tokenizer fits Japanese:
+`unicode61` treats a run of CJK as a single token (so 数学 does not match 中間テストの数学), and
+`trigram` needs three characters, so the common two-character words return nothing.
+
+**Decision.** Keep `LIKE` for recall and move ranking and paging into the application:
+
+- With a query, the candidate set is every visible match, capped at 500 rows for ranking, not the
+  newest 30.
+- `src/lib/search.ts` scores title hits (5 each, max 3), exact title (12), tag hits (3 each), and
+  body hits (1 each, max 5), plus a small engagement tiebreak; ties fall back to `lastPostAt`.
+- Results paginate at 20 rows with a visible match count. The plain feed keeps its 30-row reading
+  surface.
+
+**Consequences.**
+
+- Two-character Japanese terms work, and ranking can be explained to a reader ("the title says
+  数学"), which a `bm25` score cannot.
+- The work is proportional to matches: `LIKE` scans the thread table and the candidate bodies are
+  fetched once per request. Fine for a few thousand threads, not for hundreds of thousands.
+- The weights are code, so a change to ranking is reviewable in a diff and covered by unit tests.
+- The 500-row candidate cap is a deliberate ceiling: if a term matches more, the newest 500 are
+  ranked. It is the first knob to raise, or to replace with FTS, before the corpus grows.
+
+**Alternatives considered.** FTS5 with `trigram` (breaks 2-character searches), FTS5 with
+`unicode61` plus a dictionary (needs a Japanese segmenter as a dependency), an external search
+service (a second moving part for a school server), and no change (the promise stays broken).
+
+**Revisit if.** The thread count passes roughly 5,000, p95 search latency passes ~300 ms, or a
+search-quality complaint cannot be answered by the weight table.
+
+---
+
+## ADR-0023 — Rate-limit counters in SQLite, and only trust a proxy we control
+
+**Context.** The limiter used an in-process `Map`. A restart cleared every counter, and a second
+app process would keep its own. It also read the first `X-Forwarded-For` entry unconditionally,
+so a client that could reach the app directly could set that header per request and never hit a
+limit.
+
+**Decision.** Counters live in a `RateLimit` table and are updated by one upsert per call:
+
+```sql
+INSERT ... ON CONFLICT(key) DO UPDATE SET count = CASE WHEN resetAt <= now THEN 1 ELSE count + 1 END
+```
+
+Expired rows are pruned on each login attempt. The client address is read from
+`X-Forwarded-For` only when `TRUST_PROXY=1`. Without it, all requests share one address, so
+IP-keyed limits become deliberately conservative while per-account limits (login by username,
+replies, reactions) keep working.
+
+**Consequences.**
+
+- A restart no longer refunds an attacker's attempts, and two processes share windows.
+- Every limiter call is a database write. At school traffic this is invisible; it is not a
+  pattern for thousands of requests per second.
+- On a directly exposed app, IP-based limits collapse into one global bucket. That is the safe
+  direction, and the deployment template sets `TRUST_PROXY=1` behind Caddy, which overwrites the
+  header.
+- No Redis, no new service: the school keeps one SQLite file to back up.
+
+**Alternatives considered.** Keep the in-memory map (cheap, but the two audit findings stand),
+add Redis (a second service to install, secure, and back up), trust the header always (the
+current vulnerability), or drop IP-keyed limits entirely (registration and login enumeration
+become unbounded).
+
+**Revisit if.** A second instance is added on a different host, or the app is exposed without a
+proxy. The first needs a shared store; the second needs the proxy fixed, not the code.
+
+---
+
+## ADR-0024 — Administrators own board lifecycles; quiet boards archive themselves
+
+**Context.** Moderators and administrators held identical powers (`isModerator`), so the two
+roles were a label rather than a boundary. Separately, the promise that a community board is
+archived after 90 days of inactivity had no implementation: `Board.isArchived` was only ever
+read, never written.
+
+**Decision.** Split the roles by scope:
+
+- `MODERATOR` keeps day-to-day work: remove posts, lock threads, clear reports.
+- `ADMIN` additionally owns the shape of the forum: archiving and restoring a board
+  (`POST /api/boards/[id]/archive`).
+- A daily `pnpm archive-boards` run archives every community board whose newest visible thread
+  is older than `BOARD_ARCHIVE_DAYS` (default 90) and writes an audit row. `--dry-run` prints the
+  changes. The moderation page shows the board list with archive/restore buttons to admins.
+
+**Consequences.**
+
+- A moderator cannot quietly close a club's board; the audit log records who did.
+- Archiving is reversible from the UI, and every thread stays readable, so the decision is not
+  destructive.
+- The scheduler is cron, not an in-app timer: nothing runs if the host is down, and the run is
+  visible in a log file. That matches the existing backup script.
+- A board that never received a thread is never auto-archived (there is no activity timestamp to
+  compare), so a new club keeps its space until it is used or an admin acts.
+
+**Alternatives considered.** Let moderators archive too (no boundary left), archive inside the
+request path (an unlucky request pays the cost), a systemd timer instead of cron (one more unit;
+cron is already documented for backups), or hard-delete quiet boards (destroys history the
+project exists to keep).
+
+**Revisit if.** Clubs complain that 90 days is too short, or an administrator needs a bulk
+archive for a graduating cohort. Both are configuration and a script flag away.
+
+---
+
 ## Template for new decisions
 
 ```markdown

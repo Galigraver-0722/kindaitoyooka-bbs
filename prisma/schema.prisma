@@ -191,6 +191,15 @@ model Report {
   source      ReportSource @default(USER)
 
   @@index([resolvedAt])
+  @@index([reporterId, postId])
+}
+
+// Fixed-window counters that survive a restart. One row per bucket.
+model RateLimit {
+  key       String   @id
+  count     Int      @default(0)
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
 }
 
 model AuditLog {

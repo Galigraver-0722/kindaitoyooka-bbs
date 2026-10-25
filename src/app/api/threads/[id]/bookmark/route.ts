@@ -27,7 +27,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return seeOther(request, `/login?next=${encodeURIComponent(`/t/${thread.id}`)}`);
   }
 
-  const limit = checkRateLimit(
+  const limit = await checkRateLimit(
     `bookmark:${user.id}`,
     RATE_LIMITS.bookmark.limit,
     RATE_LIMITS.bookmark.windowMs,

@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     return seeOther(request, "/login?error=login-required");
   }
 
-  const limit = checkRateLimit(
+  const limit = await checkRateLimit(
     `thread:${user.id}`,
     RATE_LIMITS.threadCreate.limit,
     RATE_LIMITS.threadCreate.windowMs,

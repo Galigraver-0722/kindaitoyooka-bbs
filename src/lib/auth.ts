@@ -82,6 +82,19 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   return session.user;
 });
 
+/**
+ * Day-to-day moderation: remove a post, lock a thread, clear the report queue.
+ * Moderators and administrators both hold this power.
+ */
 export function isModerator(user: SessionUser | null): boolean {
   return user?.role === "MODERATOR" || user?.role === "ADMIN";
+}
+
+/**
+ * Site-level powers that change the shape of the forum rather than one post:
+ * archiving or restoring a board. Kept separate so a moderator cannot quietly
+ * close a club's board.
+ */
+export function isAdmin(user: SessionUser | null): boolean {
+  return user?.role === "ADMIN";
 }
