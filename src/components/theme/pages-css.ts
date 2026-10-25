@@ -238,6 +238,26 @@ export const pagesDCss = `
 .tw-d .act.pulse{animation:act-pop .34s ease}
 @media (prefers-reduced-motion: reduce){.tw-d .act.pulse{animation:none}}
 
+/* Mobile touch pass: 40px targets and clearance for the compose button. */
+@media (max-width: 900px){
+  .tw-d .act,.tw-d .act.save{min-height:40px;padding:8px 13px;font-size:12px}
+  .tw-d .act svg{width:16px;height:16px}
+  .tw-d .act.reply-btn{min-height:40px;padding:8px 14px}
+  .tw-d .cmt-fold{width:30px;height:30px;font-size:14px}
+  .tw-d .cmt-folded{padding:9px 14px}
+  .tw-d .tag{padding:6px 10px;font-size:11px}
+  .tw-d .hub-tabs a,.tw-d .feed-bar .hub-sort a{min-height:38px;display:inline-flex;align-items:center;padding:8px 12px}
+  .tw-d .crumb a,.tw-d .crumb>span>span{min-height:28px;display:inline-flex;align-items:center}
+  .tw-d .lang button{min-height:34px;padding:7px 9px}
+  .tw-d .nav-btn{width:40px;height:40px}
+  .tw-d .ava{width:40px;height:40px}
+  .tw-d .theme-btn{min-height:40px}
+  .tw-d main{padding-bottom:112px}
+  .tw-d .fab{width:56px;height:56px;bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+  .tw-d .brand{min-height:34px}
+  .tw-d .card h3 a,.tw-d .trow .subj a{display:inline-block;padding:3px 0}
+}
+
 `;
 
 export const pagesBCss = `
@@ -484,5 +504,25 @@ export const pagesBCss = `
 .tw-b .nav-btn:hover{color:var(--cyan);border-color:rgba(90,230,236,.5)}
 .tw-b .act.pulse{animation:act-pop .34s ease}
 @media (prefers-reduced-motion: reduce){.tw-b .act.pulse{animation:none}}
+
+/* Mobile touch pass: 40px targets and clearance for the compose button. */
+@media (max-width: 900px){
+  .tw-b .act,.tw-b .act.save{min-height:38px;padding:8px 11px;font-size:11px}
+  .tw-b .act svg{width:15px;height:15px}
+  .tw-b .act.reply-btn{min-height:38px;padding:8px 12px}
+  .tw-b .cmt-fold{width:28px;height:28px;font-size:13px}
+  .tw-b .cmt-folded{padding:9px 12px}
+  .tw-b .chips span{padding:5px 8px}
+  .tw-b .hub-tabs a,.tw-b .feed-bar .hub-sort a{min-height:36px;display:inline-flex;align-items:center;padding:7px 10px}
+  .tw-b .crumb a,.tw-b .crumb>span>span{min-height:28px;display:inline-flex;align-items:center}
+  .tw-b .lang button{min-height:34px;padding:7px 8px}
+  .tw-b .nav-btn{width:40px;height:40px}
+  .tw-b .who{width:40px;height:40px}
+  .tw-b .theme-btn{min-height:40px}
+  .tw-b main{padding-bottom:112px}
+  .tw-b .fab{width:54px;height:54px;bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+  .tw-b .brand{min-height:30px}
+  .tw-b .card h3 a,.tw-b .trow .subj a{display:inline-block;padding:4px 0}
+}
 
 `;
