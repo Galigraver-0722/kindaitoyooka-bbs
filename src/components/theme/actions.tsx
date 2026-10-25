@@ -40,6 +40,16 @@ export function ToggleAction({
   const [count, setCount] = useState(initialCount);
   const [busy, setBusy] = useState(false);
   const [pulse, setPulse] = useState(false);
+  const [fromServer, setFromServer] = useState({ count: initialCount, active: initialActive });
+
+  // A server refresh (AutoRefresh) brings new numbers, but React ignores later
+  // values of `useState`'s argument. Adopt the server's numbers unless our own
+  // optimistic toggle is still in flight.
+  if (!busy && (fromServer.count !== initialCount || fromServer.active !== initialActive)) {
+    setFromServer({ count: initialCount, active: initialActive });
+    setCount(initialCount);
+    setActive(initialActive);
+  }
 
   async function toggle() {
     if (busy) {

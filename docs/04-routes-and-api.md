@@ -199,6 +199,17 @@ success so the browser performs a `GET`.
   a push to the current path as a no-op, so the panel does this by hand).
 - `Accept: application/json` answers `{ok:true}` (401 for a guest); otherwise redirects to `/`.
 
+### `GET /api/pulse`
+
+- Auth: none. Returns one number: `{at}`.
+- `at` is the newest moment anything a reader could be looking at changed — `Post.updatedAt`,
+  `Thread.updatedAt`, the newest thread like, post like, bookmark, and report.
+- Edits and soft deletions have to move this number too, so the probe watches `updatedAt` rather
+  than creation time. Watching only "newest row" left a thread page stale after a moderator
+  removed a post, because nothing was created.
+- `AutoRefresh` polls it every 12 s while the tab is visible and no text field has focus, then
+  refreshes the route in a transition and flashes the elements whose ids were not on screen before.
+
 ### `POST /api/boards/[id]/archive`
 
 | Field | Required | Values |

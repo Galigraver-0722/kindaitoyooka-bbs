@@ -841,6 +841,54 @@ moderators find that author removal is used to erase evidence before a report is
 
 ---
 
+## ADR-0027 — Live refresh is polling plus client reconciliation, not websockets
+
+**Context.** Two readers in one thread should see each other without reloading. The first version
+polled a version probe and called `router.refresh()`, and it looked right in code — the page did
+re-render — but a reply from another reader never appeared on a reader's screen, and the "new"
+flash fired for nothing. Three separate mistakes produced one symptom.
+
+1. `CommentSection` keeps its tree in `useState(initial)`. React ignores later values of that
+   initial argument, so every refresh handed the component a fresh tree and it kept rendering its
+   first one. Server components updated; the comments did not.
+2. The probe compared creation times only, so an edit or a soft deletion (an `UPDATE`, nothing
+   created) never moved it.
+3. The flash waited a fixed 900 ms and then diffed ids, which missed any render slower than that.
+
+**Decision.**
+
+- Keep polling. `/api/pulse` returns the maximum of `Post.updatedAt`, `Thread.updatedAt`, and the
+  newest like/bookmark/report row; both `Post` and `Thread` gained an `@updatedAt` column for it.
+- Refresh inside `useTransition`, and apply the flash when the transition settles (with a timeout
+  as a safety net for a refresh that never pends). No fixed delays in the decision path.
+- Give every list item a stable id (`t-<threadId>` on cards and rows, `p-<postId>` on posts) so
+  "what is new" is a set difference, not a re-render of the whole document.
+- Reconcile explicitly wherever state shadows a server prop: comments adopt the refreshed tree
+  while keeping comments that exist only locally, and like/save buttons adopt the server's count
+  unless their own request is in flight. The reconciliation lives in `src/lib/comment-merge.ts`
+  and is unit-tested, because this is the exact place that regressed.
+
+**Consequences.**
+
+- No new infrastructure: no websocket server, no SSE endpoint, no background worker. The cost is
+  one tiny request per open tab per 12 s, and a full route refresh when something changed.
+- A page sits up to 12 s behind. That is the deliberate trade for a school forum; a real-time
+  requirement would need SSE and a fan-out that this deployment does not have.
+- The whole route is refetched, not just the changed row. Fine at this data size; the first thing
+  to revisit if a board page becomes expensive.
+- Hidden tabs do not poll, and a focused text field suppresses the refresh so a draft is never
+  pulled out from under the reader.
+
+**Alternatives considered.** Websockets or SSE (real-time, but a persistent server and fan-out),
+polling with a fixed delay before flashing (what we shipped first; misses slow renders), re-mounting
+the comment section with `key={signature}` on every change (simpler, but drops a comment the
+refresh does not happen to include yet, and loses fold state).
+
+**Revisit if.** A page needs sub-second delivery, the refresh cost per board page grows past a few
+milliseconds, or a reader complains that the 12 s lag makes a conversation feel broken.
+
+---
+
 ## Template for new decisions
 
 ```markdown

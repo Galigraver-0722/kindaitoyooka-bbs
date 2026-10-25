@@ -5,6 +5,7 @@ import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { ToggleAction } from "@/components/theme/actions";
 import { Highlight } from "@/components/theme/highlight";
 import { DeleteButton } from "@/components/theme/delete-button";
+import { reconcileComments, treeSignature } from "@/lib/comment-merge";
 import { readableInk } from "@/lib/color";
 
 const replyIcon = (
@@ -89,6 +90,16 @@ function renumber(list: CommentData[], prefix = ""): CommentData[] {
     const number = prefix ? `${prefix}-${index + 1}` : String(index + 1);
     return { ...comment, number, children: renumber(comment.children, number) };
   });
+}
+
+/** Attach a local-only comment, falling back to the top level if its parent is gone. */
+function attachComment(list: CommentData[], parentId: string | null, node: CommentData): CommentData[] {
+  const exists = (nodes: CommentData[]): boolean =>
+    nodes.some((item) => item.id === parentId || exists(item.children));
+  if (parentId !== null && !exists(list)) {
+    return [...list, node];
+  }
+  return insertReply(list, parentId, node);
 }
 
 function ReplyForm({
@@ -356,6 +367,17 @@ export function CommentSection({
   moderator?: boolean;
 }) {
   const [comments, setComments] = useState<CommentData[]>(initial);
+  const [seen, setSeen] = useState(() => treeSignature(initial));
+
+  // `router.refresh()` (AutoRefresh) gives this component a fresh `initial`
+  // tree, but React ignores new values of `useState`'s initial argument. Adopt
+  // the server tree here so replies from other readers actually appear, and
+  // keep comments that were posted locally and not echoed back yet.
+  const reconciled = reconcileComments(initial, comments, seen, attachComment, renumber);
+  if (reconciled.comments !== comments) {
+    setSeen(reconciled.seen);
+    setComments(reconciled.comments);
+  }
 
   const add = (parentId: string | null, comment: CommentData) => {
     setComments((prev) => renumber(insertReply(prev, parentId, comment)));
@@ -366,7 +388,8 @@ export function CommentSection({
       <div className="feed-bar comments-head">
         <h2>
           <span className="tick" />
-          {comments.length} {labels.commentsSuffix}
+          {/* Replies count too: 1 top-level comment with 10 answers is 11 comments. */}
+          {countTree(comments)} {labels.commentsSuffix}
         </h2>
       </div>
 

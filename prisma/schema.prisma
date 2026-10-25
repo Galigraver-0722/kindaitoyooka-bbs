@@ -98,6 +98,7 @@ model Thread {
   createdAt     DateTime         @default(now())
   lastPostAt    DateTime         @default(now())
   editedAt      DateTime?
+  updatedAt     DateTime         @updatedAt
   posts         Post[]
   tags          Tag[]
   bookmarks     ThreadBookmark[]
@@ -121,6 +122,7 @@ model Post {
   isDeleted Boolean    @default(false)
   likeCount Int        @default(0)
   createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   reports   Report[]
   likes     PostLike[]
 

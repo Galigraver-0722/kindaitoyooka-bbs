@@ -305,7 +305,7 @@ export function ThreadCards({ threads, locale, query }: { threads: HomeThread[];
   return (
     <div className="cards">
       {threads.map((thread, index) => (
-        <article className="card" key={thread.id}>
+        <article className="card" key={thread.id} id={`t-${thread.id}`}>
           <div className="card-top">
             <Link className={`bo${index % 3 === 0 ? " cy" : ""}`} href={`/b/${thread.board.slug}`}>
               <i />{thread.board.name}
@@ -356,7 +356,7 @@ export function ThreadRows({ threads, locale, query }: { threads: HomeThread[]; 
       </div>
       <ol>
         {threads.map((thread, index) => (
-          <li className="trow" key={thread.id}>
+          <li className="trow" key={thread.id} id={`t-${thread.id}`}>
             <span className="id">#{String(index + 1).padStart(4, "0")}</span>
             <div className="subj">
               <Link href={`/t/${thread.id}${query ? `?q=${encodeURIComponent(query)}` : ""}`}>
