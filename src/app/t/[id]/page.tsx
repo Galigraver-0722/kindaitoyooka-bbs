@@ -7,6 +7,8 @@ import { canEditThread } from "@/lib/editing";
 import { formatDateTime } from "@/lib/format";
 import { errorMessage, noticeMessage } from "@/lib/messages";
 import { markThreadRead } from "@/lib/read-state";
+import { normalizeHighlightTerm } from "@/lib/highlight";
+import { Highlight } from "@/components/theme/highlight";
 import { getLocale, t } from "@/lib/i18n";
 import { getTheme } from "@/lib/theme";
 import { buildThreadTree, type TreeNode } from "@/lib/thread-tree";
@@ -36,9 +38,9 @@ export default async function ThreadPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; notice?: string }>;
+  searchParams: Promise<{ error?: string; notice?: string; q?: string }>;
 }) {
-  const [{ id }, { error, notice }, theme, locale] = await Promise.all([
+  const [{ id }, { error, notice, q }, theme, locale] = await Promise.all([
     params,
     searchParams,
     getTheme(),
@@ -46,6 +48,7 @@ export default async function ThreadPage({
   ]);
   const copy = t(locale).shell;
   const pages = t(locale).pages;
+  const highlightTerm = normalizeHighlightTerm(q);
   const threadCopy = t(locale).thread;
 
   const [thread, user] = await Promise.all([
@@ -205,7 +208,7 @@ export default async function ThreadPage({
               <span className="cmt-time">{formatDateTime(root.createdAt, locale)}</span>
               <span className="root-tag">{copy.rootPost}</span>
             </div>
-            <div className="root-body">{root.body}</div>
+            <div className="root-body"><Highlight text={root.body} term={highlightTerm} /></div>
             <div className="acts cmt-acts">
               {canReply ? (
                 <a className="act reply-btn" href="#reply-form">
@@ -249,6 +252,7 @@ export default async function ThreadPage({
             loginText={copy.loginToReply}
             loginLabel={t(locale).nav.logIn}
             viewer={user?.username ?? null}
+            highlight={highlightTerm}
           />
         )}
       </main>

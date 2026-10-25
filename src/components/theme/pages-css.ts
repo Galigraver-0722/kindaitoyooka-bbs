@@ -354,6 +354,17 @@ export const pagesDCss = `
 
 .inbox-portal{display:contents}
 
+/* Search highlight + anchor flash. */
+.tw-d .hl{background:linear-gradient(180deg,transparent 52%,var(--sky) 52%);color:inherit;padding:0 1px;border-radius:2px;font-weight:inherit}
+.tw-d [id^="p-"]{scroll-margin-top:96px}
+.tw-d .flash{animation:flash-d 2.2s ease-out}
+@keyframes flash-d{
+  0%{background:rgba(18,191,209,.22);box-shadow:0 0 0 3px var(--cyan)}
+  60%{background:rgba(18,191,209,.12);box-shadow:0 0 0 3px rgba(18,191,209,.35)}
+  100%{background:transparent;box-shadow:0 0 0 0 rgba(18,191,209,0)}
+}
+@media (prefers-reduced-motion:reduce){.tw-d .flash{background:rgba(18,191,209,.14);outline:3px solid var(--cyan)}}
+
 `;
 
 export const pagesBCss = `
@@ -691,7 +702,9 @@ export const pagesBCss = `
 .tw-b .board-admin .btn:hover{border-color:rgba(90,230,236,.5);color:var(--cyan)}
 
 /* Notification inbox (shared markup, per-theme skin). */
-.tw-b .inbox{position:relative;flex:none}
+.tw-b .inbox{position:relative;flex:none;margin-left:auto;margin-right:-12px}
+.tw-b .bar .cmd{margin-left:0}
+.tw-b .bar .inbox{margin-right:-10px}
 .tw-b .inbox-btn{position:relative;display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:4px;background:rgba(90,230,236,.03);color:var(--muted);cursor:pointer;transition:.18s}
 .tw-b .inbox-btn:hover{color:var(--cyan);border-color:rgba(90,230,236,.5)}
 .tw-b .inbox-count{position:absolute;top:-5px;right:-5px;min-width:15px;height:15px;padding:0 3px;border:1px solid #04121A;border-radius:999px;background:var(--cyan);color:#04121A;font-family:var(--mono);font-size:8.5px;font-weight:700;line-height:13px;text-align:center}
@@ -712,5 +725,16 @@ export const pagesBCss = `
 @media (max-width:900px){
   .tw-b .inbox-panel.sheet{left:12px;right:12px;width:auto;top:auto;bottom:12px;max-height:70vh}
 }
+
+/* Search highlight + anchor flash. */
+.tw-b .hl{background:rgba(90,230,236,.26);color:#ECFEFF;box-shadow:0 0 0 1px rgba(90,230,236,.32);border-radius:2px;padding:0 1px;font-weight:inherit}
+.tw-b [id^="p-"]{scroll-margin-top:80px}
+.tw-b .flash{animation:flash-b 2.2s ease-out}
+@keyframes flash-b{
+  0%{background:rgba(90,230,236,.16);box-shadow:0 0 0 2px rgba(90,230,236,.65)}
+  60%{background:rgba(90,230,236,.08);box-shadow:0 0 0 2px rgba(90,230,236,.3)}
+  100%{background:transparent;box-shadow:0 0 0 0 rgba(90,230,236,0)}
+}
+@media (prefers-reduced-motion:reduce){.tw-b .flash{background:rgba(90,230,236,.1);outline:2px solid var(--cyan)}}
 
 `;

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { LanguageToggle } from "@/components/theme/language-toggle";
 import { BackButton } from "@/components/theme/nav-buttons";
 import { NotificationInbox, type InboxItem } from "@/components/theme/notification-inbox";
+import { AnchorHighlight } from "@/components/theme/anchor-highlight";
 import { RouteFreshness } from "@/components/theme/route-freshness";
 import { getNotifications } from "@/lib/notifications";
 import { ScrollHeader } from "@/components/theme/scroll-header";
@@ -17,6 +18,7 @@ import { getLocale, t } from "@/lib/i18n";
 import { timeAgo } from "@/lib/time-ago";
 import type { Locale } from "@/lib/locales";
 import { readableInk } from "@/lib/color";
+import { Highlight } from "@/components/theme/highlight";
 
 const replyIcon = (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
@@ -151,6 +153,7 @@ export async function ThemedPage({
     <div className={wrap} data-active={active ?? "home"} lang={locale}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <RouteFreshness />
+      <AnchorHighlight />
       {theme === "light" ? (
         <ScrollHeader>
           <header className="top">
@@ -294,7 +297,7 @@ export function Crumb({ items }: { items: { href?: string; label: string }[] }) 
   );
 }
 
-export function ThreadCards({ threads, locale }: { threads: HomeThread[]; locale: Locale }) {
+export function ThreadCards({ threads, locale, query }: { threads: HomeThread[]; locale: Locale; query?: string }) {
   const copy = t(locale).pages;
   return (
     <div className="cards">
@@ -306,11 +309,15 @@ export function ThreadCards({ threads, locale }: { threads: HomeThread[]; locale
             </Link>
             {thread.isUnread ? <span className="unread" title={t(locale).shell.unread}>{t(locale).shell.unread}</span> : null}
           </div>
-          <h3><Link href={`/t/${thread.id}`}>{thread.title}</Link></h3>
+          <h3>
+            <Link href={`/t/${thread.id}${query ? `?q=${encodeURIComponent(query)}` : ""}`}>
+              <Highlight text={thread.title} term={query} />
+            </Link>
+          </h3>
           <div className="tags">
             {thread.tags.slice(0, 3).map((tag) => (
               <Link className="tag" href={`/?q=${encodeURIComponent(`#${tag.name}`)}`} key={tag.name}>
-                #{tag.name}
+                #<Highlight text={tag.name} term={query} />
               </Link>
             ))}
           </div>
@@ -337,7 +344,7 @@ export function ThreadCards({ threads, locale }: { threads: HomeThread[]; locale
   );
 }
 
-export function ThreadRows({ threads, locale }: { threads: HomeThread[]; locale: Locale }) {
+export function ThreadRows({ threads, locale, query }: { threads: HomeThread[]; locale: Locale; query?: string }) {
   const copy = t(locale).pages;
   return (
     <section className="list">
@@ -349,7 +356,9 @@ export function ThreadRows({ threads, locale }: { threads: HomeThread[]; locale:
           <li className="trow" key={thread.id}>
             <span className="id">#{String(index + 1).padStart(4, "0")}</span>
             <div className="subj">
-              <Link href={`/t/${thread.id}`}>{thread.title}</Link>
+              <Link href={`/t/${thread.id}${query ? `?q=${encodeURIComponent(query)}` : ""}`}>
+                <Highlight text={thread.title} term={query} />
+              </Link>
               {thread.isUnread ? <span className="unread" title={t(locale).shell.unread}>{t(locale).shell.unread}</span> : null}
               <div className="chips">
                 {thread.tags.slice(0, 3).map((tag) => (

@@ -323,9 +323,9 @@ export default async function HomePage({
             ) : list.length === 0 ? (
               <p className="empty">{emptyText}</p>
             ) : theme === "light" ? (
-              <ThreadCards threads={list} locale={locale} />
+              <ThreadCards threads={list} locale={locale} query={query || undefined} />
             ) : (
-              <ThreadRows threads={list} locale={locale} />
+              <ThreadRows threads={list} locale={locale} query={query || undefined} />
             )}
 
             {query && pageCount > 1 ? (

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { ToggleAction } from "@/components/theme/actions";
+import { Highlight } from "@/components/theme/highlight";
 import { readableInk } from "@/lib/color";
 
 const replyIcon = (
@@ -173,6 +174,7 @@ function Comment({
   canReply,
   labels,
   viewer,
+  highlight,
   onReply,
 }: {
   data: CommentData;
@@ -180,6 +182,7 @@ function Comment({
   canReply: boolean;
   labels: CommentLabels;
   viewer: string | null;
+  highlight?: string;
   onReply: (parentId: string, comment: CommentData) => void;
 }) {
   const storageKey = `fold:${threadId}:${data.id}`;
@@ -235,7 +238,7 @@ function Comment({
 
       {collapsed ? null : (
         <>
-          <div className="cmt-body">{data.body}</div>
+          <div className="cmt-body"><Highlight text={data.body} term={highlight} /></div>
 
           <div className="acts cmt-acts">
             <ToggleAction
@@ -291,6 +294,7 @@ function Comment({
                   canReply={canReply}
                   labels={labels}
                   viewer={viewer}
+                  highlight={highlight}
                   onReply={onReply}
                 />
               ))}
@@ -312,6 +316,7 @@ export function CommentSection({
   loginText,
   loginLabel,
   viewer,
+  highlight,
 }: {
   threadId: string;
   initial: CommentData[];
@@ -321,6 +326,7 @@ export function CommentSection({
   loginText: string;
   loginLabel: string;
   viewer: string | null;
+  highlight?: string;
 }) {
   const [comments, setComments] = useState<CommentData[]>(initial);
 
@@ -349,6 +355,7 @@ export function CommentSection({
               canReply={canReply}
               labels={labels}
               viewer={viewer}
+              highlight={highlight}
               onReply={(parentId, posted) => add(parentId, posted)}
             />
           ))}

@@ -79,6 +79,9 @@ With a query the feed is a search engine:
 - `sort=latest` keeps the relevance order; `hot` and `rising` reorder the same candidate set.
 - Results paginate at 20 rows (`page`, 1-based, clamped), and the heading shows the match count.
   Page 1 is canonical without `?page=1`.
+- The term is marked (`<mark class="hl">`) in result titles and tag chips, and every result link
+  carries `?q=` on to the thread, where the opening post and replies mark the same term. A link
+  with `#p-<id>` flashes that post for ~2 s so the reader can see where they landed.
 
 Board pages accept the same `sort` values plus `page` (1-based). The page size is 20. `page` is
 clamped to the last page; page 1 is the canonical URL without `?page=1`. With `sort=hot` or

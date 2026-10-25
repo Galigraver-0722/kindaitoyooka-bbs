@@ -14,6 +14,12 @@ export type InboxItem = {
   excerpt?: string;
 };
 
+/** Badge label; anything above 99 would stretch the pill, so it is capped. */
+export function formatUnread(count: number): string {
+  if (count <= 0) return "";
+  return count > 99 ? "99+" : String(count);
+}
+
 const ICONS: Record<InboxItem["kind"], string> = {
   reply: "M9 17H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h7a4 4 0 0 1 4 4v2",
   comment: "M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z",
@@ -117,7 +123,7 @@ export function NotificationInbox({
           <path d="M18 8a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6Z" />
           <path d="M10.3 20a2 2 0 0 0 3.4 0" />
         </svg>
-        {count > 0 ? <span className="inbox-count">{count > 9 ? "9+" : count}</span> : null}
+        {count > 0 ? <span className="inbox-count">{formatUnread(count)}</span> : null}
       </button>
 
       {open
