@@ -11,6 +11,7 @@ import { getLocale, t } from "@/lib/i18n";
 import { getTheme } from "@/lib/theme";
 import { buildThreadTree, type TreeNode } from "@/lib/thread-tree";
 import { ToggleAction } from "@/components/theme/actions";
+import { readableInk } from "@/lib/color";
 import { CommentSection, type CommentData, type CommentLabels } from "@/components/theme/comment";
 
 export const dynamic = "force-dynamic";
@@ -185,6 +186,7 @@ export default async function ThreadPage({
                   style={{
                     background: root.author.avatarColor ?? undefined,
                     borderColor: root.author.avatarRing ?? undefined,
+                    color: readableInk(root.author.avatarColor),
                   }}
                 >
                   {root.author.username.slice(0, 1).toUpperCase()}

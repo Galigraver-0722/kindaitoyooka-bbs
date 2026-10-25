@@ -21,6 +21,7 @@ import { boardPageHref, parsePage, THREADS_PER_PAGE, totalPages } from "@/lib/pa
 import { parseSuggestedTags } from "@/lib/tags";
 import { getLocale, t } from "@/lib/i18n";
 import { getTheme } from "@/lib/theme";
+import { timeAgo } from "@/lib/time-ago";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +77,28 @@ export default async function BoardPage({
     count: row._count.threads,
     kind: row.kind,
   }));
+
+  const [postCount, threadAuthors, postAuthors, lastActivity] = await Promise.all([
+    prisma.post.count({
+      where: { thread: { boardId: board.id, isDeleted: false }, isDeleted: false },
+    }),
+    prisma.thread.findMany({
+      where: { boardId: board.id, isDeleted: false },
+      select: { authorId: true },
+      distinct: ["authorId"],
+    }),
+    prisma.post.findMany({
+      where: { thread: { boardId: board.id, isDeleted: false }, isDeleted: false },
+      select: { authorId: true },
+      distinct: ["authorId"],
+    }),
+    prisma.thread.aggregate({
+      where: { boardId: board.id, isDeleted: false },
+      _max: { lastPostAt: true },
+    }),
+  ]);
+  const memberCount = new Set([...threadAuthors, ...postAuthors].map((row) => row.authorId)).size;
+  const lastActive = lastActivity._max.lastPostAt;
 
   const where = { boardId: board.id, isDeleted: false };
   const requestedPage = parsePage(page);
@@ -152,11 +175,28 @@ export default async function BoardPage({
             <Crumb items={[{ href: "/", label: copy.boards }, { label: board.name }]} />
             <h1>{board.name}</h1>
             <p className="lede">{board.description}</p>
+            <div className="board-stats">
+              <div className="bs">
+                <span>{copy.statsThreads}</span>
+                <b>{board._count.threads}</b>
+              </div>
+              <div className="bs">
+                <span>{copy.statsMembers}</span>
+                <b>{memberCount}</b>
+              </div>
+              <div className="bs">
+                <span>{copy.statsPosts}</span>
+                <b>{postCount}</b>
+              </div>
+              <div className="bs">
+                <span>{copy.statsLast}</span>
+                <b>{lastActive ? timeAgo(lastActive) : "—"}</b>
+              </div>
+            </div>
             <div className="row-meta">
               <span className={`pill kind ${board.kind === "COMMUNITY" ? "comm" : ""}`}>
                 {board.kind === "COMMUNITY" ? copy.communityTag : copy.official}
               </span>
-              <span className="pill">{copy.posts(board._count.threads)}</span>
               {suggested.map((tag) => (
                 <Link className="pill" href={`/?q=${encodeURIComponent(`#${tag}`)}`} key={tag}>#{tag}</Link>
               ))}

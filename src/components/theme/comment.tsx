@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { ToggleAction } from "@/components/theme/actions";
+import { readableInk } from "@/lib/color";
 
 const replyIcon = (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
@@ -207,6 +208,7 @@ function Comment({
             style={{
               background: data.author.avatarColor ?? undefined,
               borderColor: data.author.avatarRing ?? undefined,
+              color: readableInk(data.author.avatarColor),
             }}
           >
             {data.author.username.slice(0, 1).toUpperCase()}

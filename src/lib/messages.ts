@@ -37,7 +37,7 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "edit-not-allowed": "スレッドを編集できるのは作成者だけで、投稿から 15 分以内に限ります。",
     "invalid-slug": "URL は半角英小文字・数字・ハイフンの 3〜30 文字で指定してください。",
     "slug-taken": "その URL はすでに使われています。",
-    "board-limit": "板は 1 アカウント 3 つまでです。",
+    "board-limit": "ボードは 1 アカウント 3 つまでです。",
   },
 };
 

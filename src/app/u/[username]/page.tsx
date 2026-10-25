@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ThemedPage, ThreadCards, ThreadRows, Crumb } from "@/components/theme/themed-page";
+import { LogoutButton } from "@/components/theme/logout-button";
 import type { HomeThread } from "@/components/home/types";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
 import { getLikedThreadIds } from "@/lib/likes";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
+import { readableInk } from "@/lib/color";
 import { noticeMessage } from "@/lib/messages";
 import { getTheme } from "@/lib/theme";
 import { getLocale, t } from "@/lib/i18n";
@@ -105,6 +107,7 @@ export default async function ProfilePage({
               style={{
                 background: avatarColor ?? "var(--sky)",
                 borderColor: avatarRing ?? "var(--line)",
+                color: readableInk(avatarColor),
               }}
             >
               {profile.username.slice(0, 1).toUpperCase()}
@@ -126,10 +129,13 @@ export default async function ProfilePage({
             {viewer ? (
               <>
                 <span className="account-name">@{viewer.username}</span>
-                <Link className="btn" href={`/u/${viewer.username}`}>マイページ</Link>
-                <form action="/api/auth/logout" method="post">
-                  <button className="btn" type="submit">ログアウト</button>
-                </form>
+                <LogoutButton
+                  label="ログアウト"
+                  title="ログアウトしますか？"
+                  text="この端末からログアウトします。書きかけの内容は保存されません。あとでまたログインできます。"
+                  confirm="ログアウト"
+                  cancel="キャンセル"
+                />
               </>
             ) : (
               <>
@@ -143,6 +149,8 @@ export default async function ProfilePage({
         {noticeText ? <p className="notice">{noticeText}</p> : null}
 
         {isOwner ? (
+          <details className="profile-edit">
+            <summary className="btn">プロフィールを編集</summary>
           <form className="form-card profile-form" action="/api/profile" method="post">
             <h2>プロフィールを編集</h2>
             <label className="field-label" htmlFor="bio">自己紹介</label>
@@ -164,6 +172,7 @@ export default async function ProfilePage({
                 style={{
                   background: avatarColor ?? "var(--sky)",
                   borderColor: avatarRing ?? "var(--line)",
+                  color: readableInk(avatarColor),
                 }}
               >
                 {profile.username.slice(0, 1).toUpperCase()}
@@ -174,6 +183,7 @@ export default async function ProfilePage({
               <button className="btn btn-p" type="submit">保存する</button>
             </div>
           </form>
+          </details>
         ) : null}
 
         {list.length === 0 ? (
