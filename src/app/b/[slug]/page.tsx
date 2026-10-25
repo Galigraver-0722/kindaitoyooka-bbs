@@ -12,12 +12,14 @@ import {
 import type { HomeThread } from "@/components/home/types";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
+import { getLikedThreadIds } from "@/lib/likes";
 import { prisma } from "@/lib/db";
 import { sortByHot } from "@/lib/hot";
 import { sortByRising } from "@/lib/rising";
 import { errorMessage } from "@/lib/messages";
 import { boardPageHref, parsePage, THREADS_PER_PAGE, totalPages } from "@/lib/pagination";
 import { parseSuggestedTags } from "@/lib/tags";
+import { getLocale, t } from "@/lib/i18n";
 import { getTheme } from "@/lib/theme";
 
 export const dynamic = "force-dynamic";
@@ -31,8 +33,6 @@ const THREAD_INCLUDE = {
 
 type BoardThread = Prisma.ThreadGetPayload<{ include: typeof THREAD_INCLUDE }>;
 
-const num = (value: number) => new Intl.NumberFormat("ja-JP").format(value);
-
 export default async function BoardPage({
   params,
   searchParams,
@@ -40,11 +40,14 @@ export default async function BoardPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ error?: string; sort?: string; page?: string }>;
 }) {
-  const [{ slug }, { error, sort, page }, theme] = await Promise.all([
+  const [{ slug }, { error, sort, page }, theme, locale] = await Promise.all([
     params,
     searchParams,
     getTheme(),
+    getLocale(),
   ]);
+  const copy = t(locale).shell;
+  const sortCopy = t(locale).sort;
   const order = sort === "hot" || sort === "rising" ? sort : "latest";
 
   const [board, user] = await Promise.all([
@@ -59,10 +62,11 @@ export default async function BoardPage({
 
   const boards = await prisma.board.findMany({
     where: { isArchived: false },
-    orderBy: { sortOrder: "asc" },
+    orderBy: [{ kind: "asc" }, { sortOrder: "asc" }],
     select: {
       slug: true,
       name: true,
+      kind: true,
       _count: { select: { threads: { where: { isDeleted: false } } } },
     },
   });
@@ -70,6 +74,7 @@ export default async function BoardPage({
     slug: row.slug,
     name: row.name,
     count: row._count.threads,
+    kind: row.kind,
   }));
 
   const where = { boardId: board.id, isDeleted: false };
@@ -106,7 +111,11 @@ export default async function BoardPage({
     threads = sorted.sort((a, b) => Number(b.isPinned) - Number(a.isPinned));
   }
 
-  const bookmarked = await getBookmarkedThreadIds(user?.id, threads.map((thread) => thread.id));
+  const ids = threads.map((thread) => thread.id);
+  const [bookmarked, liked] = await Promise.all([
+    getBookmarkedThreadIds(user?.id, ids),
+    getLikedThreadIds(user?.id, ids),
+  ]);
   const list: HomeThread[] = threads.map((thread) => ({
     id: thread.id,
     title: thread.title,
@@ -114,6 +123,8 @@ export default async function BoardPage({
     author: thread.author,
     tags: thread.tags,
     likeCount: thread.likeCount,
+    bookmarkCount: thread.bookmarkCount,
+    liked: liked.has(thread.id),
     replyCount: Math.max(0, thread._count.posts - 1),
     lastPostAt: thread.lastPostAt,
     bookmarked: bookmarked.has(thread.id),
@@ -130,20 +141,26 @@ export default async function BoardPage({
     return qs ? `/b/${board.slug}?${qs}` : `/b/${board.slug}`;
   };
 
+  const heading =
+    order === "rising" ? copy.feed.rising : order === "hot" ? copy.feed.hot : copy.feed.latest;
+
   return (
     <ThemedPage theme={theme} username={user?.username ?? null} active="boards">
       <main>
         <section className="banner">
           <div className="page-head">
-            <Crumb items={[{ href: "/", label: "ホーム" }, { label: board.name }]} />
+            <Crumb items={[{ href: "/", label: copy.boards }, { label: board.name }]} />
             <h1>{board.name}</h1>
             <p className="lede">{board.description}</p>
             <div className="row-meta">
-              <span className="pill">{num(board._count.threads)} スレッド</span>
+              <span className={`pill kind ${board.kind === "COMMUNITY" ? "comm" : ""}`}>
+                {board.kind === "COMMUNITY" ? copy.communityTag : copy.official}
+              </span>
+              <span className="pill">{copy.posts(board._count.threads)}</span>
               {suggested.map((tag) => (
                 <Link className="pill" href={`/?q=${encodeURIComponent(`#${tag}`)}`} key={tag}>#{tag}</Link>
               ))}
-              <Link className="pill pill-action" href={`/new?board=${board.slug}`}>＋ 投稿する</Link>
+              <Link className="pill pill-action" href={`/new?board=${board.slug}`}>{copy.newThread}</Link>
             </div>
           </div>
         </section>
@@ -151,18 +168,18 @@ export default async function BoardPage({
         <div className="feed-cols">
           <aside className="feed-side">
             <div>
-              <h2 className="side-title">ボード</h2>
+              <h2 className="side-title">{copy.boards}</h2>
               <BoardNav boards={summaries} activeSlug={board.slug} />
             </div>
           </aside>
 
           <div className="feed-body">
             <div className="feed-bar">
-              <h2><span className="tick" />{order === "rising" ? "急上昇" : order === "hot" ? "人気" : "新しい順"}</h2>
+              <h2><span className="tick" />{heading}</h2>
               <span className="hub-sort">
-                <Link className={order === "latest" ? "on" : ""} href={sortHref("latest")}>新着</Link>
-                <Link className={order === "hot" ? "on" : ""} href={sortHref("hot")}>人気</Link>
-                <Link className={order === "rising" ? "on" : ""} href={sortHref("rising")}>急上昇</Link>
+                <Link className={order === "latest" ? "on" : ""} href={sortHref("latest")}>{sortCopy.latest}</Link>
+                <Link className={order === "hot" ? "on" : ""} href={sortHref("hot")}>{sortCopy.hot}</Link>
+                <Link className={order === "rising" ? "on" : ""} href={sortHref("rising")}>{sortCopy.rising}</Link>
               </span>
             </div>
 
@@ -170,17 +187,9 @@ export default async function BoardPage({
 
             {list.length === 0 ? (
               <p className="empty">
-                {order === "rising"
-                  ? "いま急上昇しているスレッドはありません。"
-                  : order === "hot"
-                    ? "まだ人気のスレッドがありません。"
-                    : "このボードにはまだスレッドがありません。最初の 1 本を立ててみませんか。"}
-                {order === "latest" ? (
-                  <>
-                    <br />
-                    <Link href={`/new?board=${board.slug}`}>＋ 投稿する</Link>
-                  </>
-                ) : null}
+                {copy.empty.none}
+                <br />
+                <Link href={`/new?board=${board.slug}`}>{copy.newThread}</Link>
               </p>
             ) : theme === "light" ? (
               <ThreadCards threads={list} />
@@ -191,11 +200,11 @@ export default async function BoardPage({
             {order === "latest" && pageCount > 1 ? (
               <nav className="pager">
                 {currentPage > 1 ? (
-                  <Link href={boardPageHref(board.slug, { page: currentPage - 1, sort: order })}>← 前へ</Link>
+                  <Link href={boardPageHref(board.slug, { page: currentPage - 1, sort: order })}>← {locale === "ja" ? "前へ" : "Prev"}</Link>
                 ) : null}
                 <span>{currentPage} / {pageCount}</span>
                 {currentPage < pageCount ? (
-                  <Link href={boardPageHref(board.slug, { page: currentPage + 1, sort: order })}>次へ →</Link>
+                  <Link href={boardPageHref(board.slug, { page: currentPage + 1, sort: order })}>{locale === "ja" ? "次へ" : "Next"} →</Link>
                 ) : null}
               </nav>
             ) : null}

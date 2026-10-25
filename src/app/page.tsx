@@ -11,6 +11,7 @@ import {
 import type { HomeThread } from "@/components/home/types";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
+import { getLikedThreadIds } from "@/lib/likes";
 import { prisma } from "@/lib/db";
 import { sortByHot } from "@/lib/hot";
 import { sortByRising } from "@/lib/rising";
@@ -40,8 +41,14 @@ export default async function HomePage({
 }: {
   searchParams: Promise<{ q?: string; filter?: string; sort?: string }>;
 }) {
-  const [{ q, filter, sort }, theme] = await Promise.all([searchParams, getTheme()]);
+  const [{ q, filter, sort }, theme, locale] = await Promise.all([
+    searchParams,
+    getTheme(),
+    getLocale(),
+  ]);
   const user = await getCurrentUser();
+  const copy = t(locale).shell;
+  const sortCopy = t(locale).sort;
 
   const query = (q ?? "").trim().slice(0, 100);
   const view = filter === "saved" || filter === "mine" ? filter : "all";
@@ -50,10 +57,11 @@ export default async function HomePage({
 
   const boards = await prisma.board.findMany({
     where: { isArchived: false },
-    orderBy: { sortOrder: "asc" },
+    orderBy: [{ kind: "asc" }, { sortOrder: "asc" }],
     select: {
       slug: true,
       name: true,
+      kind: true,
       _count: { select: { threads: { where: { isDeleted: false } } } },
     },
   });
@@ -62,6 +70,7 @@ export default async function HomePage({
     slug: board.slug,
     name: board.name,
     count: board._count.threads,
+    kind: board.kind,
   }));
   const totalThreads = summaries.reduce((sum, board) => sum + board.count, 0);
 
@@ -106,11 +115,15 @@ export default async function HomePage({
       ...row,
       replyCount: Math.max(0, row._count.posts - 1),
     }));
-    const sorted = order === "hot" ? sortByHot(ranked).slice(0, 30) : sortByRising(ranked).slice(0, 30);
-    rows = sorted;
+    rows = order === "hot" ? sortByHot(ranked).slice(0, 30) : sortByRising(ranked).slice(0, 30);
   }
 
-  const bookmarked = await getBookmarkedThreadIds(user?.id, rows.map((row) => row.id));
+  const ids = rows.map((row) => row.id);
+  const [bookmarked, liked] = await Promise.all([
+    getBookmarkedThreadIds(user?.id, ids),
+    getLikedThreadIds(user?.id, ids),
+  ]);
+
   const list: HomeThread[] = rows.map((row) => ({
     id: row.id,
     title: row.title,
@@ -118,6 +131,8 @@ export default async function HomePage({
     author: row.author,
     tags: row.tags,
     likeCount: row.likeCount,
+    bookmarkCount: row.bookmarkCount,
+    liked: liked.has(row.id),
     replyCount: Math.max(0, row._count.posts - 1),
     lastPostAt: row.lastPostAt,
     bookmarked: bookmarked.has(row.id),
@@ -137,54 +152,88 @@ export default async function HomePage({
   };
 
   const filters = [
-    { key: "all", label: "すべて", href: href({ filter: "" }) },
-    { key: "saved", label: "保存", href: href({ filter: "saved" }) },
-    { key: "mine", label: "自分の投稿", href: href({ filter: "mine" }) },
+    { key: "all", label: copy.filters.all, href: href({ filter: "" }) },
+    { key: "saved", label: copy.filters.saved, href: href({ filter: "saved" }) },
+    { key: "mine", label: copy.filters.mine, href: href({ filter: "mine" }) },
   ];
 
   const heading = query
-    ? `「${query}」の検索結果`
+    ? copy.feed.search(query)
     : view === "saved"
-      ? "保存したスレッド"
+      ? copy.feed.saved
       : view === "mine"
-        ? "自分の投稿"
+        ? copy.feed.mine
         : order === "rising"
-          ? "急上昇"
+          ? copy.feed.rising
           : order === "hot"
-            ? "人気のスレッド"
-            : "新着スレッド";
+            ? copy.feed.hot
+            : copy.feed.latest;
+
+  const emptyText = query
+    ? copy.empty.search
+    : view === "saved"
+      ? copy.empty.saved
+      : view === "mine"
+        ? copy.empty.mine
+        : copy.empty.none;
+
+  const maxBoard = Math.max(1, ...summaries.map((board) => board.count));
+  const chartBoards = [...summaries].sort((a, b) => b.count - a.count).slice(0, 5);
+
+  const chart = (
+    <div className="chart">
+      <div className="chart-head">
+        <span>BOARD ACTIVITY</span>
+        <b>{num(totalThreads)}</b>
+      </div>
+      <div className="chart-bars">
+        {chartBoards.map((board) => (
+          <div className="chart-bar" key={board.slug} title={`${board.name} · ${board.count}`}>
+            <i style={{ height: `${18 + Math.round((board.count / maxBoard) * 62)}%` }} />
+            <span>{board.name}</span>
+          </div>
+        ))}
+      </div>
+      <div className="chart-foot">
+        {num(summaries.length)} BOARDS · {num(totalPosts)} REPLIES
+      </div>
+    </div>
+  );
 
   return (
     <ThemedPage theme={theme} username={user?.username ?? null}>
       <main>
-        {theme === "light" ? (
-          <section className="cover">
-            <div className="eyebrow">
-              <span className="sticker"><b>●</b> {num(totalThreads)} スレッド</span>
-              <span className="sticker">{num(totalPosts)} 返信</span>
-              <span className="sticker">{num(summaries.length)} ボード</span>
+        <section className="cover">
+          {theme === "light" ? (
+            <div className="cover-copy">
+              <div className="eyebrow">
+                <span className="sticker"><b>●</b> {copy.threadCount(totalThreads)}</span>
+                <span className="sticker">{copy.replyCount(totalPosts)}</span>
+                <span className="sticker">{copy.boardCount(summaries.length)}</span>
+              </div>
+              <h1>{copy.cover.dLead}<mark>{copy.cover.dAccent}</mark>{copy.cover.dTail}</h1>
+              <p className="lede">{copy.cover.dLede}</p>
             </div>
-            <h1>話そう、<mark>学校のこと</mark>。</h1>
-            <p className="lede">質問・部活の連絡・勉強の相談。書いたことは残って、あとから来た人の役に立つ。</p>
-          </section>
-        ) : (
-          <section className="cover">
-            <p className="kicker"><b>[ 01 ]</b> student network / since 2026</p>
-            <h1>学校の議論は、<span className="fade">止まらない。</span></h1>
-            <p className="lede">質問、部活の連絡、進路の相談。書いたことは残り、あとから来た人が読める。</p>
-            <div className="cover-stats">
-              <span><b>{num(totalThreads)}</b> THREADS</span>
-              <span><b>{num(totalPosts)}</b> REPLIES</span>
-              <span><b>{num(summaries.length)}</b> BOARDS</span>
-              <span><b>{num(saved)}</b> SAVED</span>
+          ) : (
+            <div className="cover-copy">
+              <p className="kicker"><b>[ 01 ]</b> student network / since 2026</p>
+              <h1>{copy.cover.bLead}<span className="fade">{copy.cover.bAccent}</span>{copy.cover.bTail}</h1>
+              <p className="lede">{copy.cover.bLede}</p>
+              <div className="cover-stats">
+                <span><b>{num(totalThreads)}</b> THREADS</span>
+                <span><b>{num(totalPosts)}</b> REPLIES</span>
+                <span><b>{num(summaries.length)}</b> BOARDS</span>
+                <span><b>{num(saved)}</b> SAVED</span>
+              </div>
             </div>
-          </section>
-        )}
+          )}
+          {chart}
+        </section>
 
         <div className="feed-cols">
           <aside className="feed-side">
             <div>
-              <h2 className="side-title">ボード</h2>
+              <h2 className="side-title">{copy.boards}</h2>
               <BoardNav boards={summaries} />
             </div>
           </aside>
@@ -193,9 +242,9 @@ export default async function HomePage({
             <div className="feed-bar">
               <h2><span className="tick" />{heading}</h2>
               <span className="hub-sort">
-                <Link className={order === "latest" ? "on" : ""} href={href({ sort: "" })}>新着</Link>
-                <Link className={order === "hot" ? "on" : ""} href={href({ sort: "hot" })}>人気</Link>
-                <Link className={order === "rising" ? "on" : ""} href={href({ sort: "rising" })}>急上昇</Link>
+                <Link className={order === "latest" ? "on" : ""} href={href({ sort: "" })}>{sortCopy.latest}</Link>
+                <Link className={order === "hot" ? "on" : ""} href={href({ sort: "hot" })}>{sortCopy.hot}</Link>
+                <Link className={order === "rising" ? "on" : ""} href={href({ sort: "rising" })}>{sortCopy.rising}</Link>
               </span>
             </div>
 
@@ -205,17 +254,15 @@ export default async function HomePage({
                   {tab.label}
                 </Link>
               ))}
-              {query ? <Link className="hub-clear" href={href({})}>検索を解除</Link> : null}
+              {query ? <Link className="hub-clear" href={href({})}>{copy.clearSearch}</Link> : null}
             </div>
 
             {needsLogin ? (
               <p className="empty">
-                この一覧を見るには <Link href="/login">ログイン</Link> してください。
+                {copy.loginNeeded} <Link href="/login">{t(locale).nav.logIn}</Link>
               </p>
             ) : list.length === 0 ? (
-              <p className="empty">
-                {query ? "該当するスレッドはありません。" : view === "saved" ? "保存したスレッドはまだありません。" : view === "mine" ? "まだ投稿していません。" : "まだスレッドがありません。"}
-              </p>
+              <p className="empty">{emptyText}</p>
             ) : theme === "light" ? (
               <ThreadCards threads={list} />
             ) : (

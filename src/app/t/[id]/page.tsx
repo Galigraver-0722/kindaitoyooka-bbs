@@ -43,7 +43,7 @@ export default async function ThreadPage({
   if (!thread || thread.isDeleted) notFound();
   if (user) await markThreadRead(user.id, thread.id);
 
-  const [likedPostIds, bookmarked] = user
+  const [likedPostIds, bookmarked, likedThread] = user
     ? await Promise.all([
         prisma.postLike
           .findMany({
@@ -57,8 +57,14 @@ export default async function ThreadPage({
             select: { userId: true },
           })
           .then(Boolean),
+        prisma.threadLike
+          .findUnique({
+            where: { userId_threadId: { userId: user.id, threadId: thread.id } },
+            select: { userId: true },
+          })
+          .then(Boolean),
       ])
-    : ([new Set<string>(), false] as const);
+    : ([new Set<string>(), false, false] as const);
 
   const canModerate = isModerator(user);
   const canEdit = canEditThread(user?.id, thread);
@@ -81,7 +87,6 @@ export default async function ThreadPage({
             <span className="pill">{thread.author.username}</span>
             <span className="pill">{formatDateTime(thread.createdAt, "ja")}</span>
             <span className="pill">{Math.max(0, thread.posts.length - 1)} 返信</span>
-            <span className="pill">{thread.likeCount} いいね</span>
             {thread.isLocked ? <span className="pill">ロック中</span> : null}
             {thread.tags.map((tag) => (
               <Link className="pill" href={`/?q=${encodeURIComponent(`#${tag.name}`)}`} key={tag.name}>
@@ -90,9 +95,20 @@ export default async function ThreadPage({
             ))}
           </div>
           <div className="detail-actions">
+            <form action={`/api/threads/${thread.id}/like`} method="post">
+              <button className={`act act-lg like${likedThread ? " on" : ""}`} aria-pressed={likedThread} aria-label="いいね">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" className="act-icon">
+                  <path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9Z" />
+                </svg>
+                <span>{thread.likeCount}</span>
+              </button>
+            </form>
             <form action={`/api/threads/${thread.id}/bookmark`} method="post">
-              <button className="btn btn-p" aria-label={bookmarked ? "保存済み" : "保存"}>
-                {bookmarked ? "保存済み" : "保存する"}
+              <button className={`act act-lg save${bookmarked ? " on" : ""}`} aria-pressed={bookmarked} aria-label={bookmarked ? "保存済み" : "保存"}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" className="act-icon">
+                  <path d="M7 4h10v17l-5-4-5 4Z" />
+                </svg>
+                <span>{thread.bookmarkCount}</span>
               </button>
             </form>
             {canEdit ? <Link className="btn" href={`/t/${thread.id}/edit`}>編集する</Link> : null}

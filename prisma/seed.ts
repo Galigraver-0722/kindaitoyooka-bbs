@@ -4,7 +4,7 @@
  * The demo passwords below are public and must never be used on a real
  * deployment. See docs/07-operations.md for the launch checklist.
  */
-import { PrismaClient, Role } from "@prisma/client";
+import { BoardKind, PrismaClient, Role } from "@prisma/client";
 import { hashPassword } from "../src/lib/passwords";
 
 const prisma = new PrismaClient();
@@ -59,6 +59,7 @@ async function main() {
       name: "雑談",
       description: "なんでも話す場所です。自己紹介もどうぞ。",
       sortOrder: 1,
+      kind: BoardKind.OFFICIAL,
       suggestedTags: "質問,雑談,自己紹介",
     },
     {
@@ -66,6 +67,7 @@ async function main() {
       name: "勉強",
       description: "宿題の質問、試験対策、勉強会の連絡に。",
       sortOrder: 2,
+      kind: BoardKind.OFFICIAL,
       suggestedTags: "質問,試験,宿題,勉強会",
     },
     {
@@ -73,6 +75,7 @@ async function main() {
       name: "部活・行事",
       description: "部活動の連絡、参加申し込み、行事の相談。",
       sortOrder: 3,
+      kind: BoardKind.OFFICIAL,
       suggestedTags: "連絡,文化祭,部活",
     },
     {
@@ -80,6 +83,7 @@ async function main() {
       name: "落とし物",
       description: "落とし物の連絡と、拾った物の報告。",
       sortOrder: 4,
+      kind: BoardKind.OFFICIAL,
       suggestedTags: "落とし物,拾得物",
     },
     {
@@ -87,7 +91,24 @@ async function main() {
       name: "サイトへの意見",
       description: "不具合、要望、この掲示板についての質問。",
       sortOrder: 5,
+      kind: BoardKind.OFFICIAL,
       suggestedTags: "要望,不具合,質問",
+    },
+    {
+      slug: "light-music",
+      name: "軽音部",
+      description: "部員向けの連絡と、ライブ・練習の告知。",
+      sortOrder: 10,
+      kind: BoardKind.COMMUNITY,
+      suggestedTags: "部活,ライブ,練習",
+    },
+    {
+      slug: "festival",
+      name: "文化祭実行委員会",
+      description: "文化祭の企画、係りの連絡、当日の動き。",
+      sortOrder: 11,
+      kind: BoardKind.COMMUNITY,
+      suggestedTags: "文化祭,実行委員,連絡",
     },
   ];
 
@@ -98,6 +119,7 @@ async function main() {
         name: board.name,
         description: board.description,
         sortOrder: board.sortOrder,
+        kind: board.kind,
         suggestedTags: board.suggestedTags,
       },
       create: board,

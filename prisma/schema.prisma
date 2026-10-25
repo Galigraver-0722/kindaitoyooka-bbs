@@ -14,6 +14,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum BoardKind {
+  OFFICIAL
+  COMMUNITY
+}
+
 enum Role {
   STUDENT
   MODERATOR
@@ -40,6 +45,7 @@ model User {
   postLikes       PostLike[]
   threadBookmarks ThreadBookmark[]
   threadReads     ThreadRead[]
+  threadLikes     ThreadLike[]
   auditLogs       AuditLog[]       @relation("AuditActor")
 }
 
@@ -59,6 +65,7 @@ model Board {
   slug        String   @unique
   name        String
   description String
+  kind        BoardKind @default(OFFICIAL)
   sortOrder     Int      @default(0)
   isArchived    Boolean  @default(false)
   // Comma-separated tag hints for the compose form, e.g. "質問,試験,宿題".
@@ -86,6 +93,7 @@ model Thread {
   tags          Tag[]
   bookmarks     ThreadBookmark[]
   reads         ThreadRead[]
+  likes         ThreadLike[]
 
   @@index([boardId, lastPostAt])
   @@index([likeCount])
@@ -112,6 +120,17 @@ model Tag {
   name      String   @unique
   createdAt DateTime @default(now())
   threads   Thread[]
+}
+
+model ThreadLike {
+  userId    String
+  threadId  String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread    Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, threadId])
+  @@index([threadId])
 }
 
 model PostLike {

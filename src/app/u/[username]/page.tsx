@@ -4,6 +4,7 @@ import { ThemedPage, ThreadCards, ThreadRows, Crumb } from "@/components/theme/t
 import type { HomeThread } from "@/components/home/types";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
+import { getLikedThreadIds } from "@/lib/likes";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { getTheme } from "@/lib/theme";
@@ -46,7 +47,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     prisma.post.count({ where: { authorId: profile.id, isDeleted: false } }),
   ]);
 
-  const bookmarked = await getBookmarkedThreadIds(viewer?.id, threads.map((thread) => thread.id));
+  const ids = threads.map((thread) => thread.id);
+  const [bookmarked, liked] = await Promise.all([
+    getBookmarkedThreadIds(viewer?.id, ids),
+    getLikedThreadIds(viewer?.id, ids),
+  ]);
   const list: HomeThread[] = threads.map((thread) => ({
     id: thread.id,
     title: thread.title,
@@ -54,6 +59,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     author: thread.author,
     tags: thread.tags,
     likeCount: thread.likeCount,
+    bookmarkCount: thread.bookmarkCount,
+    liked: liked.has(thread.id),
     replyCount: Math.max(0, thread._count.posts - 1),
     lastPostAt: thread.lastPostAt,
     bookmarked: bookmarked.has(thread.id),

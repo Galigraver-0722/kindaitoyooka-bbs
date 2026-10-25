@@ -1,4 +1,4 @@
-export type HomeBoard = { slug: string; name: string; count: number };
+export type HomeBoard = { slug: string; name: string; count: number; kind: "OFFICIAL" | "COMMUNITY" };
 
 export type HomeThread = {
   id: string;
@@ -7,6 +7,8 @@ export type HomeThread = {
   author: { username: string };
   tags: { name: string }[];
   likeCount: number;
+  bookmarkCount: number;
+  liked: boolean;
   replyCount: number;
   lastPostAt: Date;
   bookmarked: boolean;

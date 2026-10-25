@@ -1,15 +1,17 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LanguageToggle } from "@/components/theme/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { homeDCss } from "@/components/home/home-d-css";
 import { homeBCss } from "@/components/home/home-b-css";
 import { pagesDCss, pagesBCss } from "@/components/theme/pages-css";
 import type { HomeThread } from "@/components/home/types";
 import { prisma } from "@/lib/db";
+import { getLocale, t } from "@/lib/i18n";
 import { timeAgo } from "@/lib/time-ago";
 
 const heart = (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
     <path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9Z" />
   </svg>
 );
@@ -32,15 +34,21 @@ const searchIcon = (
 
 const num = (value: number) => new Intl.NumberFormat("ja-JP").format(value);
 
-export type BoardSummary = { slug: string; name: string; count: number };
+export type BoardSummary = {
+  slug: string;
+  name: string;
+  count: number;
+  kind: "OFFICIAL" | "COMMUNITY";
+};
 
 async function boardSummaries(): Promise<BoardSummary[]> {
   const boards = await prisma.board.findMany({
     where: { isArchived: false },
-    orderBy: { sortOrder: "asc" },
+    orderBy: [{ kind: "asc" }, { sortOrder: "asc" }],
     select: {
       slug: true,
       name: true,
+      kind: true,
       _count: { select: { threads: { where: { isDeleted: false } } } },
     },
   });
@@ -49,14 +57,51 @@ async function boardSummaries(): Promise<BoardSummary[]> {
     slug: board.slug,
     name: board.name,
     count: board._count.threads,
+    kind: board.kind,
   }));
 }
 
+async function BoardLinks({ boards, activeSlug }: { boards: BoardSummary[]; activeSlug?: string }) {
+  const locale = await getLocale();
+  const m = t(locale).shell;
+  const official = boards.filter((board) => board.kind === "OFFICIAL");
+  const community = boards.filter((board) => board.kind === "COMMUNITY");
+
+  const row = (board: BoardSummary) => (
+    <Link
+      className={`${activeSlug === board.slug ? "on " : ""}${board.kind === "COMMUNITY" ? "comm" : "off"}`}
+      href={`/b/${board.slug}`}
+      key={board.slug}
+    >
+      <span>{board.name}</span>
+      <i>{num(board.count)}</i>
+    </Link>
+  );
+
+  return (
+    <nav className="board-nav" aria-label={m.boards}>
+      <Link className={activeSlug ? "" : "on"} href="/">
+        <span>{m.allThreads}</span>
+        <i className="all">ALL</i>
+      </Link>
+
+      <div className="bn-group">
+        <p className="bn-label"><span className="bn-dot" />{m.official}</p>
+        {official.map(row)}
+      </div>
+
+      <div className="bn-group">
+        <p className="bn-label"><span className="bn-dot comm" />{m.community}</p>
+        {community.length > 0 ? community.map(row) : <p className="bn-empty">{m.communityEmpty}</p>}
+      </div>
+    </nav>
+  );
+}
+
 /**
- * Shared shell for both designs. The header carries only the brand, the board
- * dropdown, search, the theme switch and the account link: every way of moving
- * around the site passes through the board list, so there is no second nav bar
- * competing with it.
+ * Shared shell for both designs: brand, board dropdown, search, language,
+ * theme, account, plus the one global compose button. Navigation lives in the
+ * board list, never in a second nav bar.
  */
 export async function ThemedPage({
   theme,
@@ -69,12 +114,13 @@ export async function ThemedPage({
   active?: "home" | "boards" | "thread" | "new";
   children: ReactNode;
 }) {
+  const [boards, locale] = await Promise.all([boardSummaries(), getLocale()]);
+  const copy = t(locale).shell;
   const css = theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss;
   const wrap = theme === "light" ? "tw-d" : "tw-b";
-  const boards = await boardSummaries();
 
   return (
-    <div className={wrap} data-active={active ?? "home"}>
+    <div className={wrap} data-active={active ?? "home"} lang={locale}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       {theme === "light" ? (
         <header className="top">
@@ -83,24 +129,19 @@ export async function ThemedPage({
               <span className="sq">豊</span>豊岡BBS<small>/TOYOOKA</small>
             </Link>
             <details className="bd-drawer">
-              <summary>ボード</summary>
+              <summary>{copy.boards}</summary>
               <div className="bd-panel">
-                <Link href="/">すべてのスレッド</Link>
-                {boards.map((board) => (
-                  <Link href={`/b/${board.slug}`} key={board.slug}>
-                    <span>{board.name}</span>
-                    <i>{num(board.count)}</i>
-                  </Link>
-                ))}
+                <BoardLinks boards={boards} />
               </div>
             </details>
             <div className="tools">
               <form className="search" action="/" method="get" role="search">
                 {searchIcon}
-                <input name="q" maxLength={100} placeholder="スレッド・タグを検索" aria-label="検索" />
+                <input name="q" maxLength={100} placeholder={copy.search} aria-label={copy.search} />
               </form>
+              <LanguageToggle locale={locale} />
               <ThemeToggle theme="light" />
-              <Link className="ava" href={username ? `/u/${username}` : "/login"} aria-label="アカウント">
+              <Link className="ava" href={username ? `/u/${username}` : "/login"} aria-label="account">
                 {username ? username.slice(0, 1).toUpperCase() : "?"}
               </Link>
             </div>
@@ -114,24 +155,19 @@ export async function ThemedPage({
             </Link>
             <div className="status"><span className="dot" /><b>LIVE</b> · STUDENT NETWORK</div>
             <details className="bd-drawer">
-              <summary>BOARDS</summary>
+              <summary>{copy.boards}</summary>
               <div className="bd-panel">
-                <Link href="/">ALL THREADS</Link>
-                {boards.map((board) => (
-                  <Link href={`/b/${board.slug}`} key={board.slug}>
-                    <span>{board.name}</span>
-                    <i>{num(board.count)}</i>
-                  </Link>
-                ))}
+                <BoardLinks boards={boards} />
               </div>
             </details>
             <form className="cmd" action="/" method="get" role="search">
               <span>&gt;</span>
-              <input name="q" maxLength={100} placeholder="search threads, tags" aria-label="検索" />
+              <input name="q" maxLength={100} placeholder={copy.search} aria-label={copy.search} />
               <kbd>⌘K</kbd>
             </form>
+            <LanguageToggle locale={locale} />
             <ThemeToggle theme="dark" />
-            <Link className="who" href={username ? `/u/${username}` : "/login"} aria-label="アカウント">
+            <Link className="who" href={username ? `/u/${username}` : "/login"} aria-label="account">
               {username ? username.slice(0, 2).toUpperCase() : "?"}
             </Link>
           </header>
@@ -144,24 +180,42 @@ export async function ThemedPage({
       )}
 
       {children}
+
+      <Link className="fab" href="/new" aria-label={copy.newThread} title={copy.newThread}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </Link>
     </div>
   );
 }
 
 export function BoardNav({ boards, activeSlug }: { boards: BoardSummary[]; activeSlug?: string }) {
+  return <BoardLinks boards={boards} activeSlug={activeSlug} />;
+}
+
+function ThreadActions({ thread }: { thread: HomeThread }) {
   return (
-    <nav className="board-nav" aria-label="ボード">
-      <Link className={activeSlug ? "" : "on"} href="/">
-        <span>すべてのスレッド</span>
-        <i className="all">ALL</i>
-      </Link>
-      {boards.map((board) => (
-        <Link className={activeSlug === board.slug ? "on" : ""} href={`/b/${board.slug}`} key={board.slug}>
-          <span>{board.name}</span>
-          <i>{num(board.count)}</i>
-        </Link>
-      ))}
-    </nav>
+    <div className="acts">
+      <form action={`/api/threads/${thread.id}/like`} method="post" className="contents">
+        <button
+          className={`act like${thread.liked ? " on" : ""}`}
+          aria-pressed={thread.liked}
+          aria-label="like"
+        >
+          {heart}<span>{thread.likeCount}</span>
+        </button>
+      </form>
+      <form action={`/api/threads/${thread.id}/bookmark`} method="post" className="contents">
+        <button
+          className={`act save${thread.bookmarked ? " on" : ""}`}
+          aria-pressed={thread.bookmarked}
+          aria-label="save"
+        >
+          {bookmark}<span>{thread.bookmarkCount}</span>
+        </button>
+      </form>
+    </div>
   );
 }
 
@@ -187,11 +241,6 @@ export function ThreadCards({ threads }: { threads: HomeThread[] }) {
             <Link className={`bo${index % 3 === 0 ? " cy" : ""}`} href={`/b/${thread.board.slug}`}>
               <i />{thread.board.name}
             </Link>
-            <form action={`/api/threads/${thread.id}/bookmark`} method="post" className="contents">
-              <button className={`save${thread.bookmarked ? " on" : ""}`} aria-label={thread.bookmarked ? "保存済み" : "保存"}>
-                {bookmark}
-              </button>
-            </form>
           </div>
           <h3><Link href={`/t/${thread.id}`}>{thread.title}</Link></h3>
           <div className="tags">
@@ -206,10 +255,8 @@ export function ThreadCards({ threads }: { threads: HomeThread[] }) {
               <span className="dot">{thread.author.username.slice(0, 1).toUpperCase()}</span>
               {thread.author.username}・{timeAgo(thread.lastPostAt)}
             </span>
-            <span className="metrics">
-              <span className={`metric${thread.likeCount > 0 ? " liked" : ""}`}>{heart}{thread.likeCount}</span>
-              <span className="metric">{replyIcon}{thread.replyCount}</span>
-            </span>
+            <span className="metric">{replyIcon}{thread.replyCount}</span>
+            <ThreadActions thread={thread} />
           </div>
         </article>
       ))}
@@ -221,7 +268,7 @@ export function ThreadRows({ threads }: { threads: HomeThread[] }) {
   return (
     <section className="list">
       <div className="thead" aria-hidden="true">
-        <span>ID</span><span>SUBJECT</span><span /><span>BOARD</span><span>UPDATED</span><span>REPLIES</span><span>LIKES</span><span />
+        <span>ID</span><span>SUBJECT</span><span /><span>BOARD</span><span>UPDATED</span><span>REPLIES</span><span />
       </div>
       <ol>
         {threads.map((thread, index) => (
@@ -240,14 +287,7 @@ export function ThreadRows({ threads }: { threads: HomeThread[] }) {
             <span className="bname"><i />{thread.board.name}</span>
             <span className="time">{timeAgo(thread.lastPostAt)}</span>
             <span className="num"><b>{thread.replyCount}</b></span>
-            <span className="num"><b>{thread.likeCount}</b></span>
-            <form action={`/api/threads/${thread.id}/bookmark`} method="post" style={{ display: "contents" }}>
-              <button className={`save${thread.bookmarked ? " on" : ""}`} aria-label={thread.bookmarked ? "保存済み" : "保存"}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-                  <path d="M7 4h10v17l-5-4-5 4Z" />
-                </svg>
-              </button>
-            </form>
+            <ThreadActions thread={thread} />
           </li>
         ))}
       </ol>
