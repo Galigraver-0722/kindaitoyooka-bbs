@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { LanguageToggle } from "@/components/theme/language-toggle";
+import { BackButton } from "@/components/theme/nav-buttons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { homeDCss } from "@/components/home/home-d-css";
 import { homeBCss } from "@/components/home/home-b-css";
@@ -120,6 +121,10 @@ export async function ThemedPage({
       {theme === "light" ? (
         <header className="top">
           <div className="top-in">
+            <div className="nav-left">
+              <BackButton label={copy.back} />
+              <Link className="nav-btn" href="/" aria-label={copy.home} title={copy.home}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z" /></svg></Link>
+            </div>
             <Link className="brand" href="/">
               <span className="sq">豊</span>豊岡BBS<small>/TOYOOKA</small>
             </Link>
@@ -145,6 +150,10 @@ export async function ThemedPage({
       ) : (
         <>
           <header className="bar">
+            <div className="nav-left">
+              <BackButton label={copy.back} />
+              <Link className="nav-btn" href="/" aria-label={copy.home} title={copy.home}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z" /></svg></Link>
+            </div>
             <Link className="brand" href="/">
               <span className="sig"><i /><i /><i /></span>TOYOOKA<span style={{ color: "var(--teal)" }}>{"//"}</span>BBS
             </Link>

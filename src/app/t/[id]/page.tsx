@@ -11,6 +11,7 @@ import { getLocale, t } from "@/lib/i18n";
 import { getTheme } from "@/lib/theme";
 import { buildThreadTree, countComments, type TreeNode } from "@/lib/thread-tree";
 import { ToggleAction } from "@/components/theme/actions";
+import { Comment, type CommentData, type CommentLabels } from "@/components/theme/comment";
 
 export const dynamic = "force-dynamic";
 
@@ -46,71 +47,6 @@ function ReplyForm({
       <textarea name="body" required maxLength={2000} placeholder={placeholder} aria-label={placeholder} rows={3} />
       <button className="btn btn-p" type="submit">{submit}</button>
     </form>
-  );
-}
-
-function CommentNode({
-  node,
-  threadId,
-  likedPostIds,
-  canReply,
-  labels,
-}: {
-  node: TreeNode<PostRow>;
-  threadId: string;
-  likedPostIds: Set<string>;
-  canReply: boolean;
-  labels: { reply: string; placeholder: string; submit: string };
-}) {
-  const { post } = node;
-  const liked = likedPostIds.has(post.id);
-
-  return (
-    <div className="cmt" id={`p-${post.id}`}>
-      <div className="cmt-head">
-        <span className="cmt-no">{node.number}</span>
-        <span className="cmt-who">
-          <span className="dot">{post.author.username.slice(0, 1).toUpperCase()}</span>
-          {post.author.username}
-        </span>
-        <span className="cmt-time">{formatDateTime(post.createdAt, "ja")}</span>
-        {post.author.role !== "STUDENT" ? (
-          <span className="pill role">{post.author.role === "ADMIN" ? "管理者" : "モデレーター"}</span>
-        ) : null}
-      </div>
-
-      <div className="cmt-body">{post.body}</div>
-
-      <div className="acts cmt-acts">
-        <ToggleAction
-          kind="like"
-          endpoint={`/api/posts/${post.id}/like`}
-          initialCount={post.likeCount}
-          initialActive={liked}
-        />
-        {canReply ? (
-          <details className="reply-box">
-            <summary className="act reply-btn">{replyIcon}<span>{labels.reply}</span></summary>
-            <ReplyForm threadId={threadId} parentId={post.id} placeholder={labels.placeholder} submit={labels.submit} />
-          </details>
-        ) : null}
-      </div>
-
-      {node.children.length > 0 ? (
-        <div className="cmt-kids">
-          {node.children.map((child) => (
-            <CommentNode
-              key={child.post.id}
-              node={child}
-              threadId={threadId}
-              likedPostIds={likedPostIds}
-              canReply={canReply}
-              labels={labels}
-            />
-          ))}
-        </div>
-      ) : null}
-    </div>
   );
 }
 
@@ -180,7 +116,29 @@ export default async function ThreadPage({
   const root = thread.posts[0];
   const tree = buildThreadTree(thread.posts.slice(1));
   const totalComments = countComments(tree);
-  const labels = { reply: copy.reply, placeholder: copy.replyPlaceholder, submit: copy.replySend };
+  const labels: CommentLabels = {
+    reply: copy.reply,
+    placeholder: copy.replyPlaceholder,
+    submit: copy.replySend,
+    collapse: copy.collapse,
+    expand: copy.expand,
+    foldedSuffix: copy.foldedSuffix,
+    admin: locale === "ja" ? "管理者" : "Admin",
+    moderator: locale === "ja" ? "モデレーター" : "Moderator",
+  };
+
+  const toComment = (node: TreeNode<PostRow>): CommentData => ({
+    id: node.post.id,
+    number: node.number,
+    body: node.post.body,
+    author: { username: node.post.author.username, role: node.post.author.role },
+    createdAt: formatDateTime(node.post.createdAt, "ja"),
+    likeCount: node.post.likeCount,
+    liked: likedPostIds.has(node.post.id),
+    children: node.children.map(toComment),
+  });
+
+  const comments = tree.map(toComment);
 
   return (
     <ThemedPage
@@ -260,16 +218,15 @@ export default async function ThreadPage({
           <h2><span className="tick" />{copy.comments(totalComments)}</h2>
         </div>
 
-        {tree.length === 0 ? (
+        {comments.length === 0 ? (
           <p className="empty">{copy.noComments}</p>
         ) : (
           <div className="cmt-tree">
-            {tree.map((node) => (
-              <CommentNode
-                key={node.post.id}
-                node={node}
+            {comments.map((comment) => (
+              <Comment
+                key={comment.id}
+                data={comment}
                 threadId={thread.id}
-                likedPostIds={likedPostIds}
                 canReply={canReply}
                 labels={labels}
               />
