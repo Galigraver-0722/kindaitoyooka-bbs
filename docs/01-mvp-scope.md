@@ -23,7 +23,8 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 - Fixed-window rate limits on authentication, posting, reporting, and reactions, tunable by
   environment variable.
 - Board pagination at 20 threads per page, preserving the newest/popular sort.
-- Public community rules, privacy notice, and moderation policy pages, in English and Japanese.
+- Public terms of use, community rules, privacy notice, and moderation policy pages, in English and
+  Japanese. The terms are the agreement; the other three are declared part of it.
 - An audit log for every moderation action, visible on `/moderation`.
 - Author profile pages at `/u/<username>` with an identity banner, thread/post/like/join-date
   counts, and recent-thread and recent-reply tabs.

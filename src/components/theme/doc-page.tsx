@@ -5,7 +5,13 @@ import { getLocale, t } from "@/lib/i18n";
 import { getTheme } from "@/lib/theme";
 import type { PolicyDocument, PolicyKey } from "@/lib/policies";
 
+/**
+ * Reading order of the sidebar. "Terms" comes first because it is the umbrella
+ * agreement: it states that the other three documents are part of it, so a
+ * reader who starts at the bottom of the list meets the same claim twice.
+ */
 const ORDER: { key: PolicyKey; href: string }[] = [
+  { key: "terms", href: "/terms" },
   { key: "rules", href: "/rules" },
   { key: "privacy", href: "/privacy" },
   { key: "moderation", href: "/moderation-policy" },
@@ -20,6 +26,7 @@ export async function DocPage({ docKey, document }: { docKey: PolicyKey; documen
   const copy = t(locale).docs;
   const footer = t(locale).footer;
   const labels: Record<PolicyKey, string> = {
+    terms: footer.terms,
     rules: footer.rules,
     privacy: footer.privacy,
     moderation: footer.moderation,

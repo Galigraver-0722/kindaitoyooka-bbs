@@ -77,8 +77,9 @@ Exit criteria:
 ### Delivered in Phase 1 so far (2026-10-24)
 
 - Board pagination at 20 threads per page, keeping the newest/popular sort and the unread badges.
-- Bilingual community rules, privacy notice, and moderation policy that match what the code
-  actually does, including the limits (no account suspension, no automatic purge yet).
+- Bilingual terms of use, community rules, privacy notice, and moderation policy that match what
+  the code actually does, including the limits (no account suspension yet, no automatic purge).
+  The terms state the permission a post grants, which is open question Q13.
 - `GET /health`, the rate limits, and the audit log from Phase 1.
 - `pnpm backup`, `pnpm verify-backup`, and `pnpm restore`, plus a successful local restore drill:
   a live backup was restored into a second database, and a second server served the same threads.

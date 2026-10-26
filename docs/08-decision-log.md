@@ -29,6 +29,15 @@ alternatives considered.
 | ADR-0017 | Policies as bilingual, versioned code | Accepted | 2026-10-24 |
 | ADR-0018 | Editorial/Swiss visual system with one accent | Accepted | 2026-10-24 |
 | ADR-0019 | Progressive enhancement for reactions | Accepted | 2026-10-24 |
+| ADR-0020 | One feed and one board page as the whole information architecture | Accepted | 2026-10-25 |
+| ADR-0021 | Students open their own boards without an approval step | Accepted | 2026-10-25 |
+| ADR-0022 | Search stays `LIKE` plus a published ranking, without a full-text index | Accepted | 2026-10-25 |
+| ADR-0023 | Rate-limit counters in SQLite, and only trust a proxy we control | Accepted | 2026-10-25 |
+| ADR-0024 | Administrators own board lifecycles; quiet boards archive themselves | Accepted | 2026-10-25 |
+| ADR-0025 | The notification inbox is derived from existing rows | Accepted | 2026-10-25 |
+| ADR-0026 | Authors may remove their own posts, and a removal always lands somewhere visible | Accepted | 2026-10-25 |
+| ADR-0027 | Live refresh is polling plus client reconciliation, not websockets | Accepted | 2026-10-26 |
+| ADR-0028 | Terms of use and a name policy, because the license covers neither | Accepted | 2026-10-26 |
 
 ---
 
@@ -886,6 +895,52 @@ refresh does not happen to include yet, and loses fold state).
 
 **Revisit if.** A page needs sub-second delivery, the refresh cost per board page grows past a few
 milliseconds, or a reader complains that the 12 s lag makes a conversation feel broken.
+
+---
+
+## ADR-0028 — Terms of use and a name policy, because the license covers neither
+
+**Context.** The MIT License governs the code and nothing else. It does not say what a deployment
+is allowed to call itself, and it says nothing about the writing students publish. Open question
+Q13 (who owns a post, and what permission the site has to show it) had been unresolved since
+Phase 0, while the three published documents covered conduct, stored data, and moderation. A
+reader therefore had no text granting the site permission to display what they wrote, and a fork
+had no statement that the name did not travel with the code.
+
+**Decision.** Publish `/terms` as a fourth bilingual policy document in `src/lib/policies.ts`.
+It states that the author keeps copyright and grants only a non-exclusive, royalty-free permission
+to store, display, back up, export, and moderate a post for the purpose of running the site, and
+that the permission to display ends when the post is removed. It also declares the community
+rules, the privacy notice, and the moderation policy to be part of the agreement, with the more
+specific document governing its own subject. Separately, add `TRADEMARK.md` at the repository
+root: the name applies to forks rather than to readers, so it belongs beside the license rather
+than in the site's policy pages.
+
+**Consequences.**
+
+- Q13 is answered in published text that a reader can open, not only in this log.
+- The terms inherit the project's rule that policy text must stay true to the code. Checking them
+  exposed one such gap: the privacy notice still claimed that no IP address reached the database,
+  after the rate-limit counters had moved into SQLite. That sentence was corrected in the same
+  change, together with the notification timestamp and the rate-limit rows themselves.
+- Each page now carries its own date (`POLICY_UPDATES`), because correcting one document must not
+  move the date on the other three.
+- `TRADEMARK.md` gives a fork a concrete list of strings to rename, which makes the name policy
+  checkable by reading rather than by argument.
+- Registration links to the terms. There is no consent checkbox yet, so acceptance is stated by
+  use; a checkbox is recorded as the next step if the school's legal contact asks for one.
+
+**Alternatives considered.** Leaving the code license as the only legal text (rejected: MIT grants
+nothing about user content, so the site displayed writing it had no stated permission to display);
+placing the content licence inside the privacy notice (rejected: that notice describes data
+handling, and a permission grant belongs in the contract the reader accepts); publishing the terms
+only in `docs/` (rejected: readers of the site never open the repository); writing a bespoke
+license instead of terms plus a name policy (rejected: a custom license is neither OSI-approved nor
+readable by a student, and it would not govern the school's name either).
+
+**Revisit if.** The school's legal contact asks for explicit consent or a different governing law,
+the site begins collecting something the terms do not describe, or a fork is deployed under this
+name and the policy needs a remedy stronger than a request.
 
 ---
 

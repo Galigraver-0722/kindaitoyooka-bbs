@@ -195,6 +195,7 @@ const en = {
       firstTime: "First time here?",
       rules: "Community rules",
       privacy: "Privacy notice",
+      terms: "Terms of use",
       registerTitle: "Register",
       registerLede: "A board for the whole school. Pick a username and password and you can start posting. Registration is free and you can delete it later.",
       email: "Email (optional)",
@@ -207,7 +208,7 @@ const en = {
       noticePublic: "Everything you post can be read by every student. Deleted posts may still be cached elsewhere.",
       noticeForbidden: "No harassment, personal information or off-site contact details.",
       noticeFirstAdmin: "The first account becomes an admin. Create the admin before opening registration.",
-      noticeRules: "Read the community rules and the privacy notice before you use the board.",
+      noticeRules: "Read the terms of use, the community rules, and the privacy notice before you use the board.",
     },
     profile: {
       threads: "Threads",
@@ -458,6 +459,7 @@ const en = {
     rules: "Community rules",
     privacy: "Privacy notice",
     moderation: "Moderation policy",
+    terms: "Terms of use",
     disclaimer:
       "A community-run student project. Not an official communication channel of Kindai University Toyooka Junior & Senior High School.",
     license: "Built with Next.js and Prisma. Licensed under MIT.",
@@ -650,6 +652,7 @@ const ja: typeof en = {
       firstTime: "はじめての方は",
       rules: "コミュニティルール",
       privacy: "プライバシー通知",
+      terms: "利用規約",
       registerTitle: "新規登録",
       registerLede: "全校生徒のための掲示板です。ユーザー名とパスワードを決めると、すぐに書き込めます。登録は無料で、あとから削除もできます。",
       email: "メールアドレス（任意）",
@@ -662,7 +665,7 @@ const ja: typeof en = {
       noticePublic: "書き込んだ内容は全校生徒が読めます。消しても完全には消えない場合があります。",
       noticeForbidden: "人の悪口、個人情報、外部への連絡先の投稿は禁止です。",
       noticeFirstAdmin: "最初の登録者が管理者になります。学校のアカウントとして使う場合は、先に管理者を作ってください。",
-      noticeRules: "利用前にコミュニティルールとプライバシー通知を読んでください。",
+      noticeRules: "利用前に、利用規約・コミュニティルール・プライバシー通知を読んでください。",
     },
     profile: {
       threads: "スレッド",
@@ -909,6 +912,7 @@ const ja: typeof en = {
     rules: "コミュニティルール",
     privacy: "プライバシー通知",
     moderation: "モデレーション方針",
+    terms: "利用規約",
     disclaimer:
       "生徒が運営する非公式のプロジェクトです。近畿大学附属豊岡中学校・高等学校の公式な連絡手段ではありません。",
     license: "Next.js と Prisma で構築。MIT ライセンスで公開しています。",

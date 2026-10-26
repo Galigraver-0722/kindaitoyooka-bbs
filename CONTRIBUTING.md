@@ -64,6 +64,17 @@ Read `docs/09-learning-path.md` if any of that is unfamiliar.
   for four tables.
 - Comments explain *why*, not *what*. The code already says what.
 
+## Licensing of contributions
+
+- The project is MIT licensed. By opening a pull request you agree that your contribution is
+  released under the same license, and that the maintainer may relicense the project later
+  without asking each contributor again. If you cannot accept that, open an issue with a
+  proposal instead of a patch.
+- Do not add a file, font, image, or word list whose license forbids redistribution. Record a new
+  third-party asset in `THIRD_PARTY_NOTICES.md` in the same pull request.
+- The name policy in `TRADEMARK.md` applies to contributed material: do not add a school emblem,
+  a logo, or a name that the project has no permission to use.
+
 ## Review
 
 One maintainer reviews by default. Security-sensitive changes, moderation policy changes, and

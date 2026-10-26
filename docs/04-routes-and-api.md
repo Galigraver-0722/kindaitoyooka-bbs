@@ -25,6 +25,7 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
 | any signed-in page | Signed-in | The header shows a notification inbox (replies, comments, likes, saves) with an unread count; every item links to a specific post (`#p-<id>`), including thread-level likes and saves, which point at the opening post |
 | `/moderation` | Moderator / Admin | Open reports (10 per page, `page` parameter), automatic flags, the recent audit log, and — for administrators — the student-board archive controls |
+| `/terms` | Public | Terms of use: who may use the site, the permission a post grants, what the operators may do, and what is not promised. Declares the other three documents part of the agreement |
 | `/rules` | Public | Community rules, in the current interface language |
 | `/privacy` | Public | Privacy notice: stored data, cookies, retention, access |
 | `/moderation-policy` | Public | How reports, automatic flags, appeals, and escalation work |

@@ -35,8 +35,9 @@ thread, and where students can report problems without confronting anyone. See
 - Japanese-first interface with a header switch to English; user content is never machine-translated.
 - Tags are a separate field when composing, not parsed out of the body.
 - Board pages paginate at 20 threads, with working newest and popular sorts.
-- Public community rules, privacy notice, and moderation policy at `/rules`, `/privacy`, and
-  `/moderation-policy`, in both languages.
+- Public terms of use, community rules, privacy notice, and moderation policy at `/terms`,
+  `/rules`, `/privacy`, and `/moderation-policy`, in both languages. The terms state that your
+  posts stay yours and grant only the permission needed to run the site.
 - Profile pages at `/u/<username>` with an identity banner, thread/post/like/join-date counts,
   and separate recent-thread and recent-reply tabs; no email or real name.
 - Thread editing for 15 minutes after posting, with a visible "edited" marker.
@@ -172,6 +173,11 @@ tab. Do not open a public issue. See [SECURITY.md](SECURITY.md).
 ## License
 
 [MIT](LICENSE) © 2026 Kindai Toyooka BBS contributors.
+
+The MIT License covers the code. It does not grant the name: a deployment that is shown to
+students must not present itself as Toyooka BBS, and the school's name and emblem belong to the
+school. [TRADEMARK.md](TRADEMARK.md) lists the strings a fork has to change and the attribution it
+has to keep.
 
 ## Disclaimer
 

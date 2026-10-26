@@ -16,6 +16,9 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           className="flex flex-col gap-2.5 text-[13px] md:col-span-3"
           aria-label={m.policies}
         >
+          <Link href="/terms" className="text-muted transition-colors hover:text-ink">
+            {m.terms}
+          </Link>
           <Link href="/rules" className="text-muted transition-colors hover:text-ink">
             {m.rules}
           </Link>

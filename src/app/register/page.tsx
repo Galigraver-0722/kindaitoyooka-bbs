@@ -67,7 +67,7 @@ export default async function RegisterPage({
             <li>{copy.noticeForbidden}</li>
             <li>{copy.noticeFirstAdmin}</li>
             <li>
-              {copy.noticeRules} <Link href="/rules">{copy.rules}</Link> · <Link href="/privacy">{copy.privacy}</Link>
+              {copy.noticeRules} <Link href="/terms">{copy.terms}</Link> · <Link href="/rules">{copy.rules}</Link> · <Link href="/privacy">{copy.privacy}</Link>
             </li>
           </ul>
         </div>

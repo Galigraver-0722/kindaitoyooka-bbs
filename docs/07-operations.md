@@ -424,7 +424,8 @@ repository directory on the server.
 - [ ] `COOKIE_SECURE` left at its secure default.
 - [ ] Daily backup cron installed and one restore tested.
 - [x] Rate limiting implemented and tuned through environment variables.
-- [ ] Rules, privacy notice, and moderation policy published.
+- [ ] Terms, rules, privacy notice, and moderation policy published, and the teacher advisor has
+      read the terms that the school's name appears in.
 - [ ] At least two moderators trained; escalation contacts shared.
 - [ ] Uptime monitoring configured.
 - [ ] Error logging accessible to the maintainer.

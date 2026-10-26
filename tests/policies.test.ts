@@ -1,14 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { POLICIES, POLICY_UPDATED, policyFor } from "../src/lib/policies";
+import { POLICIES, POLICY_UPDATED, POLICY_UPDATES, policyFor } from "../src/lib/policies";
 
-const KEYS = ["rules", "privacy", "moderation"] as const;
+/** Derived from the date map, so a new document cannot be added to one language only. */
+const KEYS = Object.keys(POLICY_UPDATES) as (keyof typeof POLICY_UPDATES)[];
 
 test("both languages publish every policy with the same structure", () => {
   for (const key of KEYS) {
     const en = POLICIES.en[key];
     const ja = POLICIES.ja[key];
 
+    assert.ok(en, `en.${key} is missing`);
+    assert.ok(ja, `ja.${key} is missing`);
     assert.ok(en.title.length > 0);
     assert.ok(ja.title.length > 0);
     assert.ok(en.intro.length > 0);
@@ -26,11 +29,27 @@ test("both languages publish every policy with the same structure", () => {
   }
 });
 
-test("policy pages carry the shared update date", () => {
+test("both languages carry exactly the documented set of policies", () => {
+  assert.deepEqual(Object.keys(POLICIES.en).sort(), [...KEYS].sort());
+  assert.deepEqual(Object.keys(POLICIES.ja).sort(), [...KEYS].sort());
+});
+
+test("each page carries its own last-updated date", () => {
   for (const key of KEYS) {
-    assert.ok(POLICIES.en[key].updated.includes(POLICY_UPDATED));
-    assert.ok(POLICIES.ja[key].updated.includes(POLICY_UPDATED));
+    assert.ok(
+      POLICIES.en[key].updated.includes(POLICY_UPDATES[key]),
+      `en.${key} should read ${POLICY_UPDATES[key]}`,
+    );
+    assert.ok(
+      POLICIES.ja[key].updated.includes(POLICY_UPDATES[key]),
+      `ja.${key} should read ${POLICY_UPDATES[key]}`,
+    );
   }
+});
+
+test("the set version is the newest date in the map", () => {
+  const newest = [...Object.values(POLICY_UPDATES)].sort().at(-1);
+  assert.equal(POLICY_UPDATED, newest);
 });
 
 test("policy text contains no unfinished placeholders", () => {
@@ -41,4 +60,6 @@ test("policy text contains no unfinished placeholders", () => {
 test("policyFor resolves the requested locale", () => {
   assert.equal(policyFor("ja", "rules"), POLICIES.ja.rules);
   assert.equal(policyFor("en", "privacy"), POLICIES.en.privacy);
+  assert.equal(policyFor("ja", "terms"), POLICIES.ja.terms);
+  assert.equal(policyFor("en", "terms"), POLICIES.en.terms);
 });
