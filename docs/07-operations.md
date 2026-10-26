@@ -120,12 +120,29 @@ pnpm build
 `prisma/migrations` holds the initial migration, so a fresh server builds the same schema a
 local checkout has. `pnpm db:push` skips the history and is for throwaway experiments only.
 
-Create the first administrator by registering on the site. On an empty database, the first
-account becomes `ADMIN`. Then remove any demo accounts:
+A fresh database has no boards. The only board-creating route makes COMMUNITY boards, so run the
+bootstrap script before opening the site. It creates the five official boards and, optionally, one
+administrator. It never creates demo accounts, sample threads, or a known password, and re-running
+it is safe (boards are upserted by slug):
 
 ```bash
-pnpm exec prisma studio   # or a SQL client; delete the seeded users
+BOOTSTRAP_ADMIN_USERNAME=teacher \
+BOOTSTRAP_ADMIN_PASSWORD='<a long unique password>' \
+pnpm bootstrap
 ```
+
+Pass the password through the environment, not on the command line: argv ends up in shell history
+and in `ps` output. `pnpm bootstrap --boards-only` skips the account, and
+`pnpm bootstrap --promote <username>` raises an existing account to `ADMIN` without touching its
+password.
+
+Do not run `pnpm db:seed` here. It creates `admin`, `moderator`, and `student` with the public
+password `toyooka-demo-123`; the script now refuses to run when `NODE_ENV=production` unless
+`--force` is passed.
+
+Registering on the site also works — the first account on an empty database becomes `ADMIN` — but
+that turns into a race the moment the URL is reachable: whoever registers first owns the site. Run
+the bootstrap first if the site is already exposed.
 
 ### 4.3 systemd unit
 
@@ -411,6 +428,12 @@ repository directory on the server.
 - [ ] At least two moderators trained; escalation contacts shared.
 - [ ] Uptime monitoring configured.
 - [ ] Error logging accessible to the maintainer.
+- [ ] `pnpm bootstrap` run: official boards exist, one real `ADMIN`, no demo accounts
+      (`pnpm exec prisma studio` to confirm the user table has exactly the accounts you expect).
+- [ ] `/robots.txt` still answers `Disallow: /`; switch to allow only when the site is announced
+      (edit `src/app/robots.ts`).
+- [ ] An error page shows the school's design, not Next's default (throw once from `/meta` and
+      confirm the ERROR code appears).
 - [ ] Rollback procedure written down and practiced once.
 
 ## 10. Cost estimate

@@ -101,7 +101,8 @@ deployment, and never keep these passwords anywhere real.
 | `pnpm test` | Unit tests for validation, i18n, tags, pagination, policies, rate limits, editing, and passwords |
 | `pnpm db:deploy` | Create or update the SQLite database from `prisma/migrations` |
 | `pnpm db:push` | Push the schema without a migration (quick experiments only) |
-| `pnpm db:seed` | Insert development data |
+| `pnpm bootstrap` | First-run setup for a real deployment: the five official boards plus one administrator (no demo accounts) |
+| `pnpm db:seed` | Insert development data (refused when `NODE_ENV=production`) |
 | `pnpm db:studio` | Browse the database in Prisma Studio |
 | `pnpm reset-password <username>` | Generate a new password, print it once, and sign the account out everywhere |
 | `pnpm backup [dir]` | Write a consistent SQLite backup while the app is running |

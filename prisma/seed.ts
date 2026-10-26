@@ -2,7 +2,9 @@
  * Development seed data.
  *
  * The demo passwords below are public and must never be used on a real
- * deployment. See docs/07-operations.md for the launch checklist.
+ * deployment. See docs/07-operations.md for the launch checklist. A real
+ * deployment uses `pnpm bootstrap` instead, which creates the official boards
+ * and (optionally) one administrator without any demo accounts.
  */
 import { BoardKind, PrismaClient, Role } from "@prisma/client";
 import { hashPassword } from "../src/lib/passwords";
@@ -10,6 +12,20 @@ import { hashPassword } from "../src/lib/passwords";
 const prisma = new PrismaClient();
 
 const DEMO_PASSWORD = "toyooka-demo-123";
+
+// Refuse to run against a production deployment. `--force` exists for the one
+// legitimate case: a staging box that should mirror the demo content.
+if (process.env.NODE_ENV === "production" && !process.argv.includes("--force")) {
+  console.error(
+    [
+      "refusing to run the development seed with NODE_ENV=production:",
+      "it creates admin/student/moderator accounts with a public password.",
+      "use `pnpm bootstrap` for a real deployment (official boards + one admin),",
+      "or pass --force if this box really is a throwaway staging copy.",
+    ].join("\n"),
+  );
+  process.exit(1);
+}
 
 function tagLinks(...names: string[]) {
   return {

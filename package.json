@@ -14,6 +14,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "bootstrap": "tsx scripts/bootstrap.ts",
     "reset-password": "tsx scripts/reset-password.ts",
     "db:studio": "prisma studio",
     "archive-boards": "tsx scripts/archive-boards.ts",

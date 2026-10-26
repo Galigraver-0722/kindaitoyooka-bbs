@@ -112,11 +112,19 @@ pnpm build
 
 `prisma/migrations` に最初のマイグレーションがあるので、新しいサーバーでも手元と同じスキーマができます。`pnpm db:push` は履歴を残さないので、使い捨ての実験だけに使います。
 
-最初の管理者は、サイト上で登録して作ります。データベースが空のときは、最初のアカウントが `ADMIN` になります。そのあとでデモアカウントを削除してください。
+新しいデータベースにはボードが 1 つもありません。ボードを作る経路はコミュニティボード専用なので、サイトを開く前にブートストラップを実行してください。公式ボード 5 つと、必要なら管理者 1 人を作ります。デモアカウントもサンプル投稿も作らず、既知のパスワードも使いません。何度実行しても安全です（ボードは slug で upsert されます）。
 
 ```bash
-pnpm exec prisma studio   # or a SQL client; delete the seeded users
+BOOTSTRAP_ADMIN_USERNAME=teacher \
+BOOTSTRAP_ADMIN_PASSWORD='<長くて推測されないパスワード>' \
+pnpm bootstrap
 ```
+
+パスワードは環境変数で渡してください。コマンドライン引数はシェル履歴と `ps` に残ります。`pnpm bootstrap --boards-only` はアカウントを作らず、`pnpm bootstrap --promote <username>` はパスワードを変えずに既存アカウントを `ADMIN` にします。
+
+ここで `pnpm db:seed` を実行しないでください。`admin`、`moderator`、`student` を公開パスワード `toyooka-demo-123` で作ります。このスクリプトは `NODE_ENV=production` では `--force` を付けない限り実行を拒否するようになりました。
+
+サイト上で登録する方法もあります。空のデータベースでは最初のアカウントが `ADMIN` になります。ただし URL に到達できる状態では競争になります。最初に登録した人がサイトの管理者になるためです。公開済みなら先にブートストラップを実行してください。
 
 ### 4.3 systemd ユニット
 
@@ -375,6 +383,9 @@ npx prisma migrate diff --from-migrations prisma/migrations \
 - [ ] 少なくとも 2 人のモデレーターに研修を行い、エスカレーション先を共有した。
 - [ ] 死活監視を設定した。
 - [ ] 保守担当がエラーログを確認できる。
+- [ ] `pnpm bootstrap` を実行済み。公式ボードがあり、実在の `ADMIN` が 1 人だけで、デモアカウントがない（`pnpm exec prisma studio` で確認）。
+- [ ] `/robots.txt` が `Disallow: /` のまま。サイトを告知するときに `src/app/robots.ts` を書き換える。
+- [ ] エラー画面が学校のデザインで出る（`/meta` から一度例外を起こし、ERROR の文字列が出ることを確認）。
 - [ ] ロールバックの手順を文書に残し、1 回練習した。
 
 ## 10. 費用の目安
