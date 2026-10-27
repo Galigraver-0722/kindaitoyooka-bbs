@@ -261,6 +261,13 @@ sudo systemctl start toyooka-bbs
 curl -fsS https://bbs.example.com/health
 ```
 
+`/health` also reports `version` and `channel`, so after a deploy you can confirm which build is
+answering without reading the checked-out commit:
+
+```bash
+curl -fsS https://bbs.example.com/health | jq -r '.version + " " + .channel'
+```
+
 Then open the site and check that a known thread and its replies are present, and that the newest
 posts from the backup are there. A backup that has never been restored is a hope, not a backup.
 

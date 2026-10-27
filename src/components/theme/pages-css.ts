@@ -454,6 +454,9 @@ export const pagesDCss = `
 .tw-d .adm-row-blocked{grid-template-columns:minmax(0,1.8fr) auto auto}
 
 
+/* Build version and the beta marker, in the header next to the brand. */
+.tw-d .brand .ver{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--ink);background:var(--sky);border:1.5px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:2px;white-space:nowrap}
+@media (max-width:520px){.tw-d .brand .ver{font-size:8px;padding:0 5px}}
 `;
 
 export const pagesBCss = `
@@ -905,6 +908,11 @@ export const pagesBCss = `
 .tw-b .pill.role-moderator{color:var(--cyan);border-color:rgba(90,230,236,.5)}
 @media (max-width:820px){.tw-b .adm-row{grid-template-columns:1fr}.tw-b .adm-acts{justify-self:start}.tw-b .adm-suspend input{width:100%}}
 .tw-b .adm-row-blocked{grid-template-columns:minmax(0,1.8fr) auto auto}
+
+
+/* Build version and the beta marker, in the header next to the brand. */
+.tw-b .brand .ver{font-size:9.5px;letter-spacing:.1em;color:var(--teal);border:1px solid var(--line);border-radius:3px;padding:1px 6px;margin-left:2px;white-space:nowrap}
+@media (max-width:520px){.tw-b .brand .ver{font-size:9px;padding:0 4px}}
 
 
 `;

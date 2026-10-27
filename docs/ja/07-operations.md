@@ -239,6 +239,12 @@ sudo systemctl start toyooka-bbs
 curl -fsS https://bbs.example.com/health
 ```
 
+`/health` は `version` と `channel` も返すので、配備のあとにどのビルドが応答しているかを、チェックアウトしたコミットを読まずに確認できます。
+
+```bash
+curl -fsS https://bbs.example.com/health | jq -r '.version + " " + .channel'
+```
+
 サイトを開き、既知のスレッドと返信、バックアップ時点の最新投稿が残っていることを確認してください。一度も復旧していないバックアップは、バックアップではなく希望にすぎません。
 
 ### ローカルで行った演習（2026-10-24）

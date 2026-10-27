@@ -24,14 +24,14 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/search` | Public | Redirects to `/` with `q`; `tag` becomes a `#tag` query |
 | `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
 | any signed-in page | Signed-in | The header shows a notification inbox (replies, comments, likes, saves) with an unread count; every item links to a specific post (`#p-<id>`), including thread-level likes and saves, which point at the opening post |
-| every page | Public | The header also has an announcements panel: official notices and the changelog, portalled to the body, newest first, with a dot while something is unread for a signed-in reader |
+| every page | Public | The header carries the build badge (`v0.1.0 · BETA`, from `src/lib/version.ts`) and an announcements panel: official notices and the changelog, portalled to the body, newest first, with a dot while something is unread for a signed-in reader |
 | `/admin` | Moderator / Admin | The console: open reports (10 per page), accounts (search, suspend/restore, role changes for administrators), posts and threads (search, lock, remove), the audit log, and — for administrators — student-board archive controls. `tab=reports\|users\|content\|blocked\|audit\|boards` |
 | `/moderation` | Moderator / Admin | Redirects to `/admin?tab=reports`; the queue used to live here |
 | `/terms` | Public | Terms of use: who may use the site, the permission a post grants, what the operators may do, and what is not promised. Declares the other three documents part of the agreement |
 | `/rules` | Public | Community rules, in the current interface language |
 | `/privacy` | Public | Privacy notice: stored data, cookies, retention, access |
 | `/moderation-policy` | Public | How reports, automatic flags, appeals, and escalation work |
-| `/health` | Public | JSON readiness check: `{"status":"ok","database":"ok"}`, or 503 |
+| `/health` | Public | JSON readiness check: `{"status":"ok","database":"ok","version":"0.1.0","channel":"beta"}`, or the same shape with `status:"error"` and 503 |
 | any unknown path | Public | Custom 404 |
 
 All pages are server-rendered per request. There is no client-side data fetching.

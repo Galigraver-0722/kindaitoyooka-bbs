@@ -21,6 +21,7 @@ import { getLocale, t } from "@/lib/i18n";
 import { timeAgo } from "@/lib/time-ago";
 import type { Locale } from "@/lib/locales";
 import { readableInk } from "@/lib/color";
+import { versionNumber } from "@/lib/version";
 import { Highlight } from "@/components/theme/highlight";
 
 const replyIcon = (
@@ -190,6 +191,9 @@ export async function ThemedPage({
             </div>
             <Link className="brand" href="/">
               <span className="sq">豊</span>豊岡BBS<small>/TOYOOKA</small>
+              <span className="ver" title={`${copy.betaNote} · ${versionNumber()}`}>
+                {versionNumber()} · {copy.beta}
+              </span>
             </Link>
             <details className="bd-drawer">
               <summary>{copy.boards}</summary>
@@ -239,8 +243,11 @@ export async function ThemedPage({
             </div>
             <Link className="brand" href="/">
               <span className="sig"><i /><i /><i /></span>TOYOOKA<span style={{ color: "var(--teal)" }}>{"//"}</span>BBS
+              <span className="ver" title={`${copy.betaNote} · ${versionNumber()}`}>
+                {versionNumber()}
+              </span>
             </Link>
-            <div className="status"><span className="dot" /><b>LIVE</b> · STUDENT NETWORK</div>
+            <div className="status"><span className="dot" /><b>{copy.betaNote}</b></div>
             <details className="bd-drawer">
               <summary>{copy.boards}</summary>
               <div className="bd-panel">

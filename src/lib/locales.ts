@@ -51,6 +51,8 @@ const en = {
   },
   shell: {
     console: "Console",
+    beta: "BETA",
+    betaNote: "Internal test build",
     search: "Search threads and tags",
     boards: "Boards",
     official: "Official",
@@ -618,6 +620,8 @@ const ja: typeof en = {
   },
   shell: {
     console: "管理",
+    beta: "ベータ版",
+    betaNote: "内部テスト中の版",
     search: "スレッド・タグを検索",
     boards: "ボード",
     official: "公式",
