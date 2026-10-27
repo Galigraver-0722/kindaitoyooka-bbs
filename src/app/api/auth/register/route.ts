@@ -4,7 +4,8 @@ import { formText, isSameOrigin, seeOther } from "@/lib/http";
 import { POLICY_UPDATES } from "@/lib/policies";
 import { checkRateLimit, RATE_LIMITS, requestIp } from "@/lib/rate-limit";
 import {
-  hasAcceptedTerms,
+  AGREEMENT_FIELDS,
+  missingAgreements,
   safeNextPath,
   validateEmail,
   validatePassword,
@@ -30,9 +31,12 @@ export async function POST(request: Request) {
   const passwordValue = data.get("password");
   const password = typeof passwordValue === "string" ? passwordValue : "";
   const next = safeNextPath(formText(data, "next"), "/");
-  // The browser marks the box as required, but that is a convenience: the server
-  // decides. A request without an explicit acceptance is refused here.
-  const acceptedTerms = hasAcceptedTerms(formText(data, "terms"));
+  // The browser marks all four boxes as required, but that is a convenience: the
+  // server decides. A request that skips any of them is refused here.
+  const agreements = Object.fromEntries(
+    AGREEMENT_FIELDS.map((field) => [field, formText(data, field)]),
+  ) as Record<(typeof AGREEMENT_FIELDS)[number], string>;
+  const missing = missingAgreements(agreements);
 
   const limit = await checkRateLimit(
     `register:${requestIp(request) ?? "shared"}`,
@@ -43,7 +47,7 @@ export async function POST(request: Request) {
     return failure(request, "rate-limited", next);
   }
 
-  if (!acceptedTerms) {
+  if (missing.length > 0) {
     return failure(request, "terms-required", next);
   }
 
@@ -78,9 +82,17 @@ export async function POST(request: Request) {
       email: email || null,
       passwordHash: await hashPassword(password),
       role,
-      // Evidence of consent: when, and which version of the terms was accepted.
+      // Evidence of consent: when, and which version of each document was
+      // accepted. The four versions can differ, so each is recorded.
       termsAcceptedAt: new Date(),
       termsVersion: POLICY_UPDATES.terms,
+      acceptedPolicies: AGREEMENT_FIELDS.map((field) => {
+        const key = field === "agree_terms" ? "terms"
+          : field === "agree_rules" ? "rules"
+          : field === "agree_privacy" ? "privacy"
+          : "moderation";
+        return `${key}:${POLICY_UPDATES[key]}`;
+      }).join(";"),
     },
     select: { id: true },
   });

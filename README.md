@@ -19,7 +19,8 @@ thread, and where students can report problems without confronting anyone. See
 ## What works today
 
 - Username-and-password registration, login, logout with server-side sessions. Registration
-  requires accepting the terms of use, and stores the timestamp and the accepted version.
+  requires ticking each of the four policy documents, and stores the timestamp plus the version of
+  each one.
 - One cross-board feed with newest, popular, and rising sorts over all, saved, and own posts.
   The five official boards are created by `pnpm bootstrap`.
 - Create a thread, reply, and see replies in chronological order.

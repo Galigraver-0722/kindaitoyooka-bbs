@@ -47,6 +47,9 @@ model User {
   // Last time the reader opened the notification inbox. Anything newer is
   // counted as unseen; the events themselves are derived from existing rows.
   notificationsSeenAt DateTime?
+  // Versions of the four documents accepted at registration, e.g.
+  // "terms:2026-10-27;rules:2026-10-27;privacy:2026-10-27;moderation:2026-10-27".
+  acceptedPolicies String?
   // Last time the reader opened the announcements panel. Announcements ship
   // with the code, so only the moment is stored.
   announcementsSeenAt DateTime?

@@ -54,16 +54,26 @@ export default async function RegisterPage({
           <input id="password" name="password" type="password" autoComplete="new-password" required />
           <p className="hint">{copy.passwordNewHint}</p>
 
-          <label className="consent" htmlFor="terms">
-            <input id="terms" name="terms" type="checkbox" value="yes" required />
-            <span>
-              {copy.consentLead} <Link href="/terms">{copy.terms}</Link>,{" "}
-              <Link href="/rules">{copy.rules}</Link>,{" "}
-              <Link href="/privacy">{copy.privacy}</Link>,{" "}
-              <Link href="/moderation-policy">{copy.moderationPolicy}</Link>.
-            </span>
-          </label>
-          <p className="hint">{copy.consentHint}</p>
+          <fieldset className="agree">
+            <legend>{copy.agreeTitle}</legend>
+            <p className="hint">{copy.agreeLead}</p>
+
+            {[
+              { field: "agree_terms", href: "/terms", label: copy.agreeTerms },
+              { field: "agree_rules", href: "/rules", label: copy.agreeRules },
+              { field: "agree_privacy", href: "/privacy", label: copy.agreePrivacy },
+              { field: "agree_moderation", href: "/moderation-policy", label: copy.agreeModeration },
+            ].map((item) => (
+              <div className="agree-row" key={item.field}>
+                <input id={item.field} name={item.field} type="checkbox" value="yes" required />
+                <label htmlFor={item.field}>{item.label}</label>
+                <Link href={item.href} target="_blank" rel="noreferrer noopener">
+                  {copy.agreeOpen}
+                </Link>
+              </div>
+            ))}
+            <p className="hint">{copy.agreeHint}</p>
+          </fieldset>
 
           <div className="form-foot">
             <button className="btn btn-p" type="submit">{copy.registerSubmit}</button>

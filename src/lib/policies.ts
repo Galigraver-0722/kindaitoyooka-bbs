@@ -172,7 +172,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "3. What is stored",
           bullets: [
             "Your account: username (public), an optional email address (never shown to other users), a password hash made with scrypt, and the colours and bio you choose for your profile.",
-            "When you registered, the moment you accepted the terms and the version you accepted. This is the record that you consented.",
+            "When you registered, the moment you accepted the four documents and the version of each one: terms, rules, privacy notice, moderation policy. This is the record that you consented.",
             "Your content: threads, replies, titles, tags, likes, bookmarks, and the boards you open. Public unless a moderator removes them.",
             "Read markers: a timestamp per thread, used for the New badge. They store a time and a thread id, nothing else.",
             "Two inbox timestamps: when you last opened the notification panel and when you last opened the announcements panel. The lists themselves are computed from other rows; only the moment is stored.",
@@ -199,7 +199,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
             "To run the forum: show threads, remember what you have read, and keep you signed in.",
             "To keep people safe: receive reports, flag text for a human to review, and record what a moderator did.",
             "To prevent abuse: rate-limit repeated attempts and keep the evidence of a repeated breach.",
-            "To show that consent was given: the timestamp and version stored at registration.",
+            "To show that consent was given: the timestamp stored at registration and the version of each document accepted.",
           ],
         },
         {
@@ -403,8 +403,8 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
         {
           heading: "2. Accepting these terms",
           bullets: [
-            "You accept by ticking the box on the registration form. The server checks that box, so a request that skips it is refused even if the browser's check is bypassed.",
-            "The acceptance is stored as a timestamp and as the version of this document. That record exists so a later question about what you agreed to has an answer.",
+            "You accept by ticking one box per document on the registration form: these terms, the community rules, the privacy notice, and the moderation policy. The server checks all four, so a request that skips any of them is refused even if the browser's check is bypassed.",
+            "The acceptance is stored as a timestamp and as the version of each of the four documents, since they are revised separately. That record exists so a later question about what you agreed to has an answer.",
             "Accounts created before the requirement existed have no record. Continuing to use the site accepts the current version.",
             "If you do not accept, do not register. If you already have an account and no longer accept, stop using the site and ask the maintainer to remove your content.",
           ],
@@ -664,7 +664,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "3. 保存する情報",
           bullets: [
             "アカウント：ユーザー名（公開）、任意のメールアドレス（他の利用者には表示しません）、scrypt で作ったパスワードのハッシュ、プロフィールに設定した色と自己紹介。",
-            "登録時に利用規約へ同意した日時と、同意した文書の版。同意の記録として保存します。",
+            "登録時に 4 つの文書へ同意した日時と、文書ごとの版。同意の記録として保存します。",
             "投稿した内容：スレッド、返信、タイトル、タグ、いいね、保存、開いたボード。モデレーターが削除しない限り公開されます。",
             "既読の記録：スレッドごとの時刻。「新着」の表示に使い、時刻とスレッド ID だけを保存します。",
             "受信箱の時刻：通知パネルを最後に開いた時刻と、お知らせを最後に開いた時刻。一覧は他の行から計算し、保存するのは時刻だけです。",
@@ -691,7 +691,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
             "掲示板を動かすため：スレッドを表示し、どこまで読んだかを覚え、ログイン状態を保つ。",
             "安全を保つため：通報を受け取り、語句を人が確認できるように印を付け、モデレーターの操作を記録する。",
             "濫用を防ぐため：繰り返しの試行に回数制限をかけ、違反が繰り返された証拠を残す。",
-            "同意があったことを示すため：登録時に保存する日時と版。",
+            "同意があったことを示すため：登録時に保存する日時と、文書ごとの版。",
           ],
         },
         {
@@ -895,8 +895,8 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
         {
           heading: "2. 本規約への同意",
           bullets: [
-            "登録画面のチェックボックスに印を付けることで同意となります。判定はサーバー側で行うため、ブラウザの制御を回避したリクエストも拒否されます。",
-            "同意は日時と本規約の版として保存します。あとから「何に同意したか」を確認できるようにするためです。",
+            "登録画面のチェックボックスは、文書ごとに 1 つずつあります。本規約、コミュニティルール、プライバシー通知、モデレーション方針の 4 つです。判定はサーバー側で 4 つとも行うため、ブラウザの制御を回避したリクエストも拒否されます。",
+            "同意は日時と、4 つの文書それぞれの版として保存します。文書は個別に改訂されるためです。あとから「何に同意したか」を確認できるようにするためです。",
             "この要件ができる前に作られたアカウントには記録がありません。使い続けることは、現在の版に同意したものとして扱います。",
             "同意できない場合は登録しないでください。すでにアカウントがあり同意できない場合は、利用をやめ、保守担当に投稿内容の削除を依頼してください。",
           ],

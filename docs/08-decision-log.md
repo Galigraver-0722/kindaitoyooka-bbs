@@ -1123,6 +1123,18 @@ terms makes it harder to find).
 registration policy changes (open question Q5), or a change to the terms has to be forced on
 existing accounts instead of announced.
 
+**Addendum, 2026-10-27 — one checkbox became four.** The decision above recorded a single
+agreement, but the four documents carry independent `POLICY_UPDATES` dates, so one version number
+answers "what did this account agree to" for only one of them. Registration now renders one
+required checkbox per document (`agree_terms`, `agree_rules`, `agree_privacy`, `agree_moderation`,
+listed in `AGREEMENT_FIELDS` in `src/lib/validation.ts`); the handler refuses the request with
+`terms-required` unless all four arrive, and the account stores `termsAcceptedAt`, `termsVersion`
+for the first document, and `acceptedPolicies` as
+`terms:<v>;rules:<v>;privacy:<v>;moderation:<v>`. Each row links the document it covers and opens
+it in a new tab, so reading is possible without losing the half-filled form. The cost is four
+clicks instead of one; the benefit is that revising the community rules alone no longer
+misreports what an account agreed to about the terms.
+
 ---
 
 ## ADR-0033 — Two layers of word checks: refuse the unambiguous, queue the rest

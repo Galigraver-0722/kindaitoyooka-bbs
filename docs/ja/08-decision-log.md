@@ -713,6 +713,8 @@ INSERT ... ON CONFLICT(key) DO UPDATE SET count = CASE WHEN resetAt <= now THEN 
 
 **見直す条件。** 学校の法務担当が署名や再同意を求めたとき、登録の方針が変わったとき（未決事項 Q5）、または規約の変更を既存アカウントにも周知ではなく強制する必要が出たとき。
 
+**追記（2026-10-27）— チェックボックス 1 つを 4 つにした。** 上の決定は同意を 1 つとして記録していましたが、4 つの文書は `POLICY_UPDATES` の日付が独立しているため、1 つの版では「このアカウントが何に同意したか」に 1 つの文書についてしか答えられません。登録画面は文書ごとに必須のチェックボックスを 1 つずつ出します（`agree_terms`、`agree_rules`、`agree_privacy`、`agree_moderation`。一覧は `src/lib/validation.ts` の `AGREEMENT_FIELDS`）。ハンドラーは 4 つがそろわなければ `terms-required` で拒否し、アカウントには `termsAcceptedAt`、最初の文書のための `termsVersion`、そして文書ごとの版を持つ `acceptedPolicies`（`terms:<v>;rules:<v>;privacy:<v>;moderation:<v>`）を保存します。各行はその文書へのリンクを持ち、新しいタブで開くので、書きかけのフォームを失わずに読めます。代償は 1 回ではなく 4 回のクリックです。利点は、コミュニティルールだけを改訂したときに、規約についての同意内容を誤って表さなくなることです。
+
 ---
 
 ## ADR-0033 — 語句チェックは 2 層にする。明確なものは拒否し、迷うものはキューへ

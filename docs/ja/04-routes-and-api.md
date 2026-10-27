@@ -18,7 +18,7 @@
 | `/u/[username]` | 公開 | プロフィール。身元バナー、4 つの数（スレッド・投稿・もらったいいね・参加日）、最近のスレッドと最近の返信を 2 つのタブで表示 |
 | `/new` | ログイン済み | スレッド作成。ゲストは `/login?next=/new` へリダイレクト |
 | `/login` | 公開 | ログインフォーム。ログイン済みの利用者はリダイレクト |
-| `/register` | 公開 | 登録フォーム。利用規約への同意が必須。最初のアカウントは `ADMIN` になる |
+| `/register` | 公開 | 登録フォーム。4 つの政策文書それぞれへの同意が必須。最初のアカウントは `ADMIN` になる |
 | `/threads` | 公開 | `/` へリダイレクト。`q`・`filter`・`sort` は引き継ぐ |
 | `/search` | 公開 | `q` を付けて `/` へリダイレクト。`tag` は `#tag` の検索語になる |
 | `/bookmarks` | ログイン済み | `/?filter=saved` へリダイレクト |
@@ -91,12 +91,13 @@
 | `email` | いいえ | 有効なアドレス、254 文字以内、一意 |
 | `password` | はい | 10〜200 文字、前後の空白は削除しない |
 | `next` | いいえ | 同一サイトのパスのみ |
+| `agree_terms`、`agree_rules`、`agree_privacy`、`agree_moderation` | はい | それぞれ `yes` で届く必要があります。一覧は `AGREEMENT_FIELDS` にあります |
 
 - 成功: セッション Cookie を設定し、`next` または `/` へリダイレクトします。
 - 失敗: `/register?error=<code>` へリダイレクトします。パスワードを画面に戻すことはありません。
 - コード: `terms-required`、`invalid-input`、`username-taken`、`email-taken`。
-- チェックボックス（`terms=yes`）のないリクエストは拒否します。ブラウザの `required` は制御ではありません。
-- 同意は `termsAcceptedAt` と、その時点の `POLICY_UPDATES.terms` の値 `termsVersion` としてアカウントに保存します。
+- 4 つのうち 1 つでも欠けたリクエストは `terms-required` で拒否します。ブラウザの `required` は制御ではありません。
+- 同意は `termsAcceptedAt`、その時点の `POLICY_UPDATES.terms` の値 `termsVersion`、そして文書ごとの版を持つ `acceptedPolicies`（`terms:<v>;rules:<v>;privacy:<v>;moderation:<v>`）としてアカウントに保存します。
 
 ### `POST /api/auth/login`
 

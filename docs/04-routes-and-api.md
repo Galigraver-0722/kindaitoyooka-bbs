@@ -19,7 +19,7 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/u/[username]` | Public | Profile: identity banner, four counts (threads, posts, likes received, join date), recent threads and recent replies as two tabs |
 | `/new` | Signed-in | Create a thread; guests are redirected to `/login?next=/new` |
 | `/login` | Public | Login form; redirects signed-in users away |
-| `/register` | Public | Registration form; the terms checkbox is required; the first account becomes `ADMIN` |
+| `/register` | Public | Registration form; each of the four policy documents must be ticked; the first account becomes `ADMIN` |
 | `/threads` | Public | Redirects to `/`, keeping `q`, `filter`, and `sort` |
 | `/search` | Public | Redirects to `/` with `q`; `tag` becomes a `#tag` query |
 | `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
@@ -118,12 +118,13 @@ success so the browser performs a `GET`.
 | `email` | no | Valid address, ≤ 254 chars, unique |
 | `password` | yes | 10–200 chars, not trimmed |
 | `next` | no | Same-site path only |
+| `agree_terms`, `agree_rules`, `agree_privacy`, `agree_moderation` | yes | Must each arrive as `yes`; the list lives in `AGREEMENT_FIELDS` |
 
 - Success: sets the session cookie, redirects to `next` or `/`.
 - Failure: redirects to `/register?error=<code>`; password is never echoed.
 - Codes: `terms-required`, `invalid-input`, `username-taken`, `email-taken`.
-- A request without the checkbox (`terms=yes`) is refused, so the browser's `required` attribute is not the control.
-- Acceptance is stored on the account as `termsAcceptedAt` plus `termsVersion`, the value of `POLICY_UPDATES.terms` at that moment.
+- A request that omits any of the four fields is refused with `terms-required`, so the browser's `required` attributes are not the control.
+- Acceptance is stored on the account as `termsAcceptedAt`, plus `termsVersion` (the `POLICY_UPDATES.terms` value at that moment) and `acceptedPolicies`, which names the version of each document: `terms:<v>;rules:<v>;privacy:<v>;moderation:<v>`.
 
 ### `POST /api/auth/login`
 

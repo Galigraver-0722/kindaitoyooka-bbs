@@ -378,6 +378,15 @@ export const pagesDCss = `
   100%{background:transparent;box-shadow:0 0 0 0 rgba(18,191,209,0)}
 }
 @media (prefers-reduced-motion:reduce){.tw-d .flash{background:rgba(18,191,209,.14);outline:3px solid var(--cyan)}}
+/* Registration agreement list: four separate confirmations. */
+.tw-d .agree{margin:22px 0 0;padding:14px 16px;border:2px dashed var(--line);border-radius:14px;background:var(--bg)}
+.tw-d .agree legend{padding:0 8px;font-size:13px;font-weight:800;letter-spacing:-.01em}
+.tw-d .agree-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:start;padding:7px 0}
+.tw-d .agree-row+.agree-row{border-top:1.5px solid rgba(6,35,48,.12)}
+.tw-d .agree-row input{margin-top:4px;width:18px;height:18px;accent-color:var(--cyan-deep);flex:none}
+.tw-d .agree-row label{font-size:13px;line-height:1.7;cursor:pointer}
+.tw-d .agree-row a{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:#06707D;border-bottom:1.5px solid var(--cyan);white-space:nowrap;padding-bottom:1px}
+
 /* Feed excerpt: the opening of the body, dimmer than the title, at most two lines. */
 .tw-d .excerpt{margin-top:6px;max-width:74ch;color:var(--muted);font-size:12.5px;line-height:1.7;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
 .tw-d .trow .excerpt{margin-top:4px;max-width:62ch;font-size:11.5px;line-height:1.65}
@@ -818,6 +827,15 @@ export const pagesBCss = `
   100%{background:transparent;box-shadow:0 0 0 0 rgba(90,230,236,0)}
 }
 @media (prefers-reduced-motion:reduce){.tw-b .flash{background:rgba(90,230,236,.1);outline:2px solid var(--cyan)}}
+/* Registration agreement list: four separate confirmations. */
+.tw-b .agree{margin:22px 0 0;padding:14px 16px;border:1px dashed var(--line);border-radius:6px;background:rgba(8,32,43,.4)}
+.tw-b .agree legend{padding:0 8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--teal);text-transform:uppercase}
+.tw-b .agree-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:start;padding:7px 0}
+.tw-b .agree-row+.agree-row{border-top:1px solid var(--line-soft)}
+.tw-b .agree-row input{margin-top:4px;width:16px;height:16px;accent-color:var(--cyan)}
+.tw-b .agree-row label{font-size:12.5px;line-height:1.75;color:var(--text);cursor:pointer}
+.tw-b .agree-row a{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--cyan);white-space:nowrap;border-bottom:1px solid rgba(90,230,236,.45);padding-bottom:1px}
+
 /* Header avatar: one class for both designs, filled even before the reader picks colours. */
 .tw-b .ava{width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid rgba(90,230,236,.45);border-radius:4px;background:rgba(90,230,236,.10);color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:500;line-height:1;transition:border-color .18s,background .18s}
 .tw-b .ava:hover{border-color:rgba(90,230,236,.75);background:rgba(90,230,236,.16)}

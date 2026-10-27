@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  AGREEMENT_FIELDS,
   hasAcceptedTerms,
+  missingAgreements,
   safeNextPath,
   validateBody,
   validateEmail,
@@ -73,4 +75,19 @@ test("terms acceptance needs an explicit yes", () => {
   assert.equal(hasAcceptedTerms("true"), false);
   assert.equal(hasAcceptedTerms("YES"), false);
   assert.equal(hasAcceptedTerms(""), false);
+});
+
+test("every document must be accepted separately", () => {
+  const all = Object.fromEntries(AGREEMENT_FIELDS.map((field) => [field, "yes"]));
+  assert.deepEqual(missingAgreements(all), []);
+
+  const threeOfFour = { ...all, agree_privacy: "" };
+  assert.deepEqual(missingAgreements(threeOfFour), ["agree_privacy"]);
+
+  assert.deepEqual(missingAgreements({}), [...AGREEMENT_FIELDS]);
+});
+
+test("only the exact value yes counts as acceptance", () => {
+  const all = Object.fromEntries(AGREEMENT_FIELDS.map((field) => [field, "on"]));
+  assert.equal(missingAgreements(all).length, AGREEMENT_FIELDS.length);
 });

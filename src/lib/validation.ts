@@ -41,6 +41,21 @@ export function validateReportReason(value: string): boolean {
  * Registration is refused unless the terms checkbox was submitted. The form
  * posts `terms=yes`; anything else, including a missing field, is not consent.
  */
+/** The four documents a person must accept, and the form field for each. */
+export const AGREEMENT_FIELDS = [
+  "agree_terms",
+  "agree_rules",
+  "agree_privacy",
+  "agree_moderation",
+] as const;
+
+export type AgreementField = (typeof AGREEMENT_FIELDS)[number];
+
+/** Which of the four documents the submission did not accept. */
+export function missingAgreements(values: Partial<Record<AgreementField, string>>): AgreementField[] {
+  return AGREEMENT_FIELDS.filter((field) => values[field] !== "yes");
+}
+
 export function hasAcceptedTerms(value: string): boolean {
   return value === "yes";
 }

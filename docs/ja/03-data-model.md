@@ -43,6 +43,7 @@ erDiagram
 | `announcementsSeenAt` | datetime? | お知らせパネルを最後に開いた時刻。これより後に公開された項目が未読になる |
 | `termsAcceptedAt` | datetime? | 利用規約に同意した時刻。登録時に保存する。この要件より前のアカウントは `NULL` |
 | `termsVersion` | string? | 登録時に同意した `POLICY_UPDATES.terms` の値 |
+| `acceptedPolicies` | string? | 登録時に同意した 4 つの文書それぞれの版。`terms:<v>;rules:<v>;privacy:<v>;moderation:<v>` の形。4 つのチェックボックスを必須にする前のアカウントは `NULL` |
 | `isSuspended` | boolean | 管理画面から立てる。停止中のアカウントはログインできず、セッションはすべて削除される |
 | `suspendedAt` | datetime? | 停止した時刻。解除すると消える |
 | `suspendedReason` | string? | モデレーターが入力した理由（200 文字まで）。監査行にも複製する |
