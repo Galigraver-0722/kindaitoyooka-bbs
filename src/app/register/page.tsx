@@ -86,7 +86,6 @@ export default async function RegisterPage({
           <ul className="auth-list">
             <li>{copy.noticePublic}</li>
             <li>{copy.noticeForbidden}</li>
-            <li>{copy.noticeFirstAdmin}</li>
           </ul>
         </div>
       </main>

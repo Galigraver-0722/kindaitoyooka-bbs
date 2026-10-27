@@ -56,7 +56,7 @@ export const ANNOUNCEMENTS: Announcement[] = [
     },
     body: {
       ja:
-        "開いたままのスレッドに、他の人の返信が十数秒で反映されるようになりました。新しく届いた投稿は少しの間だけ色が付きます。\n" +
+        "開いたままのスレッドに、他の人の返信が 12 秒ほどで反映されるようになりました。新しく届いた投稿は、少しの間だけ強調されます。\n" +
         "入力欄にカーソルがある間は更新しません。書きかけの返信が消えることはありません。",
       en:
         "A thread you leave open now picks up other people's replies within a few seconds. New posts are highlighted briefly.\n" +
@@ -77,7 +77,7 @@ export const ANNOUNCEMENTS: Announcement[] = [
         "未読があれば数字が付きます。項目を押すと、その投稿まで移動して一瞬光ります。",
       en:
         "The bell in the header collects replies, comments, likes, and saves on your posts.\n" +
-        "A number appears while something is unread. Clicking an item jumps to that post and flashes it.",
+        "A count appears while anything is unread. Clicking an item jumps to that post and flashes it.",
     },
   },
   {
@@ -90,12 +90,12 @@ export const ANNOUNCEMENTS: Announcement[] = [
     },
     body: {
       ja:
-        "豊岡BBS のベータ版です。授業や部活の連絡、勉強の質問、落とし物の連絡に使ってください。\n" +
-        "投稿は消しても記録に残ります。あとから「やっぱり消したい」と思ったときは、削除ボタンを使ってください。\n" +
-        "ルールは /rules、困ったときの流れは /moderation-policy にまとめてあります。",
+        "Toyooka BBS のベータ版です。授業や部活の連絡、勉強の質問、落とし物の連絡に使ってください。\n" +
+        "投稿を削除すると、その場所はプレースホルダーに変わり、本文は記録として残ります。消したい投稿があるときは、その投稿の削除ボタンを使ってください。\n" +
+        "ルールは /rules、通報がどう扱われるかは /moderation-policy にまとめてあります。",
       en:
         "This is the beta of Toyooka BBS. Use it for class and club notices, study questions, and lost-and-found.\n" +
-        "Removing a post leaves a placeholder; the record stays with the moderators. Use the delete button if you change your mind.\n" +
+        "When you delete a post, its place becomes a placeholder and the text stays on record. Use the delete button on the post if you want it gone.\n" +
         "The rules are at /rules, and how reports are handled is at /moderation-policy.",
     },
   },
