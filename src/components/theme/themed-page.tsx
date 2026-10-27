@@ -248,7 +248,6 @@ export async function ThemedPage({
                 {versionTag()}
               </span>
             </Link>
-            <div className="status"><span className="dot" /><b>{copy.betaNote}</b></div>
             <details className="bd-drawer">
               <summary>{copy.boards}</summary>
               <div className="bd-panel">
