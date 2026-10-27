@@ -24,6 +24,8 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     self: "You cannot do that to your own account.",
     "blocked-word": "That wording cannot be posted here. Rewrite it without the blocked word.",
     "last-admin": "At least one administrator has to remain.",
+    "announcement-invalid": "A title and a body in both languages are required (title up to 120 characters, body up to 2000).",
+    "announcement-not-found": "That announcement does not exist.",
   },
   ja: {
     "invalid-input": "入力内容を確認して、もう一度お試しください。",
@@ -48,6 +50,8 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     self: "自分のアカウントにはこの操作を行えません。",
     "blocked-word": "この言葉は投稿できません。語を書き換えてください。",
     "last-admin": "管理者は最低 1 人必要です。",
+    "announcement-invalid": "タイトルと本文を英日どちらも入力してください（タイトルは 120 文字、本文は 2000 文字まで）。",
+    "announcement-not-found": "そのお知らせは見つかりません。",
   },
 };
 
@@ -65,6 +69,9 @@ const NOTICE_MESSAGES: Record<Locale, Record<string, string>> = {
     "thread-removed": "Thread removed.",
     "thread-locked": "Thread locked.",
     "thread-unlocked": "Thread unlocked.",
+    "announcement-created": "Announcement published.",
+    "announcement-updated": "Announcement saved.",
+    "announcement-deleted": "Announcement deleted.",
   },
   ja: {
     reported: "通報を受け付けました。モデレーターが確認します。",
@@ -79,6 +86,9 @@ const NOTICE_MESSAGES: Record<Locale, Record<string, string>> = {
     "thread-removed": "スレッドを削除しました。",
     "thread-locked": "スレッドをロックしました。",
     "thread-unlocked": "スレッドのロックを解除しました。",
+    "announcement-created": "お知らせを公開しました。",
+    "announcement-updated": "お知らせを保存しました。",
+    "announcement-deleted": "お知らせを削除しました。",
   },
 };
 

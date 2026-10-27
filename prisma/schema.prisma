@@ -50,8 +50,8 @@ model User {
   // Versions of the four documents accepted at registration, e.g.
   // "terms:2026-10-27;rules:2026-10-27;privacy:2026-10-27;moderation:2026-10-27".
   acceptedPolicies String?
-  // Last time the reader opened the announcements panel. Announcements ship
-  // with the code, so only the moment is stored.
+  // Last time the reader opened the announcements panel. The entries live in
+  // their own table, so only the moment is stored on the reader.
   announcementsSeenAt DateTime?
   // Registration requires accepting the terms. The timestamp and the version
   // accepted are the evidence; accounts created before the requirement existed
@@ -71,6 +71,7 @@ model User {
   ownedBoards     Board[]       @relation("BoardOwner")
   auditLogs       AuditLog[]       @relation("AuditActor")
   blockedAttempts BlockedAttempt[]
+  announcements   Announcement[]   @relation("AnnouncementAuthor")
 }
 
 model Session {
@@ -257,4 +258,27 @@ model AuditLog {
 
   @@index([createdAt])
   @@index([actorId])
+}
+
+/// Official notices and the changelog. They used to be a code constant; the
+/// console needs to post a notice without a redeploy, so they live here now.
+/// Only administrators may write them.
+model Announcement {
+  id          String   @id @default(cuid())
+  /// Date shown to readers and used for ordering and for the unread count.
+  publishedAt DateTime
+  /// "notice" or "release"; the panel renders a different badge for each.
+  kind        String   @default("notice")
+  titleJa     String
+  titleEn     String
+  bodyJa      String
+  bodyEn      String
+  /// Drafts stay in the table but are not rendered anywhere public.
+  isPublished Boolean  @default(true)
+  createdById String?
+  createdBy   User?    @relation("AnnouncementAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([publishedAt])
 }

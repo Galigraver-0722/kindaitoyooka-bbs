@@ -39,6 +39,8 @@ thread, and where students can report problems without confronting anyone. See
 - Tags come from a dedicated field when composing, not parsed out of the body, and search
   accepts `#tag` as a filter.
 - Board pages paginate at 20 threads, with working newest and popular sorts.
+- Announcements and a changelog in the header panel, editable from the console, in both
+  languages, with drafts that stay hidden until published.
 - Public terms of use, community rules, privacy notice, and moderation policy at `/terms`,
   `/rules`, `/privacy`, and `/moderation-policy`, in both languages. The terms state that your
   posts stay yours and grant only the permission needed to run the site.

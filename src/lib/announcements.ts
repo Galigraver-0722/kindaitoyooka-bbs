@@ -1,16 +1,17 @@
 /**
  * Official announcements, including the changelog.
  *
- * These ship with the code on purpose. An announcement that describes a
- * release is part of that release: writing it in a database editor would let
- * the notice and the behaviour drift, and nobody would notice until a student
- * quoted a changelog line that was never true. Editing this file is part of
- * shipping a change.
+ * They live in the database so an administrator can post a notice from the
+ * console without a redeploy. `SEED_ANNOUNCEMENTS` is what `pnpm bootstrap`
+ * writes into an empty table, so a fresh deployment starts with the same four
+ * entries the code used to ship; after that the console is the editor.
  *
  * Read state is a single timestamp per account (`User.announcementsSeenAt`),
  * the same shape ADR-0025 chose for the notification inbox: only the moment is
- * stored, the list itself is code.
+ * stored. ADR-0034 records why the entries moved out of the code.
  */
+
+import { prisma } from "@/lib/db";
 
 export type AnnouncementKind = "release" | "notice";
 
@@ -26,7 +27,7 @@ export type Announcement = {
   body: Text;
 };
 
-export const ANNOUNCEMENTS: Announcement[] = [
+export const SEED_ANNOUNCEMENTS: Announcement[] = [
   {
     id: "2026-10-27-console",
     publishedAt: "2026-10-27",
@@ -102,7 +103,7 @@ export const ANNOUNCEMENTS: Announcement[] = [
 ];
 
 /** Milliseconds of the newest entry, used as the comparison point. */
-export function latestAnnouncementAt(entries: Announcement[] = ANNOUNCEMENTS): number {
+export function latestAnnouncementAt(entries: Announcement[]): number {
   return entries.reduce((newest, entry) => {
     const at = Date.parse(`${entry.publishedAt}T00:00:00Z`);
     return Number.isFinite(at) && at > newest ? at : newest;
@@ -113,12 +114,82 @@ export function latestAnnouncementAt(entries: Announcement[] = ANNOUNCEMENTS): n
  * Announcements published after the reader last opened the panel. `seenAt` is
  * null for a reader who has never opened it, which counts everything as new.
  */
-export function unreadAnnouncements(
-  seenAt: Date | null,
-  entries: Announcement[] = ANNOUNCEMENTS,
-): Announcement[] {
+export function unreadAnnouncements(seenAt: Date | null, entries: Announcement[]): Announcement[] {
   if (!seenAt) {
     return entries;
   }
   return entries.filter((entry) => Date.parse(`${entry.publishedAt}T00:00:00Z`) > seenAt.getTime());
+}
+
+export function isAnnouncementKind(value: string): value is AnnouncementKind {
+  return value === "notice" || value === "release";
+}
+
+type Row = {
+  id: string;
+  publishedAt: Date;
+  kind: string;
+  titleJa: string;
+  titleEn: string;
+  bodyJa: string;
+  bodyEn: string;
+};
+
+/** The date shown to readers is the UTC day of `publishedAt`. */
+function dateOf(value: Date): string {
+  return value.toISOString().slice(0, 10);
+}
+
+function fromRow(row: Row): Announcement {
+  return {
+    id: row.id,
+    publishedAt: dateOf(row.publishedAt),
+    kind: isAnnouncementKind(row.kind) ? row.kind : "notice",
+    title: { ja: row.titleJa, en: row.titleEn },
+    body: { ja: row.bodyJa, en: row.bodyEn },
+  };
+}
+
+const rowSelect = {
+  id: true,
+  publishedAt: true,
+  kind: true,
+  titleJa: true,
+  titleEn: true,
+  bodyJa: true,
+  bodyEn: true,
+} as const;
+
+/**
+ * Newest first, drafts excluded: what readers see. The date is a label, not a
+ * schedule — "deleted" and "draft" are the only things that hide an entry, so a
+ * notice typed at 23:00 shows up immediately instead of waiting for midnight.
+ */
+export async function listAnnouncements(): Promise<Announcement[]> {
+  const rows = await prisma.announcement.findMany({
+    where: { isPublished: true },
+    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+    select: rowSelect,
+  });
+  return rows.map(fromRow);
+}
+
+/** Everything, drafts included, for the console. */
+export async function listAllAnnouncements(): Promise<
+  (Announcement & { isPublished: boolean; updatedAt: Date })[]
+> {
+  const rows = await prisma.announcement.findMany({
+    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+    select: { ...rowSelect, isPublished: true, updatedAt: true },
+  });
+  return rows.map((row) => ({ ...fromRow(row), isPublished: row.isPublished, updatedAt: row.updatedAt }));
+}
+
+/** `YYYY-MM-DD` from a date input, stored as midnight UTC. */
+export function parsePublishedAt(value: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+  const at = new Date(`${value}T00:00:00Z`);
+  return Number.isNaN(at.getTime()) ? null : at;
 }

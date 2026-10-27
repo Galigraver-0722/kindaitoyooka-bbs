@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Crumb, ThemedPage } from "@/components/theme/themed-page";
 import { canRestore, canSuspend } from "@/lib/admin";
+import { listAllAnnouncements, type Announcement } from "@/lib/announcements";
 import { getCurrentUser, isAdmin, isModerator } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
@@ -22,7 +23,7 @@ const PER_PAGE = 20;
 const REPORTS_PER_PAGE = 10;
 const ROLES = ["STUDENT", "MODERATOR", "ADMIN"] as const;
 
-type Tab = "reports" | "users" | "content" | "blocked" | "boards" | "audit";
+type Tab = "reports" | "users" | "content" | "blocked" | "announcements" | "boards" | "audit";
 
 export default async function ConsolePage({
   searchParams,
@@ -34,6 +35,7 @@ export default async function ConsolePage({
     role?: string;
     notice?: string;
     error?: string;
+    edit?: string;
   }>;
 }) {
   const [params, user, locale, theme] = await Promise.all([
@@ -59,6 +61,7 @@ export default async function ConsolePage({
     params.tab === "users" ||
     params.tab === "content" ||
     params.tab === "blocked" ||
+    params.tab === "announcements" ||
     params.tab === "boards" ||
     params.tab === "audit"
       ? (params.tab as Tab)
@@ -120,7 +123,12 @@ export default async function ConsolePage({
               ["content", copy.tabs.content],
               ["blocked", copy.tabs.blocked],
               ["audit", copy.tabs.audit],
-              ...(admin ? [["boards", copy.tabs.boards] as [Tab, string]] : []),
+              ...(admin
+                ? ([
+                    ["announcements", copy.tabs.announcements],
+                    ["boards", copy.tabs.boards],
+                  ] as Array<[Tab, string]>)
+                : []),
             ] as Array<[Tab, string]>
           ).map(([key, label]) => (
             <Link key={key} href={tabHref(key)} className={tab === key ? "on" : ""} aria-current={tab === key ? "page" : undefined}>
@@ -154,6 +162,10 @@ export default async function ConsolePage({
         ) : null}
 
         {tab === "blocked" ? <BlockedTab locale={locale} /> : null}
+
+        {tab === "announcements" && admin ? (
+          <AnnouncementsTab copy={copy.announcements} locale={locale} editId={params.edit} />
+        ) : null}
 
         {tab === "boards" && admin ? <BoardsTab copy={moderation} /> : null}
 
@@ -559,6 +571,102 @@ async function ContentTab({
           {currentPage < pageCount ? <Link href={pagerHref(currentPage + 1)}>→</Link> : null}
         </nav>
       ) : null}
+    </section>
+  );
+}
+
+type AnnouncementCopy = ReturnType<typeof t>["admin"]["announcements"];
+
+/** Fields shared by the create form and the edit form. */
+function AnnouncementFields({
+  copy,
+  item,
+}: {
+  copy: AnnouncementCopy;
+  item?: Announcement & { isPublished: boolean };
+}) {
+  return (
+    <>
+      <label className="field-label" htmlFor="titleJa">{copy.titleJa}</label>
+      <input id="titleJa" name="titleJa" required minLength={2} maxLength={120} defaultValue={item?.title.ja ?? ""} />
+      <label className="field-label" htmlFor="titleEn">{copy.titleEn}</label>
+      <input id="titleEn" name="titleEn" required minLength={2} maxLength={120} defaultValue={item?.title.en ?? ""} />
+      <label className="field-label" htmlFor="bodyJa">{copy.bodyJa}</label>
+      <textarea id="bodyJa" name="bodyJa" required minLength={2} maxLength={2000} rows={5} defaultValue={item?.body.ja ?? ""} />
+      <label className="field-label" htmlFor="bodyEn">{copy.bodyEn}</label>
+      <textarea id="bodyEn" name="bodyEn" required minLength={2} maxLength={2000} rows={5} defaultValue={item?.body.en ?? ""} />
+      <label className="field-label" htmlFor="publishedAt">{copy.date}</label>
+      <input id="publishedAt" name="publishedAt" type="date" required defaultValue={item?.publishedAt ?? new Date().toISOString().slice(0, 10)} />
+      <label className="field-label" htmlFor="kind">{copy.kind}</label>
+      <select id="kind" name="kind" defaultValue={item?.kind ?? "notice"}>
+        <option value="notice">{copy.kindNotice}</option>
+        <option value="release">{copy.kindRelease}</option>
+      </select>
+      <label className="field-label" htmlFor="status">{copy.published}</label>
+      <select id="status" name="status" defaultValue={item?.isPublished === false ? "draft" : "published"}>
+        <option value="published">{copy.published}</option>
+        <option value="draft">{copy.draft}</option>
+      </select>
+    </>
+  );
+}
+
+async function AnnouncementsTab({
+  copy,
+  locale,
+  editId,
+}: {
+  copy: AnnouncementCopy;
+  locale: Awaited<ReturnType<typeof getLocale>>;
+  editId?: string;
+}) {
+  const items = await listAllAnnouncements();
+  const editing = editId ? items.find((item) => item.id === editId) : undefined;
+
+  return (
+    <section className="mod-sec">
+      <p className="mod-hint">{copy.hint}</p>
+      <p className="mod-hint">{copy.bothLanguages}</p>
+
+      {items.length === 0 ? (
+        <p className="empty">{copy.empty}</p>
+      ) : (
+        <ul className="board-admin">
+          {items.map((item) => (
+            <li key={item.id} className={item.isPublished ? "" : "is-archived"}>
+              <div className="ba-main">
+                <Link href={`/admin?tab=announcements&edit=${item.id}`}>{item.title.ja}</Link>
+                <span className="ba-meta">
+                  {item.publishedAt} · {item.kind === "release" ? copy.kindRelease : copy.kindNotice} ·{" "}
+                  {item.isPublished ? copy.published : copy.draft} · {copy.updated(formatDateTime(item.updatedAt, locale))}
+                </span>
+              </div>
+              <Link className="btn ghost" href={`/admin?tab=announcements&edit=${item.id}`}>
+                {copy.edit}
+              </Link>
+              <details>
+                <summary className="adm-sub">{copy.remove}</summary>
+                <form action={`/api/admin/announcements/${item.id}/delete`} method="post">
+                  <button type="submit" className="btn ghost">{copy.remove}</button>
+                </form>
+              </details>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <h2 className="adm-subhead">{editing ? copy.edit : copy.create}</h2>
+      <form
+        className="form-card"
+        action={editing ? `/api/admin/announcements/${editing.id}` : "/api/admin/announcements"}
+        method="post"
+      >
+        <AnnouncementFields copy={copy} item={editing} />
+        <div className="form-foot">
+          <button type="submit" className="btn btn-p">{editing ? copy.save : copy.createSubmit}</button>
+          {editing ? <Link className="btn ghost" href="/admin?tab=announcements">{copy.cancel}</Link> : null}
+        </div>
+      </form>
     </section>
   );
 }

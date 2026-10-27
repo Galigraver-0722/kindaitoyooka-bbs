@@ -9,12 +9,15 @@ export type AuditAction =
   | "report.dismiss"
   | "user.suspend"
   | "user.restore"
-  | "user.role";
+  | "user.role"
+  | "announcement.create"
+  | "announcement.update"
+  | "announcement.delete";
 
 export type AuditInput = {
   actorId: string;
   action: AuditAction;
-  targetType: "post" | "thread" | "report" | "user" | "board";
+  targetType: "post" | "thread" | "report" | "user" | "board" | "announcement";
   targetId: string;
   details?: Record<string, unknown>;
 };

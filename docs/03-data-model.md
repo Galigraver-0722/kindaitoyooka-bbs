@@ -141,13 +141,32 @@ not stack duplicates in the queue. Automatic flags have no reporter and are exem
 | --- | --- | --- |
 | `id` | string (cuid) | |
 | `actorId` | string? | FK → User; `NULL` if the account is deleted |
-| `action` | string | `post.remove`, `thread.lock`, `thread.unlock`, `thread.remove`, `report.remove`, `report.dismiss` |
-| `targetType` | string | `post`, `thread`, or `report` |
+| `action` | string | `post.remove`, `thread.lock`, `thread.unlock`, `thread.remove`, `report.remove`, `report.dismiss`, `user.suspend`, `user.restore`, `user.role`, `announcement.create`, `announcement.update`, `announcement.delete` |
+| `targetType` | string | `post`, `thread`, `report`, `user`, `board`, or `announcement` |
 | `targetId` | string | Target row id |
 | `details` | string? | Small JSON payload (thread id, board slug, report ids) |
 | `createdAt` | datetime | |
 
 Audit rows are append-only. The moderation page shows the thirty most recent ones.
+
+### Announcement
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | string (cuid) | |
+| `publishedAt` | datetime | Date shown to readers; midnight UTC of the date picked in the console. Ordering key |
+| `kind` | string | `notice` or `release`; the panel renders a different badge |
+| `titleJa`, `titleEn` | string | 2–120 characters each; both are required |
+| `bodyJa`, `bodyEn` | string | 2–2000 characters each; both are required |
+| `isPublished` | boolean | `false` is a draft: stored, never rendered |
+| `createdById` | string? | FK → User, `SET NULL` on delete; only administrators may write |
+| `createdAt`, `updatedAt` | datetime | |
+
+The panel reads published rows for every page, so the table is read on each render. The date is a
+label, not a schedule: `isPublished` is the only visibility switch, and a notice typed at 23:00
+appears immediately. `pnpm bootstrap` seeds the four entries that used to live in code, and only
+into an empty table, so re-running it never overwrites an edit. ADR-0034 records the move.
+
 
 ### Tag
 

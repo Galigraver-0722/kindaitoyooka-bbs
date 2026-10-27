@@ -124,7 +124,9 @@ local checkout has. `pnpm db:push` skips the history and is for throwaway experi
 A fresh database has no boards. The only board-creating route makes COMMUNITY boards, so run the
 bootstrap script before opening the site. It creates the five official boards and, optionally, one
 administrator. It never creates demo accounts, sample threads, or a known password, and re-running
-it is safe (boards are upserted by slug):
+it is safe (boards are upserted by slug). It also writes the four starter announcements into an
+empty `Announcement` table, so the header panel is not blank on day one; once an administrator edits
+them in the console, re-running the script leaves them alone:
 
 ```bash
 BOOTSTRAP_ADMIN_USERNAME=teacher \

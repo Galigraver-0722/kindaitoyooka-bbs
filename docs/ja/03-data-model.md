@@ -142,6 +142,22 @@ erDiagram
 
 監査行は追記のみです。モデレーションページには直近 30 件を表示します。
 
+### Announcement
+
+| カラム | 型 | 備考 |
+| --- | --- | --- |
+| `id` | string（cuid） | |
+| `publishedAt` | datetime | 読者に表示する日付。管理画面で選んだ日の UTC 0 時。並び順のキー |
+| `kind` | string | `notice` か `release`。パネルはバッジを描き分ける |
+| `titleJa`、`titleEn` | string | それぞれ 2〜120 文字。両方必須 |
+| `bodyJa`、`bodyEn` | string | それぞれ 2〜2000 文字。両方必須 |
+| `isPublished` | boolean | `false` は下書き。保存はされるが描画されない |
+| `createdById` | string? | User への FK。削除時 `SET NULL`。書けるのは管理者だけ |
+| `createdAt`、`updatedAt` | datetime | |
+
+パネルは毎描画で公開中の行を読むため、このテーブルは全ページで参照されます。日付はラベルであって予約ではなく、表示を決めるのは `isPublished` だけです。`pnpm bootstrap` は元はコードにあった 4 件を空のテーブルにだけ書き込み、再実行しても編集内容を上書きしません。移行の理由は ADR-0034 に書いています。
+
+
 ### Tag
 
 | カラム | 型 | 備考 |

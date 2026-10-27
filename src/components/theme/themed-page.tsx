@@ -4,7 +4,7 @@ import { LanguageToggle } from "@/components/theme/language-toggle";
 import { BackButton } from "@/components/theme/nav-buttons";
 import { NotificationInbox, type InboxItem } from "@/components/theme/notification-inbox";
 import { AnnouncementPanel, type AnnouncementItem } from "@/components/theme/announcement-panel";
-import { ANNOUNCEMENTS, unreadAnnouncements } from "@/lib/announcements";
+import { listAnnouncements, unreadAnnouncements } from "@/lib/announcements";
 import { AnchorHighlight } from "@/components/theme/anchor-highlight";
 import { AutoRefresh } from "@/components/theme/auto-refresh";
 import { RouteFreshness } from "@/components/theme/route-freshness";
@@ -21,7 +21,7 @@ import { getLocale, t } from "@/lib/i18n";
 import { timeAgo } from "@/lib/time-ago";
 import type { Locale } from "@/lib/locales";
 import { readableInk } from "@/lib/color";
-import { versionNumber } from "@/lib/version";
+import { versionTag } from "@/lib/version";
 import { Highlight } from "@/components/theme/highlight";
 
 const replyIcon = (
@@ -153,9 +153,10 @@ export async function ThemedPage({
     unreadWord: inboxCopy.unreadWord,
   };
   const annCopy = t(locale).announcements;
-  const unreadAnnouncementList = unreadAnnouncements(me?.announcementsSeenAt ?? null);
+  const announcements = await listAnnouncements();
+  const unreadAnnouncementList = unreadAnnouncements(me?.announcementsSeenAt ?? null, announcements);
   const unreadIds = new Set(unreadAnnouncementList.map((entry) => entry.id));
-  const announcementItems: AnnouncementItem[] = ANNOUNCEMENTS.map((entry) => ({
+  const announcementItems: AnnouncementItem[] = announcements.map((entry) => ({
     id: entry.id,
     date: entry.publishedAt,
     kind: entry.kind,
@@ -191,8 +192,8 @@ export async function ThemedPage({
             </div>
             <Link className="brand" href="/">
               <span className="sq">豊</span>豊岡BBS<small>/TOYOOKA</small>
-              <span className="ver" title={`${copy.betaNote} · ${versionNumber()}`}>
-                {versionNumber()} · {copy.beta}
+              <span className="ver" title={`${copy.betaNote} · ${versionTag()}`}>
+                {versionTag()}
               </span>
             </Link>
             <details className="bd-drawer">
@@ -243,8 +244,8 @@ export async function ThemedPage({
             </div>
             <Link className="brand" href="/">
               <span className="sig"><i /><i /><i /></span>TOYOOKA<span style={{ color: "var(--teal)" }}>{"//"}</span>BBS
-              <span className="ver" title={`${copy.betaNote} · ${versionNumber()}`}>
-                {versionNumber()}
+              <span className="ver" title={`${copy.betaNote} · ${versionTag()}`}>
+                {versionTag()}
               </span>
             </Link>
             <div className="status"><span className="dot" /><b>{copy.betaNote}</b></div>

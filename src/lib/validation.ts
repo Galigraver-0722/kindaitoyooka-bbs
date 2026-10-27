@@ -72,6 +72,30 @@ export function hasAcceptedTerms(value: string): boolean {
  */
 const NEXT_BASE = "https://next.invalid";
 
+/** Announcements are short by design: a notice, not a document. */
+export const ANNOUNCEMENT_LIMITS = { titleMax: 120, bodyMax: 2000 } as const;
+
+export type AnnouncementInput = {
+  titleJa: string;
+  titleEn: string;
+  bodyJa: string;
+  bodyEn: string;
+};
+
+/**
+ * Both languages are required because the panel renders one of them depending
+ * on the reader's locale; a missing side would show an empty notice.
+ */
+export function validateAnnouncement(input: AnnouncementInput): boolean {
+  const title = (value: string) =>
+    value.length >= 2 && value.length <= ANNOUNCEMENT_LIMITS.titleMax;
+  const body = (value: string) => value.length >= 2 && value.length <= ANNOUNCEMENT_LIMITS.bodyMax;
+
+  return (
+    title(input.titleJa) && title(input.titleEn) && body(input.bodyJa) && body(input.bodyEn)
+  );
+}
+
 export function safeNextPath(value: string | null | undefined, fallback = "/"): string {
   if (!value || !value.startsWith("/")) {
     return fallback;

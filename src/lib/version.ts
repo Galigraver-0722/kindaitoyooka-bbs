@@ -14,7 +14,11 @@ export const CHANNEL: "beta" | "stable" = "beta";
 
 export const IS_BETA = CHANNEL === "beta";
 
-/** `v0.1.0`, for places that show the number without the channel. */
-export function versionNumber(): string {
-  return `v${VERSION}`;
+/**
+ * The one string the UI shows: `v.beta0.1.0` while testing, `v0.1.0` once the
+ * channel is stable. The dot after `v` is deliberate; it keeps the channel and
+ * the number readable without a second label.
+ */
+export function versionTag(): string {
+  return CHANNEL === "beta" ? `v.beta${VERSION}` : `v${VERSION}`;
 }

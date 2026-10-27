@@ -24,8 +24,8 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/search` | Public | Redirects to `/` with `q`; `tag` becomes a `#tag` query |
 | `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
 | any signed-in page | Signed-in | The header shows a notification inbox (replies, comments, likes, saves) with an unread count; every item links to a specific post (`#p-<id>`), including thread-level likes and saves, which point at the opening post |
-| every page | Public | The header carries the build badge (`v0.1.0 · BETA`, from `src/lib/version.ts`) and an announcements panel: official notices and the changelog, portalled to the body, newest first, with a dot while something is unread for a signed-in reader |
-| `/admin` | Moderator / Admin | The console: open reports (10 per page), accounts (search, suspend/restore, role changes for administrators), posts and threads (search, lock, remove), the audit log, and — for administrators — student-board archive controls. `tab=reports\|users\|content\|blocked\|audit\|boards` |
+| every page | Public | The header carries the build badge (`v.beta0.1.0`, from `src/lib/version.ts`) and an announcements panel: official notices and the changelog from the `Announcement` table, newest first, portalled to the body, with a dot while something is unread for a signed-in reader. Only published rows (not drafts) are rendered |
+| `/admin` | Moderator / Admin | The console: open reports (10 per page), accounts (search, suspend/restore, role changes for administrators), posts and threads (search, lock, remove), the audit log, and — for administrators — student-board archive controls. `tab=reports\|users\|content\|blocked\|audit\|announcements\|boards`. Administrators also edit the announcements; the three announcement endpoints are listed in §2 |
 | `/moderation` | Moderator / Admin | Redirects to `/admin?tab=reports`; the queue used to live here |
 | `/terms` | Public | Terms of use: who may use the site, the permission a post grants, what the operators may do, and what is not promised. Declares the other three documents part of the agreement |
 | `/rules` | Public | Community rules, in the current interface language |
@@ -355,6 +355,9 @@ in `src/lib/admin.ts` and are unit-tested.
 | `POST /api/admin/posts/[id]/remove` | — | Moderator / Admin | Soft-deletes the post, writes `post.remove` |
 | `POST /api/admin/threads/[id]/remove` | — | Moderator / Admin | Soft-deletes the thread, writes `thread.remove` |
 | `POST /api/admin/threads/[id]/lock` | — | Moderator / Admin | Toggles `isLocked`, writes `thread.lock` / `thread.unlock` |
+| `POST /api/admin/announcements` | `titleJa`, `titleEn`, `bodyJa`, `bodyEn`, `publishedAt`, `kind`, `status=published\|draft` | Admin only | Creates an announcement, writes `announcement.create` |
+| `POST /api/admin/announcements/[id]` | Same fields | Admin only | Updates it in place, writes `announcement.update` |
+| `POST /api/admin/announcements/[id]/delete` | — | Admin only | Deletes the row, writes `announcement.delete` |
 
 Nobody can suspend an administrator, and nobody can suspend or restore their own account.
 

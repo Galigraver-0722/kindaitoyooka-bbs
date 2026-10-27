@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { CHANNEL, VERSION } from "@/lib/version";
+import { CHANNEL, VERSION, versionTag } from "@/lib/version";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  * reading the commit that happens to be on disk.
  */
 export async function GET() {
-  const build = { version: VERSION, channel: CHANNEL };
+  const build = { version: VERSION, channel: CHANNEL, tag: versionTag() };
   try {
     await prisma.$queryRaw`SELECT 1`;
     return Response.json({ status: "ok", database: "ok", ...build });

@@ -43,6 +43,7 @@ alternatives considered.
 | ADR-0031 | The feed shows the opening lines; the composer preview is parked | Accepted | 2026-10-27 |
 | ADR-0032 | Registration records consent, and the policies state what the code enforces | Accepted | 2026-10-27 |
 | ADR-0033 | Two layers of word checks: refuse the unambiguous, queue the rest | Accepted | 2026-10-27 |
+| ADR-0034 | Announcements move from a code constant into the database | Accepted | 2026-10-27 |
 
 ---
 
@@ -1181,6 +1182,38 @@ drift from the code that uses it).
 
 **Revisit if.** The block list produces a false positive in a real class, or a moderator asks for a
 way to allow a specific post without editing code.
+
+---
+
+## ADR-0034 — Announcements move from a code constant into the database
+
+**Context.** The four announcements, including the changelog, were a TypeScript constant. The
+rationale was that a release note is part of the release: keeping it beside the code makes drift
+visible at review time. That held while the only writer was the maintainer with a checkout. Once
+the site is live, a notice such as "the library closes at noon" has to appear without a rebuild,
+and the administrator who knows it does not have a checkout.
+
+**Decision.** Add an `Announcement` table (`publishedAt`, `kind`, both languages of title and body,
+`isPublished`) and an administrator-only tab in the console that creates, edits, and deletes rows.
+The panel reads published rows on every render; `isPublished` is the only visibility switch, so
+the date is a label rather than a schedule. `pnpm bootstrap` writes the four former constants into
+an empty table so a fresh deployment starts with the same entries, and it never overwrites an edit.
+Every write records an audit row (`announcement.create|update|delete`).
+
+**Consequences.** A notice can now be posted in seconds from a phone, which is what the feature is
+for. The old guarantee is gone: nothing forces the changelog to match the release that shipped.
+Mitigations: the console shows the last update time on each row, the audit log records who changed
+what, and the four seeded entries keep their original wording. Both languages remain mandatory, so
+a notice cannot silently show an empty body to half the readers.
+
+**Alternatives considered.** Keep the code constant and redeploy for each notice (rejected: a
+schedule change would need a commit, a build, and a restart, and the build needs more RAM than the
+server has); a rich-text editor with images (rejected: the site has no uploads and no sanitizer);
+per-language publication (rejected: the panel picks a language from the reader's cookie, so a
+missing side would render blank).
+
+**Revisit if.** Announcements start carrying attachments, someone needs scheduled publication, or
+the console becomes the only place a change is recorded and the changelog drifts from the code.
 
 ---
 

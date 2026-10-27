@@ -8,6 +8,7 @@ import {
   validateBody,
   validateEmail,
   validatePassword,
+  validateAnnouncement,
   validateReportReason,
   validateTitle,
   validateUsername,
@@ -104,4 +105,13 @@ test("every document must be accepted separately", () => {
 test("only the exact value yes counts as acceptance", () => {
   const all = Object.fromEntries(AGREEMENT_FIELDS.map((field) => [field, "on"]));
   assert.equal(missingAgreements(all).length, AGREEMENT_FIELDS.length);
+});
+
+test("an announcement needs a title and a body in both languages", () => {
+  const base = { titleJa: "テスト", titleEn: "Test", bodyJa: "本文です", bodyEn: "Body" };
+  assert.equal(validateAnnouncement(base), true);
+  assert.equal(validateAnnouncement({ ...base, titleJa: "" }), false);
+  assert.equal(validateAnnouncement({ ...base, bodyEn: "" }), false);
+  assert.equal(validateAnnouncement({ ...base, titleEn: "x".repeat(121) }), false);
+  assert.equal(validateAnnouncement({ ...base, bodyJa: "x".repeat(2001) }), false);
 });

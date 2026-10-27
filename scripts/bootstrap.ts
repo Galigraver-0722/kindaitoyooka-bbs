@@ -19,6 +19,7 @@
  * up in the shell history or in `ps` on a shared host.
  */
 import { BoardKind, PrismaClient, Role } from "@prisma/client";
+import { SEED_ANNOUNCEMENTS } from "../src/lib/announcements";
 import { hashPassword } from "../src/lib/passwords";
 import { LIMITS, validatePassword, validateUsername } from "../src/lib/validation";
 import { loadLocalEnv } from "./env";
@@ -94,6 +95,33 @@ async function ensureBoards(): Promise<void> {
   console.log(`official boards ready: ${OFFICIAL_BOARDS.map((board) => board.slug).join(", ")}`);
 }
 
+/**
+ * The four announcements the code used to ship. Written only into an empty
+ * table, so re-running bootstrap never duplicates or overwrites what an
+ * administrator has edited in the console.
+ */
+async function ensureAnnouncements(): Promise<void> {
+  const existing = await prisma.announcement.count();
+  if (existing > 0) {
+    console.log(`announcements: ${existing} already present, nothing to seed`);
+    return;
+  }
+
+  for (const entry of SEED_ANNOUNCEMENTS) {
+    await prisma.announcement.create({
+      data: {
+        publishedAt: new Date(`${entry.publishedAt}T00:00:00Z`),
+        kind: entry.kind,
+        titleJa: entry.title.ja,
+        titleEn: entry.title.en,
+        bodyJa: entry.body.ja,
+        bodyEn: entry.body.en,
+      },
+    });
+  }
+  console.log(`announcements seeded: ${SEED_ANNOUNCEMENTS.length}`);
+}
+
 async function promoteExisting(username: string): Promise<void> {
   const user = await prisma.user.findUnique({ where: { username }, select: { id: true, role: true } });
   if (!user) {
@@ -147,6 +175,7 @@ async function main(): Promise<void> {
   const promote = promoteIndex >= 0 ? args[promoteIndex + 1]?.trim().toLowerCase() : undefined;
 
   await ensureBoards();
+  await ensureAnnouncements();
 
   if (boardsOnly) {
     return;

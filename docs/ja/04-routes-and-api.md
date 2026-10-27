@@ -178,7 +178,7 @@
 ### `POST /api/announcements/seen`
 
 - 認証: 変更にはログインが必要です。ゲストは 401。
-- `User.announcementsSeenAt` を現在時刻にし、お知らせパネルの点を消します。お知らせの本文自体は `src/lib/announcements.ts` にあり、コードと一緒に配布されます。
+- `User.announcementsSeenAt` を現在時刻にし、お知らせパネルの点を消します。お知らせの本文は `Announcement` テーブルにあり、管理画面の「お知らせ」タブで編集します（公開中の行だけを表示します）。
 - `Accept: application/json` のときは `{ok:true}`（ゲストは 401）。それ以外は `/` へリダイレクトします。
 
 ### `GET /api/pulse`
@@ -293,6 +293,9 @@
 | `POST /api/admin/posts/[id]/remove` | — | モデレーター／管理者 | 投稿を論理削除し、`post.remove` を書く |
 | `POST /api/admin/threads/[id]/remove` | — | モデレーター／管理者 | スレッドを論理削除し、`thread.remove` を書く |
 | `POST /api/admin/threads/[id]/lock` | — | モデレーター／管理者 | `isLocked` を反転し、`thread.lock` / `thread.unlock` を書く |
+| `POST /api/admin/announcements` | `titleJa`、`titleEn`、`bodyJa`、`bodyEn`、`publishedAt`、`kind`、`status=published\|draft` | 管理者のみ | お知らせを作成し、`announcement.create` を書く |
+| `POST /api/admin/announcements/[id]` | 同じ項目 | 管理者のみ | その場で更新し、`announcement.update` を書く |
+| `POST /api/admin/announcements/[id]/delete` | — | 管理者のみ | 行を削除し、`announcement.delete` を書く |
 
 管理者を停止することはできず、自分のアカウントも停止・解除できません。
 
