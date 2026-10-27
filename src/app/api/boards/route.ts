@@ -1,4 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
+import { scanPost } from "@/lib/content-filter";
+import { recordBlockedAttempt } from "@/lib/content-guard";
 import { prisma } from "@/lib/db";
 import { formText, isSameOrigin, seeOther } from "@/lib/http";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -35,6 +37,21 @@ export async function POST(request: Request) {
   }
   if (!SLUG.test(slug) || RESERVED.has(slug)) {
     return seeOther(request, "/boards/new?error=invalid-slug");
+  }
+
+  const scan = scanPost([
+    { field: "board-name", text: name },
+    { field: "board-description", text: description },
+    { field: "tags", text: tags.join(" ") },
+  ]);
+  if (scan.blocked.length > 0) {
+    await recordBlockedAttempt({
+      userId: user.id,
+      surface: "board",
+      hit: scan.blocked[0],
+      texts: [name, description, tags.join(" ")],
+    });
+    return seeOther(request, "/boards/new?error=blocked-word");
   }
 
   const [owned, existing] = await Promise.all([

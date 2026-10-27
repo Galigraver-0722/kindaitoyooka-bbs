@@ -67,6 +67,7 @@ model User {
   threadLikes     ThreadLike[]
   ownedBoards     Board[]       @relation("BoardOwner")
   auditLogs       AuditLog[]       @relation("AuditActor")
+  blockedAttempts BlockedAttempt[]
 }
 
 model Session {
@@ -218,6 +219,27 @@ model RateLimit {
   count     Int      @default(0)
   resetAt   DateTime
   updatedAt DateTime @updatedAt
+}
+
+/// A write that the word filter refused. Kept so moderators can see attempts
+/// that never became posts, and so a student who is repeatedly blocked can be
+/// talked to before it escalates.
+model BlockedAttempt {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// thread | reply | edit | board | profile
+  surface   String
+  /// title | body | tags | bio | board-name | board-description
+  field     String
+  /// Comma-joined matched terms, exactly as the filter saw them.
+  words     String
+  /// First 200 characters of the refused text, so the moderator has context.
+  excerpt   String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
 }
 
 model AuditLog {

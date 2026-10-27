@@ -22,7 +22,7 @@ const PER_PAGE = 20;
 const REPORTS_PER_PAGE = 10;
 const ROLES = ["STUDENT", "MODERATOR", "ADMIN"] as const;
 
-type Tab = "reports" | "users" | "content" | "boards" | "audit";
+type Tab = "reports" | "users" | "content" | "blocked" | "boards" | "audit";
 
 export default async function ConsolePage({
   searchParams,
@@ -56,7 +56,11 @@ export default async function ConsolePage({
   const admin = isAdmin(user);
 
   const requested: Tab =
-    params.tab === "users" || params.tab === "content" || params.tab === "boards" || params.tab === "audit"
+    params.tab === "users" ||
+    params.tab === "content" ||
+    params.tab === "blocked" ||
+    params.tab === "boards" ||
+    params.tab === "audit"
       ? (params.tab as Tab)
       : "reports";
   // A non-administrator asking for the board tab gets the queue instead of an
@@ -68,11 +72,12 @@ export default async function ConsolePage({
     : undefined;
   const requestedPage = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
 
-  const [openReports, userCount, threadCount, postCount] = await Promise.all([
+  const [openReports, userCount, threadCount, postCount, blockedCount] = await Promise.all([
     prisma.report.count({ where: { resolvedAt: null } }),
     prisma.user.count(),
     prisma.thread.count({ where: { isDeleted: false } }),
     prisma.post.count({ where: { isDeleted: false } }),
+    prisma.blockedAttempt.count(),
   ]);
 
   const noticeText = noticeMessage(params.notice, locale);
@@ -100,6 +105,7 @@ export default async function ConsolePage({
             <div className="bs"><span>{copy.stats.users}</span><b>{userCount}</b></div>
             <div className="bs"><span>{copy.stats.threads}</span><b>{threadCount}</b></div>
             <div className="bs"><span>{copy.stats.posts}</span><b>{postCount}</b></div>
+            <div className="bs"><span>{copy.stats.blocked}</span><b>{blockedCount}</b></div>
           </div>
         </div>
 
@@ -112,6 +118,7 @@ export default async function ConsolePage({
               ["reports", copy.tabs.reports],
               ["users", copy.tabs.users],
               ["content", copy.tabs.content],
+              ["blocked", copy.tabs.blocked],
               ["audit", copy.tabs.audit],
               ...(admin ? [["boards", copy.tabs.boards] as [Tab, string]] : []),
             ] as Array<[Tab, string]>
@@ -145,6 +152,8 @@ export default async function ConsolePage({
         {tab === "content" ? (
           <ContentTab locale={locale} query={query} page={requestedPage} />
         ) : null}
+
+        {tab === "blocked" ? <BlockedTab locale={locale} /> : null}
 
         {tab === "boards" && admin ? <BoardsTab copy={moderation} /> : null}
 
@@ -626,6 +635,47 @@ async function AuditTab({ locale }: { locale: Awaited<ReturnType<typeof getLocal
             </li>
           ))}
         </ol>
+      )}
+    </section>
+  );
+}
+
+async function BlockedTab({ locale }: { locale: Locale }) {
+  const copy = t(locale).admin.blocked;
+  const rows = await prisma.blockedAttempt.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    include: { user: { select: { username: true } } },
+  });
+
+  return (
+    <section className="mod-sec">
+      <h2 className="sec-head"><span className="tick" />{t(locale).admin.tabs.blocked}</h2>
+      <p className="mod-hint">{copy.hint}</p>
+
+      {rows.length === 0 ? (
+        <p className="empty">{copy.empty}</p>
+      ) : (
+        <ul className="adm-list">
+          {rows.map((row) => (
+            <li key={row.id} className="adm-row adm-row-blocked">
+              <div className="adm-who">
+                <Link href={`/u/${row.user.username}`}>{row.user.username}</Link>
+                <span className="adm-sub">
+                  {copy.where}: {copy.surface[row.surface] ?? row.surface} · {copy.field}:{" "}
+                  {copy.fields[row.field] ?? row.field}
+                </span>
+                <span className="adm-excerpt">{row.excerpt}</span>
+              </div>
+              <div className="adm-status">
+                <span className="pill bad">{copy.words}: {row.words}</span>
+              </div>
+              <div className="adm-status">
+                <span className="adm-sub">{formatDateTime(row.createdAt, locale)}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   );

@@ -129,16 +129,34 @@ Before removing critical content, save a screenshot or a database row reference 
 log. Do not forward the content to group chats; that spreads the harm. Share only with the
 teacher advisor through an approved channel.
 
-### Automatic sensitive-word flags
+### Automatic checks: blocked and flagged
 
-Posts and titles are checked on write against the CC BY 4.0 `naughty-words` lists for Japanese and
-English. The project keeps an ignore list for ordinary school words and adds a few Japanese
-threats. A match creates one `Report` with `source = AUTO` in the moderation queue, containing the
-matched terms. It never hides, blocks, or edits the post, and it is not a finding of guilt.
+Every write is checked before it is stored: thread titles, bodies, tags, replies, board names,
+board descriptions, and profile bios. Matching runs on NFKC-normalised, lowercased text with
+spaces and punctuation removed for Japanese, so full-width forms and 「死 ね」 do not slip through.
+English matches keep word boundaries, so `ass` does not fire on `class`.
 
-Moderators treat automatic flags as tips, not verdicts. Dismiss false positives, and escalate
-real threats using the protocol below. The word lists live in `node_modules/naughty-words` and are
-not user data; no post content is sent to a third party.
+The list has two layers (`src/lib/sensitive-words.ts`):
+
+- **Blocked.** A short list of terms whose only ordinary use is abusive: a direct death threat,
+  sexual violence, sexual content involving minors, a hard slur, hard profanity. The post is not
+  created and the author is told the wording cannot be posted. Only 14 Japanese entries are on this
+  layer; 「殺す」 is not one of them, because "kill time" and games exist.
+- **Flagged.** A longer list queues the post with an Auto-detected entry in the reports tab:
+  ambiguous violence, insults, drug words, the CC BY 4.0 `naughty-words` sexual vocabulary, and
+  self-harm phrases. Flags never hide or delete anything.
+
+Self-harm phrasing is deliberately flag-only. The right response to 「死にたい」 is a person reading
+it, not a filter refusing it.
+
+A refused write leaves a `BlockedAttempt` row: the account, the surface (thread, reply, edit, board,
+profile), the field that matched, the matched word, the first 200 characters of the text, and the
+time. Moderators see the list under **Blocked** in `/admin`. Treat repeated attempts as a
+conversation, not a ban; a suspension is a separate, documented decision.
+
+Moderators treat automatic flags as tips, not verdicts. Dismiss false positives, and escalate real
+threats using the protocol below. The upstream lists live in `node_modules/naughty-words` and are not
+user data; no post content is sent to a third party.
 
 ## 6. Roles and separation of duties
 

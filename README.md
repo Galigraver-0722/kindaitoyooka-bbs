@@ -50,7 +50,11 @@ thread, and where students can report problems without confronting anyone. See
 - Account suspension: signs the account out everywhere, blocks sign-in, keeps every post; reversible with one click. Only students can be suspended by a moderator, only administrators can change roles.
 - Manual password recovery with `pnpm reset-password <username>`; no email provider required.
 - `GET /health` reports application and database readiness.
-- Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, with a project-specific ignore list; matches are reviewed by a human, never auto-hidden.
+- Two-layer word checks on every write (thread titles, bodies, tags, replies, board names,
+  descriptions, bios): a short list of unambiguous abuse is refused before it is stored, and
+  everything ambiguous — insults, drug words, the CC BY 4.0 `naughty-words` sexual vocabulary, and
+  self-harm phrases — is queued for a human. Refusals leave a record that moderators see under
+  Blocked in `/admin`; self-harm phrases are never auto-refused.
 - Students can open their own community board from `/boards/new` (three per account, five per
   hour), badged so it is never mistaken for an official board. A board with no thread activity
   for 90 days is archived by the daily `pnpm archive-boards` run and can be restored from

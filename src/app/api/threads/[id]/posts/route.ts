@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
-import { detectSensitiveText } from "@/lib/content-filter";
+import { scanPost } from "@/lib/content-filter";
+import { recordBlockedAttempt } from "@/lib/content-guard";
 import { prisma } from "@/lib/db";
 import { formText, isSameOrigin, seeOther, wantsJson } from "@/lib/http";
 import { getLocale } from "@/lib/i18n";
@@ -79,7 +80,25 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return seeOther(request, `/t/${id}?error=invalid-input`);
   }
 
-  const flagged = detectSensitiveText(body, tags.join(" "));
+  const scan = scanPost([
+    { field: "body", text: body },
+    { field: "tags", text: tags.join(" ") },
+  ]);
+
+  if (scan.blocked.length > 0) {
+    await recordBlockedAttempt({
+      userId: user.id,
+      surface: "reply",
+      hit: scan.blocked[0],
+      texts: [body, tags.join(" ")],
+    });
+    if (wantsJson(request)) {
+      return Response.json({ error: "blocked-word", term: scan.blocked[0].term }, { status: 422 });
+    }
+    return seeOther(request, `/t/${id}?error=blocked-word`);
+  }
+
+  const flagged = scan.flagged.map((hit) => hit.term);
 
   const post = await prisma.$transaction(async (tx) => {
     const created = await tx.post.create({

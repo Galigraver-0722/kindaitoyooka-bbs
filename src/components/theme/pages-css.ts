@@ -442,6 +442,7 @@ export const pagesDCss = `
 .tw-d .pill.role-admin{background:var(--cyan)}
 .tw-d .pill.role-moderator{background:var(--sky)}
 @media (max-width:820px){.tw-d .adm-row{grid-template-columns:1fr}.tw-d .adm-acts{justify-self:start}.tw-d .adm-suspend input{width:100%}}
+.tw-d .adm-row-blocked{grid-template-columns:minmax(0,1.8fr) auto auto}
 
 
 `;
@@ -885,6 +886,7 @@ export const pagesBCss = `
 .tw-b .pill.role-admin{color:#04121A;background:var(--cyan);border-color:var(--cyan)}
 .tw-b .pill.role-moderator{color:var(--cyan);border-color:rgba(90,230,236,.5)}
 @media (max-width:820px){.tw-b .adm-row{grid-template-columns:1fr}.tw-b .adm-acts{justify-self:start}.tw-b .adm-suspend input{width:100%}}
+.tw-b .adm-row-blocked{grid-template-columns:minmax(0,1.8fr) auto auto}
 
 
 `;

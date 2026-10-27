@@ -25,7 +25,7 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
 | any signed-in page | Signed-in | The header shows a notification inbox (replies, comments, likes, saves) with an unread count; every item links to a specific post (`#p-<id>`), including thread-level likes and saves, which point at the opening post |
 | every page | Public | The header also has an announcements panel: official notices and the changelog, portalled to the body, newest first, with a dot while something is unread for a signed-in reader |
-| `/admin` | Moderator / Admin | The console: open reports (10 per page), accounts (search, suspend/restore, role changes for administrators), posts and threads (search, lock, remove), the audit log, and — for administrators — student-board archive controls. `tab=reports\|users\|content\|audit\|boards` |
+| `/admin` | Moderator / Admin | The console: open reports (10 per page), accounts (search, suspend/restore, role changes for administrators), posts and threads (search, lock, remove), the audit log, and — for administrators — student-board archive controls. `tab=reports\|users\|content\|blocked\|audit\|boards` |
 | `/moderation` | Moderator / Admin | Redirects to `/admin?tab=reports`; the queue used to live here |
 | `/terms` | Public | Terms of use: who may use the site, the permission a post grants, what the operators may do, and what is not promised. Declares the other three documents part of the agreement |
 | `/rules` | Public | Community rules, in the current interface language |
@@ -365,8 +365,11 @@ short code in the query string; `src/lib/messages.ts` maps codes to English sent
 codes fall back to a generic "check the form" message, so a hand-crafted URL cannot inject text
 into the page.
 
-Automatic flags appear in `/moderation` with the `AUTO` source and the matched terms. They do not
-hide or block the post; a moderator decides.
+Writes are checked before they are stored; see `docs/06-safety-and-moderation.md` for the list and
+the split between blocking and flagging. A blocked write redirects with `error=blocked-word` (422
+with `{"error":"blocked-word"}` for the JSON reply endpoint) and leaves a `BlockedAttempt` row that
+the console lists under `blocked`. Flagged content is stored and gets one `Report` with
+`source = AUTO` and the matched terms.
 
 Unexpected failures (database down, unhandled exception) return a 500 from Next.js. Add error
 monitoring before launch; see `docs/07-operations.md`.

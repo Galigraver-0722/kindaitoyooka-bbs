@@ -1,4 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
+import { scanPost } from "@/lib/content-filter";
+import { recordBlockedAttempt } from "@/lib/content-guard";
 import { prisma } from "@/lib/db";
 import { formText, isSameOrigin, seeOther } from "@/lib/http";
 
@@ -21,6 +23,17 @@ export async function POST(request: Request) {
   const avatarRingRaw = formText(data, "avatarRing");
   const avatarColor = HEX.test(avatarColorRaw) ? avatarColorRaw.toLowerCase() : null;
   const avatarRing = HEX.test(avatarRingRaw) ? avatarRingRaw.toLowerCase() : null;
+
+  const scan = scanPost([{ field: "bio", text: bio }]);
+  if (scan.blocked.length > 0) {
+    await recordBlockedAttempt({
+      userId: user.id,
+      surface: "profile",
+      hit: scan.blocked[0],
+      texts: [bio],
+    });
+    return seeOther(request, `/u/${user.username}?error=blocked-word`);
+  }
 
   await prisma.user.update({
     where: { id: user.id },

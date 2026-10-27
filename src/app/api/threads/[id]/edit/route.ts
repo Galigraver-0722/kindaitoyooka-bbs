@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
-import { detectSensitiveText } from "@/lib/content-filter";
+import { scanPost } from "@/lib/content-filter";
+import { recordBlockedAttempt } from "@/lib/content-guard";
 import { prisma } from "@/lib/db";
 import { canEditThread } from "@/lib/editing";
 import { formText, isSameOrigin, seeOther } from "@/lib/http";
@@ -47,7 +48,23 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   const openingPost = thread.posts[0];
-  const flagged = detectSensitiveText(title, body, tags.join(" "));
+  const scan = scanPost([
+    { field: "title", text: title },
+    { field: "body", text: body },
+    { field: "tags", text: tags.join(" ") },
+  ]);
+
+  if (scan.blocked.length > 0) {
+    await recordBlockedAttempt({
+      userId: user.id,
+      surface: "edit",
+      hit: scan.blocked[0],
+      texts: [title, body, tags.join(" ")],
+    });
+    return seeOther(request, `/t/${id}/edit?error=blocked-word`);
+  }
+
+  const flagged = scan.flagged.map((hit) => hit.term);
 
   await prisma.$transaction(async (tx) => {
     await tx.thread.update({

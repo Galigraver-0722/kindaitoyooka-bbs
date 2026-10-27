@@ -22,6 +22,7 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "slug-taken": "That URL is already in use.",
     "board-limit": "You can create up to 3 boards.",
     self: "You cannot do that to your own account.",
+    "blocked-word": "That wording cannot be posted here. Rewrite it without the blocked word.",
     "last-admin": "At least one administrator has to remain.",
   },
   ja: {
@@ -45,6 +46,7 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "board-limit": "ボードは 1 アカウント 3 つまでです。",
     "terms-required": "アカウントを作るには利用規約への同意が必要です。",
     self: "自分のアカウントにはこの操作を行えません。",
+    "blocked-word": "この言葉は投稿できません。語を書き換えてください。",
     "last-admin": "管理者は最低 1 人必要です。",
   },
 };

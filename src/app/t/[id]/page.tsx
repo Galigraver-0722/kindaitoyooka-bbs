@@ -113,6 +113,7 @@ export default async function ThreadPage({
     commentsSuffix: copy.commentsSuffix,
     like: pages.actions.like,
     sendError: pages.sendError,
+    blockedWord: pages.blockedWord,
     admin: pages.role.admin,
     moderator: pages.role.moderator,
     report: threadCopy.report,

@@ -42,6 +42,7 @@ alternatives considered.
 | ADR-0030 | Announcements ship with the code, and previews are read-only | Accepted | 2026-10-27 |
 | ADR-0031 | The feed shows the opening lines; the composer preview is parked | Accepted | 2026-10-27 |
 | ADR-0032 | Registration records consent, and the policies state what the code enforces | Accepted | 2026-10-27 |
+| ADR-0033 | Two layers of word checks: refuse the unambiguous, queue the rest | Accepted | 2026-10-27 |
 
 ---
 
@@ -1121,6 +1122,53 @@ terms makes it harder to find).
 **Revisit if.** The school's legal contact asks for a signature or a re-consent pass, the
 registration policy changes (open question Q5), or a change to the terms has to be forced on
 existing accounts instead of announced.
+
+---
+
+## ADR-0033 — Two layers of word checks: refuse the unambiguous, queue the rest
+
+**Context.** The first version of the word check only produced a moderation flag. Any reader could
+post anything and the queue would catch it later, which meant a slur sat in a thread until a
+moderator woke up. The obvious fix — block on any match — would refuse 「殺す」 ("kill time"),
+「死ねば」 ("if I die"), and every health-class word, so it was not an option either.
+
+**Decision.**
+
+- Two layers in `src/lib/sensitive-words.ts`. **Blocked**: a short list whose only ordinary use is
+  abusive (direct death threats, sexual violence, sexual content involving minors, hard slurs,
+  hard profanity). Fourteen Japanese entries. **Flagged**: everything ambiguous — 殺す, insults,
+  drug words, the CC BY 4.0 `naughty-words` sexual vocabulary, and self-harm phrases — stored and
+  queued with `source = AUTO`.
+- Matching runs on NFKC-normalised, lowercased text. Japanese is compared with spaces and
+  punctuation stripped, so 「死 ね」 is caught; English keeps word boundaries. A handful of entries
+  carry a negative lookahead (「死ねば」).
+- Self-harm phrases are flag-only by design. A person in distress needs someone to read the post,
+  not a filter to refuse it.
+- Every write path is checked, including titles: thread create, thread edit, replies, board names,
+  descriptions, and profile bios. (A report that titles were not checked could not be reproduced —
+  a title match already created an AUTO report — but the paths are now uniform and covered by tests
+  that assert the field is recorded.)
+- A blocked write leaves no post and stores a `BlockedAttempt` row: account, surface, field, matched
+  term, 200-character excerpt, time. The console lists them under **Blocked**.
+
+**Consequences.**
+
+- A slur in a title or body never becomes visible, at the cost of a small false-positive surface on
+  the block list. The list is short enough to read in one screen and to argue about in a meeting.
+- A student who keeps hitting the block sees a plain message ("this wording cannot be posted") and
+  no post; a moderator sees the pattern in the console and can talk to them.
+- Blocking does not punish: no report, no audit entry against the account, no suspension. That is a
+  separate decision, recorded elsewhere.
+- The blocked record contains the offending text itself (200 characters). That is deliberate — a
+  moderator cannot judge a word they cannot see — and it is disclosed in the privacy notice.
+
+**Alternatives considered.** Flag-only (the status quo, too slow for slurs), block-on-any-match
+(refuses ordinary Japanese), a third-party moderation API (sends student text to a stranger, needs
+network access and money), a database-managed word list (a second editor and a way for the list to
+drift from the code that uses it).
+
+**Revisit if.** The block list produces a false positive in a real class, or a moderator asks for a
+way to allow a specific post without editing code.
 
 ---
 

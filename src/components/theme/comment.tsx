@@ -42,6 +42,7 @@ export type CommentLabels = {
   foldedSuffix: string;
   like: string;
   sendError: string;
+  blockedWord: string;
   commentsSuffix: string;
   admin: string;
   moderator: string;
@@ -120,7 +121,7 @@ function ReplyForm({
   const fieldId = useId();
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -129,7 +130,7 @@ function ReplyForm({
     }
 
     setBusy(true);
-    setError(false);
+    setErrorText(null);
     // `event.currentTarget` is cleared once the handler yields, so keep the
     // form now and close its <details> after the request resolves.
     const form = event.currentTarget;
@@ -152,7 +153,9 @@ function ReplyForm({
         return;
       }
       if (!response.ok) {
-        setError(true);
+        // 422 carries the "blocked wording" code; everything else is generic.
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        setErrorText(payload?.error === "blocked-word" ? labels.blockedWord : labels.sendError);
         return;
       }
 
@@ -163,7 +166,7 @@ function ReplyForm({
       // Keep the cached copy of this thread in step with the server.
       router.refresh();
     } catch {
-      setError(true);
+      setErrorText(labels.sendError);
     } finally {
       setBusy(false);
     }
@@ -189,7 +192,7 @@ function ReplyForm({
         <button className="btn btn-p" type="submit" disabled={busy}>
           {labels.submit}
         </button>
-        {error ? <span className="hint">{labels.sendError}</span> : null}
+        {errorText ? <span className="hint">{errorText}</span> : null}
       </div>
     </form>
   );

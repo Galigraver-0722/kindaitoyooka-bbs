@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
-import { detectSensitiveText } from "@/lib/content-filter";
+import { scanPost } from "@/lib/content-filter";
+import { recordBlockedAttempt } from "@/lib/content-guard";
 import { prisma } from "@/lib/db";
 import { formText, isSameOrigin, seeOther } from "@/lib/http";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
@@ -54,7 +55,25 @@ export async function POST(request: Request) {
     return backToNew("invalid-input");
   }
 
-  const flagged = detectSensitiveText(title, body, tags.join(" "));
+  const scan = scanPost([
+    { field: "title", text: title },
+    { field: "body", text: body },
+    { field: "tags", text: tags.join(" ") },
+  ]);
+
+  // A hard-blocked word stops the write. The attempt is recorded for the
+  // console; the post itself never exists.
+  if (scan.blocked.length > 0) {
+    await recordBlockedAttempt({
+      userId: user.id,
+      surface: "thread",
+      hit: scan.blocked[0],
+      texts: [title, body, tags.join(" ")],
+    });
+    return backToNew("blocked-word");
+  }
+
+  const flagged = scan.flagged.map((hit) => hit.term);
 
   const thread = await prisma.$transaction(async (tx) => {
     const created = await tx.thread.create({
