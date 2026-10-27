@@ -378,6 +378,10 @@ export const pagesDCss = `
   100%{background:transparent;box-shadow:0 0 0 0 rgba(18,191,209,0)}
 }
 @media (prefers-reduced-motion:reduce){.tw-d .flash{background:rgba(18,191,209,.14);outline:3px solid var(--cyan)}}
+/* Feed excerpt: the opening of the body, dimmer than the title, at most two lines. */
+.tw-d .excerpt{margin-top:6px;max-width:74ch;color:var(--muted);font-size:12.5px;line-height:1.7;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.tw-d .trow .excerpt{margin-top:4px;max-width:62ch;font-size:11.5px;line-height:1.65}
+
 /* Announcements panel: official notices and the changelog. */
 .tw-d .ann{position:relative;flex:none}
 .tw-d .ann-btn{position:relative;display:grid;place-items:center;width:38px;height:38px;border:2px solid var(--line);border-radius:50%;background:var(--paper);box-shadow:2px 2px 0 var(--line);color:var(--ink);cursor:pointer;transition:.14s}
@@ -812,6 +816,10 @@ export const pagesBCss = `
   100%{background:transparent;box-shadow:0 0 0 0 rgba(90,230,236,0)}
 }
 @media (prefers-reduced-motion:reduce){.tw-b .flash{background:rgba(90,230,236,.1);outline:2px solid var(--cyan)}}
+/* Feed excerpt: the opening of the body, dimmer than the title, at most two lines. */
+.tw-b .excerpt{margin-top:6px;max-width:74ch;color:#7FA6B0;font-size:11.5px;line-height:1.7;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.tw-b .trow .excerpt{margin-top:4px;max-width:62ch;font-size:10.5px;line-height:1.65;color:#6E96A0}
+
 /* Announcements panel: official notices and the changelog. */
 .tw-b .ann{position:relative;flex:none}
 .tw-b .ann-btn{position:relative;display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(90,230,236,.4);border-radius:4px;background:rgba(8,32,43,.6);color:var(--cyan);cursor:pointer;transition:.18s}

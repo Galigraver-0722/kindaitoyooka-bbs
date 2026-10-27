@@ -58,8 +58,8 @@ thread, and where students can report problems without confronting anyone. See
   written when a thread is opened.
 - An announcements panel in the header with official notices and the changelog, newest first; opening
   it clears a dot for signed-in readers. The entries live in `src/lib/announcements.ts` (ADR-0030).
-- A preview under the body field in the compose, edit, and reply forms: same line-break rules as the
-  published post, character count, no server round trip.
+- Feed cards and board rows show the opening of the body in a dimmer two-line excerpt, so a thread's
+  subject is visible without opening it. The excerpt is plain text; the title stays the only link.
 - A notification inbox in the header, left of the search box: replies, comments, likes, and saves
   on your posts, with an unread count that clears when the panel opens. The events are derived
   from existing rows (ADR-0025).

@@ -40,6 +40,7 @@ alternatives considered.
 | ADR-0028 | Terms of use and a name policy, because the license covers neither | Accepted | 2026-10-26 |
 | ADR-0029 | One console, and suspension as the account-level sanction | Accepted | 2026-10-27 |
 | ADR-0030 | Announcements ship with the code, and previews are read-only | Accepted | 2026-10-27 |
+| ADR-0031 | The feed shows the opening lines; the composer preview is parked | Accepted | 2026-10-27 |
 
 ---
 
@@ -1021,6 +1022,8 @@ server round trip to be accurate?
   It cannot show the final thread layout (numbering, nesting), only the body.
 - The edit page moved to the shared themed shell as part of this work, so the preview sits in the
   same form markup as the other two places.
+- The preview itself is currently switched off (`FEATURES.postPreview`); the request moved to a feed
+  excerpt, recorded in ADR-0031. The code path and its labels remain in place.
 
 **Alternatives considered.** An `Announcement` table plus an admin tab (an editor to build, test,
 and permission), a panel fed from the markdown in `docs/` (no dates on the rendered page, and the
@@ -1029,6 +1032,46 @@ something the browser already has, and a second formatting implementation to kee
 
 **Revisit if.** Someone other than a developer has to publish notices, or announcements need to
 target a board or a year group instead of everyone.
+
+---
+
+## ADR-0031 — The feed shows the opening lines; the composer preview is parked
+
+**Context.** A reader deciding whether to open a thread had only the title, the board, the tags, and
+a reply count. The obvious addition is the first line or two of the opening post, dimmer than the
+title and visible without hovering or clicking. A composer preview (showing how a drafted post will
+look) was built in the same batch by mistake; it answers a different question and is not wanted
+yet.
+
+**Decision.**
+
+- The feed cards (`/`) and rows (`/b/[slug]`, the profile's thread list) carry `excerpt` in
+  `HomeThread`. It is filled by `postExcerpt` in `src/lib/excerpt.ts`: collapse every run of
+  whitespace, including the ideographic space, into one space, trim, cut at 120 code points, and
+  append an ellipsis. The cut is on code points, so an emoji is never split.
+- The excerpt is rendered in the muted colour, clamped to two lines, and is plain text — not a link,
+  so the title stays the only navigation target.
+- The composer preview stays in the codebase but is switched off by `FEATURES.postPreview` in
+  `src/lib/features.ts`. Flipping that one value restores it in all three forms.
+
+**Consequences.**
+
+- Reading the feed now costs one extra column per row (`posts take 1`), not a second query per
+  thread. Thirty rows on the home page, twenty on a board page.
+- A post whose body starts with a blank line shows the next line, because whitespace is collapsed
+  before the cut. A body that is only whitespace has no excerpt and the element is not rendered.
+- The preview is not dead code: it is tested by hand-verified paths and stays type-checked and
+  linted, so reviving it is a one-line change rather than an archaeology exercise.
+- The excerpt is text, not a summary. It can end mid-sentence, which is the honest behaviour for a
+  preview of exactly what is in the post.
+
+**Alternatives considered.** A generated summary (an extra dependency and a lie about what the body
+says), a per-thread query for the opening post (N+1), showing the excerpt only on hover (the request
+was explicitly without interaction), deleting the composer preview (it works and may be wanted).
+
+**Revisit if.** The opening line is consistently a greeting that says nothing ("はじめまして"), in
+which case the excerpt should start after the first paragraph break, or if the feed becomes expensive
+enough that the extra column matters.
 
 ---
 

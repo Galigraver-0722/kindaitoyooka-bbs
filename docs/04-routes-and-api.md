@@ -9,8 +9,8 @@ public API. A future mobile client would need a JSON API with explicit versionin
 
 | Path | Access | Purpose |
 | --- | --- | --- |
-| `/` | Public | The one cross-board feed. `sort=latest\|hot\|rising`, `filter=all\|saved\|mine`, `q` search over titles, bodies, and tags; 30 threads without a query, 20 rows per page with one |
-| `/b/[slug]` | Public | Board home: identity banner with thread, member, post, and last-activity counts, then the board's threads 20 per page; pinned first, then by activity, popularity, or rising |
+| `/` | Public | The one cross-board feed; each thread shows the opening of its body in a dimmer two-line excerpt under the title. `sort=latest\|hot\|rising`, `filter=all\|saved\|mine`, `q` search over titles, bodies, and tags; 30 threads without a query, 20 rows per page with one |
+| `/b/[slug]` | Public | Board home (same excerpt treatment): identity banner with thread, member, post, and last-activity counts, then the board's threads 20 per page; pinned first, then by activity, popularity, or rising |
 | `/boards` | Public | Redirects to `/`; the board list lives in the sidebar and the mobile drawer |
 | `/boards/new` | Signed-in | Create a community board. Three owned boards per account, five per hour, slug taken from the form |
 | `/t/[id]` | Public | Thread with all posts in a numbered tree, reply form, reaction controls |
@@ -25,7 +25,6 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
 | any signed-in page | Signed-in | The header shows a notification inbox (replies, comments, likes, saves) with an unread count; every item links to a specific post (`#p-<id>`), including thread-level likes and saves, which point at the opening post |
 | every page | Public | The header also has an announcements panel: official notices and the changelog, portalled to the body, newest first, with a dot while something is unread for a signed-in reader |
-| `/new`, `/t/[id]/edit`, reply forms | Signed-in / author | A preview toggle under the body field renders the text the way it will be published (line breaks preserved, no markup language), with a live character count; it reads the textarea by id and never edits it |
 | `/admin` | Moderator / Admin | The console: open reports (10 per page), accounts (search, suspend/restore, role changes for administrators), posts and threads (search, lock, remove), the audit log, and — for administrators — student-board archive controls. `tab=reports\|users\|content\|audit\|boards` |
 | `/moderation` | Moderator / Admin | Redirects to `/admin?tab=reports`; the queue used to live here |
 | `/terms` | Public | Terms of use: who may use the site, the permission a post grants, what the operators may do, and what is not promised. Declares the other three documents part of the agreement |

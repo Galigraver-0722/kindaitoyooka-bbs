@@ -6,6 +6,7 @@ import { ToggleAction } from "@/components/theme/actions";
 import { Highlight } from "@/components/theme/highlight";
 import { DeleteButton } from "@/components/theme/delete-button";
 import { PostPreview } from "@/components/theme/post-preview";
+import { FEATURES } from "@/lib/features";
 import { reconcileComments, treeSignature } from "@/lib/comment-merge";
 import { readableInk } from "@/lib/color";
 
@@ -182,7 +183,9 @@ function ReplyForm({
         onChange={(event) => setValue(event.target.value)}
       />
       <div className="form-foot">
-        <PostPreview fieldId={fieldId} labels={labels.preview} maxLength={2000} />
+        {FEATURES.postPreview ? (
+          <PostPreview fieldId={fieldId} labels={labels.preview} maxLength={2000} />
+        ) : null}
         <button className="btn btn-p" type="submit" disabled={busy}>
           {labels.submit}
         </button>

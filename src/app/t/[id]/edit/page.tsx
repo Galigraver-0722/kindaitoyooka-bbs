@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Crumb, ThemedPage } from "@/components/theme/themed-page";
 import { PostPreview } from "@/components/theme/post-preview";
+import { FEATURES } from "@/lib/features";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canEditThread } from "@/lib/editing";
@@ -108,7 +109,9 @@ export default async function EditThreadPage({
           <p className="hint">{m.newThread.charLimit(LIMITS.bodyMax)}</p>
 
           <div className="form-foot">
-            <PostPreview fieldId="body" labels={t(locale).preview} maxLength={LIMITS.bodyMax} />
+            {FEATURES.postPreview ? (
+              <PostPreview fieldId="body" labels={t(locale).preview} maxLength={LIMITS.bodyMax} />
+            ) : null}
             <button className="btn btn-p" type="submit">{m.editing.save}</button>
             <Link className="hint" href={`/t/${thread.id}`}>{m.editing.cancel}</Link>
           </div>

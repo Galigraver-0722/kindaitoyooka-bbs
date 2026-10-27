@@ -356,6 +356,7 @@ export function ThreadCards({ threads, locale, query }: { threads: HomeThread[];
               <Highlight text={thread.title} term={query} />
             </Link>
           </h3>
+          {thread.excerpt ? <p className="excerpt">{thread.excerpt}</p> : null}
           <div className="tags">
             {thread.tags.slice(0, 3).map((tag) => (
               <Link className="tag" href={`/?q=${encodeURIComponent(`#${tag.name}`)}`} key={tag.name}>
@@ -402,6 +403,7 @@ export function ThreadRows({ threads, locale, query }: { threads: HomeThread[]; 
                 <Highlight text={thread.title} term={query} />
               </Link>
               {thread.isUnread ? <span className="unread" title={t(locale).shell.unread}>{t(locale).shell.unread}</span> : null}
+              {thread.excerpt ? <p className="excerpt">{thread.excerpt}</p> : null}
               <div className="chips">
                 {thread.tags.slice(0, 3).map((tag) => (
                   <span key={tag.name}>#{tag.name}</span>

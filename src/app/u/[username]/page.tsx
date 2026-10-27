@@ -13,6 +13,7 @@ import { readableInk } from "@/lib/color";
 import { noticeMessage } from "@/lib/messages";
 import { getTheme } from "@/lib/theme";
 import { timeAgo } from "@/lib/time-ago";
+import { postExcerpt } from "@/lib/excerpt";
 import { getLocale, t } from "@/lib/i18n";
 
 export async function generateMetadata({
@@ -68,6 +69,7 @@ export default async function ProfilePage({
         board: { select: { slug: true, name: true } },
         author: { select: { username: true, avatarColor: true, avatarRing: true } },
         tags: { select: { name: true } },
+        posts: { orderBy: { createdAt: "asc" }, take: 1, select: { body: true } },
         _count: { select: { posts: true } },
       },
     }),
@@ -115,7 +117,7 @@ export default async function ProfilePage({
     replyCount: Math.max(0, thread._count.posts - 1),
     lastPostAt: thread.lastPostAt,
     bookmarked: bookmarked.has(thread.id),
-        excerpt: "",
+    excerpt: postExcerpt(thread.posts[0]?.body ?? ""),
   }));
 
   const replies = replyRows
