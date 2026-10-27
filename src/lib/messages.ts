@@ -3,6 +3,7 @@ import type { Locale } from "@/lib/i18n";
 const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
   en: {
     "invalid-input": "Please check the form and try again.",
+    "terms-required": "Accept the terms of use to create an account.",
     "username-taken": "That username is already taken.",
     "email-taken": "That email address is already registered.",
     "invalid-credentials": "Wrong username or password.",
@@ -42,6 +43,7 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "invalid-slug": "URL は半角英小文字・数字・ハイフンの 3〜30 文字で指定してください。",
     "slug-taken": "その URL はすでに使われています。",
     "board-limit": "ボードは 1 アカウント 3 つまでです。",
+    "terms-required": "アカウントを作るには利用規約への同意が必要です。",
     self: "自分のアカウントにはこの操作を行えません。",
     "last-admin": "管理者は最低 1 人必要です。",
   },

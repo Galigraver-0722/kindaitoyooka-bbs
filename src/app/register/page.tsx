@@ -54,6 +54,17 @@ export default async function RegisterPage({
           <input id="password" name="password" type="password" autoComplete="new-password" required />
           <p className="hint">{copy.passwordNewHint}</p>
 
+          <label className="consent" htmlFor="terms">
+            <input id="terms" name="terms" type="checkbox" value="yes" required />
+            <span>
+              {copy.consentLead} <Link href="/terms">{copy.terms}</Link>,{" "}
+              <Link href="/rules">{copy.rules}</Link>,{" "}
+              <Link href="/privacy">{copy.privacy}</Link>,{" "}
+              <Link href="/moderation-policy">{copy.moderationPolicy}</Link>.
+            </span>
+          </label>
+          <p className="hint">{copy.consentHint}</p>
+
           <div className="form-foot">
             <button className="btn btn-p" type="submit">{copy.registerSubmit}</button>
             <span className="hint">{copy.haveAccount} <Link href={loginHref}>{copy.loginLink}</Link></span>
@@ -66,9 +77,6 @@ export default async function RegisterPage({
             <li>{copy.noticePublic}</li>
             <li>{copy.noticeForbidden}</li>
             <li>{copy.noticeFirstAdmin}</li>
-            <li>
-              {copy.noticeRules} <Link href="/terms">{copy.terms}</Link> · <Link href="/rules">{copy.rules}</Link> · <Link href="/privacy">{copy.privacy}</Link>
-            </li>
           </ul>
         </div>
       </main>

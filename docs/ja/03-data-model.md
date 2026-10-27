@@ -41,6 +41,8 @@ erDiagram
 | `bio` | string? | 200 文字まで。プロフィールページに出す |
 | `notificationsSeenAt` | datetime? | ヘッダーの通知を最後に開いた時刻。これより新しい出来事が未読になる |
 | `announcementsSeenAt` | datetime? | お知らせパネルを最後に開いた時刻。これより後に公開された項目が未読になる |
+| `termsAcceptedAt` | datetime? | 利用規約に同意した時刻。登録時に保存する。この要件より前のアカウントは `NULL` |
+| `termsVersion` | string? | 登録時に同意した `POLICY_UPDATES.terms` の値 |
 | `isSuspended` | boolean | 管理画面から立てる。停止中のアカウントはログインできず、セッションはすべて削除される |
 | `suspendedAt` | datetime? | 停止した時刻。解除すると消える |
 | `suspendedReason` | string? | モデレーターが入力した理由（200 文字まで）。監査行にも複製する |

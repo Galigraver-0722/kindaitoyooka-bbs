@@ -41,6 +41,7 @@ alternatives considered.
 | ADR-0029 | One console, and suspension as the account-level sanction | Accepted | 2026-10-27 |
 | ADR-0030 | Announcements ship with the code, and previews are read-only | Accepted | 2026-10-27 |
 | ADR-0031 | The feed shows the opening lines; the composer preview is parked | Accepted | 2026-10-27 |
+| ADR-0032 | Registration records consent, and the policies state what the code enforces | Accepted | 2026-10-27 |
 
 ---
 
@@ -1075,6 +1076,51 @@ was explicitly without interaction), deleting the composer preview (it works and
 **Revisit if.** The opening line is consistently a greeting that says nothing ("はじめまして"), in
 which case the excerpt should start after the first paragraph break, or if the feed becomes expensive
 enough that the extra column matters.
+
+---
+
+## ADR-0032 — Registration records consent, and the policies state what the code enforces
+
+**Context.** The four published documents were written in one pass and described behaviour in
+general terms. Two problems followed. Registration linked to them but asked for no agreement, so
+nothing recorded that an account had accepted anything, and a later revision left no way to answer
+"what did this person agree to". The text also left out rules the code already enforces: who may
+suspend whom, that the last administrator cannot be demoted, that a removed body stays readable to
+the moderator handling the report, and that a copy inside a backup outlives the account.
+
+**Decision.** Require an explicit checkbox at registration, validate it on the server, and store
+`termsAcceptedAt` with `termsVersion` (the value of `POLICY_UPDATES.terms` at that moment) on the
+account. Rewrite all four documents around the implemented behaviour: definitions, prohibited
+content and conduct, the enforcement ladder, suspension and restoration, appeals, data categories,
+retention, rights, warranty, and liability. Accounts created before the requirement keep `NULL`
+and are not re-prompted.
+
+**Consequences.**
+
+- A registration request without `terms=yes` is refused with `terms-required`; the browser's
+  `required` attribute is a convenience, not the control.
+- The record answers a later question about consent without inventing one. Bumping
+  `POLICY_UPDATES.terms` changes what new registrations store, so a substantive change is visible
+  in the data rather than only in the page.
+- The documents now name what `src/lib/admin.ts` and the route handlers enforce. A change to a role
+  rule is also a documentation change: the moderation policy states who may suspend whom, and it
+  would be wrong the moment the code moved without it.
+- English and Japanese are written independently and share only the section count, because the
+  document page renders one table of contents for both languages. Paragraph counts inside a
+  section may differ.
+- Existing accounts are not blocked, which keeps the beta usable. The cost is that the earliest
+  accounts have no acceptance record, and the terms say so.
+
+**Alternatives considered.** A linked notice with no checkbox (rejected: no evidence, and "did they
+agree" stays unanswerable); a modal on first sign-in (rejected: interrupts someone already using
+the site, and is harder to prove than a recorded registration); a separate `Consent` table
+(rejected: one fact per account belongs on the account); one consent document covering the other
+three (rejected: the moderation policy is read as an operating manual, and burying it inside the
+terms makes it harder to find).
+
+**Revisit if.** The school's legal contact asks for a signature or a re-consent pass, the
+registration policy changes (open question Q5), or a change to the terms has to be forced on
+existing accounts instead of announced.
 
 ---
 

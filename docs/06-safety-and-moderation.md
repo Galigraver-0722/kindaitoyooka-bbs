@@ -216,6 +216,8 @@ keep them current.
 
 Practical implications:
 
+- Registration asks for explicit acceptance of the terms of use and records when, and which
+  version, was accepted. Keep that record: it is the evidence of consent.
 - Keep a documented takedown process and a named contact.
 - Preserve logs long enough to respond to a lawful inquiry, but no longer than necessary.
 - Do not promise anonymity you cannot deliver. Account data and server logs may be disclosable.

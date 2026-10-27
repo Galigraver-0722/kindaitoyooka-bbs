@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  hasAcceptedTerms,
   safeNextPath,
   validateBody,
   validateEmail,
@@ -64,4 +65,12 @@ test("redirect targets must stay on this site", () => {
   assert.equal(safeNextPath("//evil.example"), "/");
   assert.equal(safeNextPath("https://evil.example"), "/");
   assert.equal(safeNextPath("javascript:alert(1)"), "/");
+});
+
+test("terms acceptance needs an explicit yes", () => {
+  assert.equal(hasAcceptedTerms("yes"), true);
+  assert.equal(hasAcceptedTerms("on"), false);
+  assert.equal(hasAcceptedTerms("true"), false);
+  assert.equal(hasAcceptedTerms("YES"), false);
+  assert.equal(hasAcceptedTerms(""), false);
 });

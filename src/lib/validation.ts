@@ -38,6 +38,14 @@ export function validateReportReason(value: string): boolean {
 }
 
 /**
+ * Registration is refused unless the terms checkbox was submitted. The form
+ * posts `terms=yes`; anything else, including a missing field, is not consent.
+ */
+export function hasAcceptedTerms(value: string): boolean {
+  return value === "yes";
+}
+
+/**
  * Only allow redirects back into this site. Rejecting `//host` and absolute URLs
  * prevents the login form from becoming an open redirect.
  */

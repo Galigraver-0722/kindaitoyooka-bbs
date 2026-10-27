@@ -18,7 +18,7 @@
 | `/u/[username]` | 公開 | プロフィール。身元バナー、4 つの数（スレッド・投稿・もらったいいね・参加日）、最近のスレッドと最近の返信を 2 つのタブで表示 |
 | `/new` | ログイン済み | スレッド作成。ゲストは `/login?next=/new` へリダイレクト |
 | `/login` | 公開 | ログインフォーム。ログイン済みの利用者はリダイレクト |
-| `/register` | 公開 | 登録フォーム。最初のアカウントは `ADMIN` になる |
+| `/register` | 公開 | 登録フォーム。利用規約への同意が必須。最初のアカウントは `ADMIN` になる |
 | `/threads` | 公開 | `/` へリダイレクト。`q`・`filter`・`sort` は引き継ぐ |
 | `/search` | 公開 | `q` を付けて `/` へリダイレクト。`tag` は `#tag` の検索語になる |
 | `/bookmarks` | ログイン済み | `/?filter=saved` へリダイレクト |
@@ -94,7 +94,9 @@
 
 - 成功: セッション Cookie を設定し、`next` または `/` へリダイレクトします。
 - 失敗: `/register?error=<code>` へリダイレクトします。パスワードを画面に戻すことはありません。
-- コード: `invalid-input`、`username-taken`、`email-taken`。
+- コード: `terms-required`、`invalid-input`、`username-taken`、`email-taken`。
+- チェックボックス（`terms=yes`）のないリクエストは拒否します。ブラウザの `required` は制御ではありません。
+- 同意は `termsAcceptedAt` と、その時点の `POLICY_UPDATES.terms` の値 `termsVersion` としてアカウントに保存します。
 
 ### `POST /api/auth/login`
 

@@ -50,6 +50,11 @@ model User {
   // Last time the reader opened the announcements panel. Announcements ship
   // with the code, so only the moment is stored.
   announcementsSeenAt DateTime?
+  // Registration requires accepting the terms. The timestamp and the version
+  // accepted are the evidence; accounts created before the requirement existed
+  // carry null and are not re-prompted.
+  termsAcceptedAt DateTime?
+  termsVersion    String?
   createdAt       DateTime         @default(now())
   sessions        Session[]
   threads         Thread[]
