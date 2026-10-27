@@ -166,12 +166,15 @@ Restart=always
 RestartSec=5
 NoNewPrivileges=true
 PrivateTmp=true
+MemoryMax=900M
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Replace `/usr/local/bin/pnpm` with the output of `command -v pnpm`. Then:
+`MemoryMax=900M` stops one runaway request from pushing a 1 GB machine into the kernel OOM
+killer: the service restarts instead of the whole host freezing. Replace `/usr/local/bin/pnpm`
+with the output of `command -v pnpm`. Then:
 
 ```bash
 sudo systemctl daemon-reload
@@ -186,6 +189,9 @@ The template in `deploy/Caddyfile` also sets HSTS and basic security headers. `/
 ```caddyfile
 bbs.example.com {
     encode gzip zstd
+    request_body {
+        max_size 256KB
+    }
     reverse_proxy 127.0.0.1:3000
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
@@ -195,6 +201,9 @@ bbs.example.com {
     }
 }
 ```
+
+`request_body` refuses uploads over 256 KB at the proxy; the handlers separately refuse anything
+over 64 KB from `Content-Length`, so the two limits overlap on purpose.
 
 ```bash
 sudo systemctl reload caddy

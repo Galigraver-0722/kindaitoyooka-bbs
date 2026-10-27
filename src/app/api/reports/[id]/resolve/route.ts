@@ -1,11 +1,15 @@
 import { getCurrentUser, isModerator } from "@/lib/auth";
 import { recordAudit } from "@/lib/audit";
 import { prisma } from "@/lib/db";
-import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!isSameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  if (isOversized(request)) {
+    return payloadTooLarge();
   }
 
   const { id } = await params;

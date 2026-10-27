@@ -13,10 +13,10 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/b/[slug]` | Public | Board home (same excerpt treatment): identity banner with thread, member, post, and last-activity counts, then the board's threads 20 per page; pinned first, then by activity, popularity, or rising |
 | `/boards` | Public | Redirects to `/`; the board list lives in the sidebar and the mobile drawer |
 | `/boards/new` | Signed-in | Create a community board. Three owned boards per account, five per hour, slug taken from the form |
-| `/t/[id]` | Public | Thread with all posts in a numbered tree, reply form, reaction controls |
+| `/t/[id]` | Public | Thread with all posts in a numbered tree, reply form, reaction controls. A locked thread keeps the tree and replaces only the reply form with a notice |
 | `/t/[id]/edit` | Author | Edit the title, opening post, and tags within 15 minutes of posting |
 | `/t/[id]/export` | Public | Download the thread as a plain-text file |
-| `/u/[username]` | Public | Profile: identity banner, four counts (threads, posts, likes received, join date), recent threads and recent replies as two tabs |
+| `/u/[username]` | Public | Profile: identity banner, four counts (threads, posts, likes received, join date), recent threads and recent replies as two tabs. Replies inside a removed thread are excluded, so a deleted discussion does not survive on the author's profile |
 | `/new` | Signed-in | Create a thread; guests are redirected to `/login?next=/new` |
 | `/login` | Public | Login form; redirects signed-in users away |
 | `/register` | Public | Registration form; each of the four policy documents must be ticked; the first account becomes `ADMIN` |
@@ -110,6 +110,11 @@ All endpoints accept `application/x-www-form-urlencoded` or `multipart/form-data
 HTML form encoding), reject cross-origin `Origin` headers, and respond with `303 See Other` on
 success so the browser performs a `GET`.
 
+A body larger than `MAX_BODY_BYTES` (64 KB) is refused with `413` from its `Content-Length` before
+any parsing, and `deploy/Caddyfile` caps the proxy at 256 KB for requests that arrive chunked.
+The report endpoint authenticates before it touches the body, so an anonymous client cannot make
+the server parse anything.
+
 ### `POST /api/auth/register`
 
 | Field | Required | Rules |
@@ -117,11 +122,12 @@ success so the browser performs a `GET`.
 | `username` | yes | 3–20 chars, `[A-Za-z0-9_]`, lowercased |
 | `email` | no | Valid address, ≤ 254 chars, unique |
 | `password` | yes | 10–200 chars, not trimmed |
-| `next` | no | Same-site path only |
+| `next` | no | A path on this site. The value is resolved against a fixed origin and dropped unless the result keeps that origin, so `/\\evil.example`, `//host`, and control characters all fall back to `/` |
 | `agree_terms`, `agree_rules`, `agree_privacy`, `agree_moderation` | yes | Must each arrive as `yes`; the list lives in `AGREEMENT_FIELDS` |
 
 - Success: sets the session cookie, redirects to `next` or `/`.
 - Failure: redirects to `/register?error=<code>`; password is never echoed.
+- Bodies over 64 KB (`MAX_BODY_BYTES`) are refused with `413` before parsing.
 - Codes: `terms-required`, `invalid-input`, `username-taken`, `email-taken`.
 - A request that omits any of the four fields is refused with `terms-required`, so the browser's `required` attributes are not the control.
 - Acceptance is stored on the account as `termsAcceptedAt`, plus `termsVersion` (the `POLICY_UPDATES.terms` value at that moment) and `acceptedPolicies`, which names the version of each document: `terms:<v>;rules:<v>;privacy:<v>;moderation:<v>`.

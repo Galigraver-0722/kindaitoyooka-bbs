@@ -61,12 +61,35 @@ export function hasAcceptedTerms(value: string): boolean {
 }
 
 /**
- * Only allow redirects back into this site. Rejecting `//host` and absolute URLs
- * prevents the login form from becoming an open redirect.
+ * Only allow redirects back into this site.
+ *
+ * The value is resolved against a fixed origin and kept only when the result
+ * still has that origin. Prefix checks alone are not enough: `new URL("/\\evil.com",
+ * base)` treats the backslash as an authority marker and lands on `http://evil.com`,
+ * and a tab does the same. Comparing origins after parsing closes both, plus
+ * absolute URLs and `//host`. Control characters are rejected outright so a
+ * header cannot be split.
  */
+const NEXT_BASE = "https://next.invalid";
+
 export function safeNextPath(value: string | null | undefined, fallback = "/"): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+  if (!value || !value.startsWith("/")) {
     return fallback;
   }
-  return value;
+  if (/[\\\u0000-\u001f\u007f]/.test(value)) {
+    return fallback;
+  }
+
+  let url: URL;
+  try {
+    url = new URL(value, NEXT_BASE);
+  } catch {
+    return fallback;
+  }
+
+  if (url.origin !== NEXT_BASE) {
+    return fallback;
+  }
+
+  return `${url.pathname}${url.search}${url.hash}`;
 }

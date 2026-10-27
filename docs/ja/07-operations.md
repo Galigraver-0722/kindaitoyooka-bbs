@@ -149,12 +149,15 @@ Restart=always
 RestartSec=5
 NoNewPrivileges=true
 PrivateTmp=true
+MemoryMax=900M
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-`/usr/local/bin/pnpm` の部分は、`command -v pnpm` の出力に置き換えてください。そのうえで次を実行します。
+`MemoryMax=900M` は、1 つの暴走リクエストが 1 GB のマシンをカーネルの OOM killer に押し込むのを
+防ぎます。ホストごと固まる代わりにサービスが再起動します。`/usr/local/bin/pnpm` の部分は、
+`command -v pnpm` の出力に置き換えてください。そのうえで次を実行します。
 
 ```bash
 sudo systemctl daemon-reload
@@ -169,6 +172,9 @@ sudo systemctl status toyooka-bbs
 ```caddyfile
 bbs.example.com {
     encode gzip zstd
+    request_body {
+        max_size 256KB
+    }
     reverse_proxy 127.0.0.1:3000
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
@@ -178,6 +184,9 @@ bbs.example.com {
     }
 }
 ```
+
+`request_body` はプロキシで 256 KB を超えるアップロードを拒否します。ハンドラー側でも
+`Content-Length` が 64 KB を超えるものを拒否するので、2 つの上限は意図的に重なっています。
 
 ```bash
 sudo systemctl reload caddy

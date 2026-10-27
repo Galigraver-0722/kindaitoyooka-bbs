@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { scanPost } from "@/lib/content-filter";
 import { recordBlockedAttempt } from "@/lib/content-guard";
 import { prisma } from "@/lib/db";
-import { formText, isSameOrigin, seeOther, wantsJson } from "@/lib/http";
+import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther, wantsJson } from "@/lib/http";
 import { getLocale } from "@/lib/i18n";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { parseTagInput } from "@/lib/tags";
@@ -12,6 +12,12 @@ import { validateBody } from "@/lib/validation";
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!isSameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  if (isOversized(request)) {
+    return wantsJson(request)
+      ? Response.json({ error: "too-large" }, { status: 413 })
+      : payloadTooLarge();
   }
 
   const { id } = await params;

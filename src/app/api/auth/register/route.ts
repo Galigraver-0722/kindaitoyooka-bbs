@@ -1,6 +1,6 @@
 import { createSession, hashPassword, SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 import { POLICY_UPDATES } from "@/lib/policies";
 import { checkRateLimit, RATE_LIMITS, requestIp } from "@/lib/rate-limit";
 import {
@@ -23,6 +23,10 @@ function failure(request: Request, code: string, next: string) {
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  if (isOversized(request)) {
+    return payloadTooLarge();
   }
 
   const data = await request.formData();

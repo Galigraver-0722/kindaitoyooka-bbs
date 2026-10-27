@@ -264,22 +264,19 @@ export default async function ThreadPage({
           </article>
         ) : null}
 
-        {thread.isLocked ? (
-          <p className="notice">{pages.actions.lockedNotice}</p>
-        ) : (
-          <CommentSection
-            threadId={thread.id}
-            initial={comments}
-            canReply={canReply}
-            labels={labels}
-            emptyText={copy.noComments}
-            loginText={copy.loginToReply}
-            loginLabel={t(locale).nav.logIn}
-            viewer={user?.username ?? null}
-            highlight={highlightTerm}
-            moderator={canModerate}
-          />
-        )}
+        <CommentSection
+          threadId={thread.id}
+          initial={comments}
+          canReply={canReply}
+          labels={labels}
+          emptyText={copy.noComments}
+          loginText={copy.loginToReply}
+          loginLabel={t(locale).nav.logIn}
+          lockedText={thread.isLocked ? pages.actions.lockedNotice : undefined}
+          viewer={user?.username ?? null}
+          highlight={highlightTerm}
+          moderator={canModerate}
+        />
       </main>
     </ThemedPage>
   );

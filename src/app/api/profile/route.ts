@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { scanPost } from "@/lib/content-filter";
 import { recordBlockedAttempt } from "@/lib/content-guard";
 import { prisma } from "@/lib/db";
-import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
@@ -10,6 +10,10 @@ const HEX = /^#[0-9a-fA-F]{6}$/;
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  if (isOversized(request)) {
+    return payloadTooLarge();
   }
 
   const user = await getCurrentUser();

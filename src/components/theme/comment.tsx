@@ -363,6 +363,7 @@ export function CommentSection({
   emptyText,
   loginText,
   loginLabel,
+  lockedText,
   viewer,
   highlight,
 }: {
@@ -373,6 +374,8 @@ export function CommentSection({
   emptyText: string;
   loginText: string;
   loginLabel: string;
+  /** Present when the thread is locked: the tree stays visible, the box does not. */
+  lockedText?: string;
   viewer: string | null;
   highlight?: string;
   moderator?: boolean;
@@ -432,6 +435,8 @@ export function CommentSection({
             onPosted={(comment) => add(null, comment)}
           />
         </div>
+      ) : lockedText ? (
+        <p className="notice">{lockedText}</p>
       ) : (
         <p className="notice">
           {loginText} <a href={`/login?next=${encodeURIComponent(`/t/${threadId}`)}`}>{loginLabel}</a>

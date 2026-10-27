@@ -18,6 +18,31 @@ export function formText(data: FormData, key: string): string {
 }
 
 /**
+ * Largest body any endpoint accepts. A post is a few kilobytes, so this leaves
+ * room for long Japanese bodies while stopping a client from streaming
+ * hundreds of megabytes into `formData()` on a small server.
+ */
+export const MAX_BODY_BYTES = 64 * 1024;
+
+/**
+ * `Content-Length` is trustworthy for its own body: it describes what the server
+ * is about to read. A chunked request has no length, so the proxy limit in
+ * `deploy/Caddyfile` is the second gate.
+ */
+export function isOversized(request: Request, limit = MAX_BODY_BYTES): boolean {
+  const header = request.headers.get("content-length");
+  if (!header) {
+    return false;
+  }
+  const length = Number(header);
+  return Number.isFinite(length) && length > limit;
+}
+
+export function payloadTooLarge(): Response {
+  return new Response("Payload Too Large", { status: 413 });
+}
+
+/**
  * Defence in depth on top of `SameSite=Lax`: reject cross-site form posts when
  * the browser sends an Origin header. Requests without an Origin header (some
  * privacy tools, non-browser clients) are allowed through.

@@ -1,6 +1,6 @@
 import { getCurrentUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 import { getLocale } from "@/lib/i18n";
 
 /**
@@ -10,6 +10,10 @@ import { getLocale } from "@/lib/i18n";
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!isSameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  if (isOversized(request)) {
+    return payloadTooLarge();
   }
 
   const user = await getCurrentUser();

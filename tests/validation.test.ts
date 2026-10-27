@@ -69,6 +69,20 @@ test("redirect targets must stay on this site", () => {
   assert.equal(safeNextPath("javascript:alert(1)"), "/");
 });
 
+test("a backslash or control character cannot become an authority", () => {
+  // `new URL("/\\evil.example", base)` resolves to http://evil.example/.
+  assert.equal(safeNextPath("/\\evil.example"), "/");
+  assert.equal(safeNextPath("/\\evil.example/t/1"), "/");
+  assert.equal(safeNextPath("/\t/evil.example"), "/");
+  assert.equal(safeNextPath("/\r\nSet-Cookie: a=b"), "/");
+  assert.equal(safeNextPath("\\\\evil.example"), "/");
+  // Keep the harmless shapes intact.
+  assert.equal(safeNextPath("/b/study?page=2"), "/b/study?page=2");
+  assert.equal(safeNextPath("/t/abc#p-1"), "/t/abc#p-1");
+  // An encoded backslash is a path segment, not an authority.
+  assert.equal(safeNextPath("/%5Cevil.example"), "/%5Cevil.example");
+});
+
 test("terms acceptance needs an explicit yes", () => {
   assert.equal(hasAcceptedTerms("yes"), true);
   assert.equal(hasAcceptedTerms("on"), false);

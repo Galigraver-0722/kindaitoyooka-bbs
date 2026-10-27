@@ -1,6 +1,14 @@
 # Replace bbs.example.com with the domain owned by the school or the advisor.
 bbs.example.com {
 	encode gzip zstd
+
+	# A post is a few kilobytes. This stops an unauthenticated client from
+	# streaming a huge body at the app; the handler also rejects anything over
+	# 64 KB by Content-Length, so the two limits overlap on purpose.
+	request_body {
+		max_size 256KB
+	}
+
 	reverse_proxy 127.0.0.1:3000
 
 	header {

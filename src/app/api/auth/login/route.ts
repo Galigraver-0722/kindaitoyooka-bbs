@@ -1,6 +1,6 @@
 import { createSession, SESSION_COOKIE, sessionCookieOptions, verifyPassword } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 import { checkRateLimit, pruneRateLimits, RATE_LIMITS, requestIp, resetRateLimit } from "@/lib/rate-limit";
 import { safeNextPath } from "@/lib/validation";
 
@@ -15,6 +15,10 @@ function failure(request: Request, next: string, code = "invalid-credentials") {
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  if (isOversized(request)) {
+    return payloadTooLarge();
   }
 
   const data = await request.formData();

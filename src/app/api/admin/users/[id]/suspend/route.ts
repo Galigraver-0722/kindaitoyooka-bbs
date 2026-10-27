@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canSuspend } from "@/lib/admin";
 import { recordAudit } from "@/lib/audit";
 import { prisma } from "@/lib/db";
-import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 
 /**
  * Suspend an account. Suspending deletes every session for the target, so the
@@ -12,6 +12,10 @@ import { formText, isSameOrigin, seeOther } from "@/lib/http";
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!isSameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  if (isOversized(request)) {
+    return payloadTooLarge();
   }
 
   const actor = await getCurrentUser();

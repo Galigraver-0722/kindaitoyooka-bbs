@@ -79,8 +79,15 @@ export default async function ProfilePage({
       where: { authorId: profile.id, isDeleted: false },
       _sum: { likeCount: true },
     }),
+    // A removed thread keeps its posts, so the thread flag has to be checked
+    // here as well; otherwise the body of a deleted discussion stays readable
+    // on the author's profile after the thread page is already a 404.
     prisma.post.findMany({
-      where: { authorId: profile.id, isDeleted: false },
+      where: {
+        authorId: profile.id,
+        isDeleted: false,
+        thread: { isDeleted: false },
+      },
       orderBy: { createdAt: "desc" },
       take: 24,
       select: {

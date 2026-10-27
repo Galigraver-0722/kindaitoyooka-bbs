@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { scanPost } from "@/lib/content-filter";
 import { recordBlockedAttempt } from "@/lib/content-guard";
 import { prisma } from "@/lib/db";
-import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { parseSuggestedTags } from "@/lib/tags";
 
@@ -14,6 +14,10 @@ const BOARDS_PER_USER = 3;
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  if (isOversized(request)) {
+    return payloadTooLarge();
   }
 
   const user = await getCurrentUser();

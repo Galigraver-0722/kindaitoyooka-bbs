@@ -1,10 +1,14 @@
 import { cookieSecure } from "@/lib/auth";
-import { formText, isSameOrigin, sameHostPath, seeOther } from "@/lib/http";
+import { formText, isOversized, isSameOrigin, payloadTooLarge, sameHostPath, seeOther } from "@/lib/http";
 import { isLocale, LOCALE_COOKIE } from "@/lib/i18n";
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  if (isOversized(request)) {
+    return payloadTooLarge();
   }
 
   const data = await request.formData();

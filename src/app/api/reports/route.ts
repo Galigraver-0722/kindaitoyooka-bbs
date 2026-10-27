@@ -1,12 +1,21 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formText, isSameOrigin, seeOther } from "@/lib/http";
+import { formText, isOversized, isSameOrigin, payloadTooLarge, sameHostPath, seeOther } from "@/lib/http";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { validateReportReason } from "@/lib/validation";
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
+  }
+  if (isOversized(request)) {
+    return payloadTooLarge();
+  }
+
+  // Authentication first: an anonymous request must not cost a body parse.
+  const user = await getCurrentUser();
+  if (!user) {
+    return seeOther(request, `/login?next=${encodeURIComponent(sameHostPath(request, "/"))}`);
   }
 
   const data = await request.formData();
@@ -19,11 +28,6 @@ export async function POST(request: Request) {
 
   if (!post) {
     return seeOther(request, "/?error=not-found");
-  }
-
-  const user = await getCurrentUser();
-  if (!user) {
-    return seeOther(request, `/login?next=${encodeURIComponent(`/t/${post.threadId}`)}`);
   }
 
   const limit = await checkRateLimit(
