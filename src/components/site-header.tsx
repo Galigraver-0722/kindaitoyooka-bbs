@@ -35,7 +35,7 @@ export function SiteHeader({ user, locale }: { user: SessionUser | null; locale:
             </Link>
           ) : null}
           {canModerate ? (
-            <Link href="/moderation" className={linkClass}>
+            <Link href="/admin" className={linkClass}>
               {m.nav.moderation}
             </Link>
           ) : null}

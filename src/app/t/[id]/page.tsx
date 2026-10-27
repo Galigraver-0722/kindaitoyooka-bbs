@@ -197,7 +197,7 @@ export default async function ThreadPage({
                 cancel={pages.confirmDelete.cancel}
               />
             ) : null}
-            {canModerate ? <Link className="btn" href="/moderation">{pages.actions.moderation}</Link> : null}
+            {canModerate ? <Link className="btn" href="/admin">{pages.actions.moderation}</Link> : null}
           </div>
         </div>
 

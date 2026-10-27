@@ -28,8 +28,10 @@ thread, and where students can report problems without confronting anyone. See
 - Search titles, replies, and tags from the feed. A query scans every match (up to 500
   candidates) instead of the newest 30, ranks with published weights, and paginates at 20;
   newest, popularity, and rising stay available as sorts.
-- Report a post with a reason; moderators review the queue at `/moderation`.
-- Moderator tools: remove post, lock/unlock thread, remove thread, dismiss reports.
+- Report a post with a reason; moderators review the queue at `/admin`.
+- Moderator console at `/admin` with tabs for reports, accounts, posts, and the audit log; removing
+  posts, locking threads, and suspending a student account all happen there, and every action is
+  attributed to the moderator in the audit log.
 - Soft deletion: removed content leaves a visible placeholder instead of vanishing.
 - Japanese-first interface with a header switch to English; user content is never machine-translated.
 - Tags come from a dedicated field when composing, not parsed out of the body, and search
@@ -44,14 +46,14 @@ thread, and where students can report problems without confronting anyone. See
 - Plain-text export of a whole thread at `/t/<id>/export`.
 - Fixed-window rate limits on login, registration, posting, reporting, and reactions, tunable
   through environment variables.
-- Audit log for every moderation action, shown on `/moderation`.
+- Account suspension: signs the account out everywhere, blocks sign-in, keeps every post; reversible with one click. Only students can be suspended by a moderator, only administrators can change roles.
 - Manual password recovery with `pnpm reset-password <username>`; no email provider required.
 - `GET /health` reports application and database readiness.
 - Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, with a project-specific ignore list; matches are reviewed by a human, never auto-hidden.
 - Students can open their own community board from `/boards/new` (three per account, five per
   hour), badged so it is never mistaken for an official board. A board with no thread activity
   for 90 days is archived by the daily `pnpm archive-boards` run and can be restored from
-  `/moderation`.
+  the console.
 - "New" badges on the feed and board lists for signed-in readers, driven by the read markers
   written when a thread is opened.
 - A notification inbox in the header, left of the search box: replies, comments, likes, and saves

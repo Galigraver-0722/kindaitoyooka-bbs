@@ -24,7 +24,8 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/search` | Public | Redirects to `/` with `q`; `tag` becomes a `#tag` query |
 | `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
 | any signed-in page | Signed-in | The header shows a notification inbox (replies, comments, likes, saves) with an unread count; every item links to a specific post (`#p-<id>`), including thread-level likes and saves, which point at the opening post |
-| `/moderation` | Moderator / Admin | Open reports (10 per page, `page` parameter), automatic flags, the recent audit log, and — for administrators — the student-board archive controls |
+| `/admin` | Moderator / Admin | The console: open reports (10 per page), accounts (search, suspend/restore, role changes for administrators), posts and threads (search, lock, remove), the audit log, and — for administrators — student-board archive controls. `tab=reports\|users\|content\|audit\|boards` |
+| `/moderation` | Moderator / Admin | Redirects to `/admin?tab=reports`; the queue used to live here |
 | `/terms` | Public | Terms of use: who may use the site, the permission a post grants, what the operators may do, and what is not promised. Declares the other three documents part of the agreement |
 | `/rules` | Public | Community rules, in the current interface language |
 | `/privacy` | Public | Privacy notice: stored data, cookies, retention, access |
@@ -131,6 +132,8 @@ success so the browser performs a `GET`.
 
 - Success: session cookie, redirect to `next` or `/`.
 - Failure: `/login?error=invalid-credentials` (same message for unknown user and wrong password).
+- A suspended account is rejected after the password check with `error=suspended`; somebody
+  guessing without the password still sees `invalid-credentials`.
 - Rate limited after 10 attempts per IP + username in 10 minutes (`error=rate-limited`); a
   successful login clears the counter.
 
@@ -320,6 +323,23 @@ success so the browser performs a `GET`.
 - `remove`: soft-deletes the reported post and marks the report `removed`.
 - `dismiss`: leaves the post and marks the report `dismissed`.
 - Redirects to `/moderation` in both cases.
+
+### Console endpoints
+
+All six require a signed-in moderator (`MODERATOR` or `ADMIN`), check the origin like every other
+mutation, and redirect back to `/admin` with a `notice` or `error` code. The rules behind them live
+in `src/lib/admin.ts` and are unit-tested.
+
+| Endpoint | Body | Who | Effect |
+| --- | --- | --- | --- |
+| `POST /api/admin/users/[id]/suspend` | `reason` (optional, ≤ 200) | Moderator for students; admin for moderators | Sets `isSuspended`, stamps the reason, deletes every session of that user, writes `user.suspend` |
+| `POST /api/admin/users/[id]/restore` | — | Same ladder as suspend | Clears the three suspension fields, writes `user.restore` |
+| `POST /api/admin/users/[id]/role` | `role=STUDENT\|MODERATOR\|ADMIN` | Admin only | Changes the role, writes `user.role` with `{from, to}`. Not on yourself; the last administrator cannot be demoted |
+| `POST /api/admin/posts/[id]/remove` | — | Moderator / Admin | Soft-deletes the post, writes `post.remove` |
+| `POST /api/admin/threads/[id]/remove` | — | Moderator / Admin | Soft-deletes the thread, writes `thread.remove` |
+| `POST /api/admin/threads/[id]/lock` | — | Moderator / Admin | Toggles `isLocked`, writes `thread.lock` / `thread.unlock` |
+
+Nobody can suspend an administrator, and nobody can suspend or restore their own account.
 
 ### Unread markers
 

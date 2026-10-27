@@ -6,12 +6,15 @@ export type AuditAction =
   | "thread.unlock"
   | "thread.remove"
   | "report.remove"
-  | "report.dismiss";
+  | "report.dismiss"
+  | "user.suspend"
+  | "user.restore"
+  | "user.role";
 
 export type AuditInput = {
   actorId: string;
   action: AuditAction;
-  targetType: "post" | "thread" | "report";
+  targetType: "post" | "thread" | "report" | "user" | "board";
   targetId: string;
   details?: Record<string, unknown>;
 };

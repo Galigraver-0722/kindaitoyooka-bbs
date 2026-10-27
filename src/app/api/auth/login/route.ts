@@ -36,11 +36,17 @@ export async function POST(request: Request) {
 
   const user = await prisma.user.findUnique({
     where: { username },
-    select: { id: true, passwordHash: true },
+    select: { id: true, passwordHash: true, isSuspended: true },
   });
 
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return failure(request, next);
+  }
+
+  // Only reached with the correct password: a bystander guessing still sees
+  // "wrong username or password", so the suspended state is not probeable.
+  if (user.isSuspended) {
+    return failure(request, next, "suspended");
   }
 
   await resetRateLimit(loginKey);

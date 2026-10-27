@@ -38,6 +38,7 @@ alternatives considered.
 | ADR-0026 | Authors may remove their own posts, and a removal always lands somewhere visible | Accepted | 2026-10-25 |
 | ADR-0027 | Live refresh is polling plus client reconciliation, not websockets | Accepted | 2026-10-26 |
 | ADR-0028 | Terms of use and a name policy, because the license covers neither | Accepted | 2026-10-26 |
+| ADR-0029 | One console, and suspension as the account-level sanction | Accepted | 2026-10-27 |
 
 ---
 
@@ -941,6 +942,50 @@ readable by a student, and it would not govern the school's name either).
 **Revisit if.** The school's legal contact asks for explicit consent or a different governing law,
 the site begins collecting something the terms do not describe, or a fork is deployed under this
 name and the policy needs a remedy stronger than a request.
+
+---
+
+## ADR-0029 — One console, and suspension as the account-level sanction
+
+**Context.** Moderation lived on `/moderation`: a report queue, an audit list, and (for
+administrators) board archive controls. There was no account-level sanction at all — when a student
+kept posting after their posts were removed, a moderator could only keep deleting. The obvious fix
+is a second page for accounts and one for content, but that gives three places to remember, and the
+project has repeatedly paid for duplicate entry points.
+
+**Decision.**
+
+- One console at `/admin`, with tabs: reports, accounts, posts, audit, and boards (administrators
+  only). `/moderation` redirects there so old links and bookmarks still work.
+- `User` gains `isSuspended`, `suspendedAt`, and `suspendedReason`. Suspending deletes every session
+  of that account and blocks sign-in; nothing is deleted, and restore clears the three fields.
+- The ladder is explicit and enforced in one place, `src/lib/admin.ts`: a moderator may suspend
+  students, an administrator may suspend moderators, nobody may suspend an administrator, and
+  nobody may act on their own account. Role changes are administrator-only, cannot target yourself,
+  and the last administrator cannot be demoted.
+- Every action writes an audit row (`user.suspend`, `user.restore`, `user.role`, plus the existing
+  content actions), so the console leaves the same trail as the old queue.
+- The page is deliberately plain: server-rendered tables and plain forms, no client state. It is an
+  internal tool used by a handful of people; a drag-and-drop interface would be a liability.
+
+**Consequences.**
+
+- A single place answers "what can I do about this account, this post, this board". Moderators see
+  no board controls and no role selectors, because the buttons are not rendered for them; the API
+  refuses them as well, and the refusal is covered by unit tests.
+- Suspension is reversible, so a mistake costs one restore instead of a lost account. There is no
+  permanent deletion of an account; the closest is a suspension nobody lifts.
+- A suspended person keeps their posts, which is deliberate: removing them would quietly rewrite a
+  thread that other students already replied to.
+- The console has no pagination-free overview of a single person's history; getting it means
+  filtering the posts tab by their name. Acceptable for a school, and the audit log covers actions.
+
+**Alternatives considered.** Separate `/admin/users` and `/admin/posts` pages (three entry points),
+a ban flag with a permanent delete (destroys the record and is easy to misuse), reusing the existing
+delete endpoints from the console (they redirect to the thread, which loses the operator's place).
+
+**Revisit if.** The school wants temporary mutes with an automatic expiry, needs a per-account
+history page, or a moderator ends up sharing an account with someone else.
 
 ---
 

@@ -23,7 +23,8 @@
 | `/search` | 公開 | `q` を付けて `/` へリダイレクト。`tag` は `#tag` の検索語になる |
 | `/bookmarks` | ログイン済み | `/?filter=saved` へリダイレクト |
 | ログイン後の各ページ | ログイン済み | ヘッダーに通知の受信箱（返信・コメント・いいね・保存）と未読数を出す。各項目は特定の投稿（`#p-<id>`）へリンクする。スレッド単位のいいね・保存は最初の投稿を指す |
-| `/moderation` | モデレーター／管理者 | 未処理の通報（1 ページ 10 件、`page` 指定可）、自動フラグ、最近の監査ログ。管理者にはコミュニティボードのアーカイブ操作も出す。それ以外の利用者はリダイレクト |
+| `/admin` | モデレーター／管理者 | 管理コンソール。未処理の通報（1 ページ 10 件）、アカウント（検索・停止・解除、管理者は権限変更も）、投稿とスレッド（検索・ロック・削除）、監査ログ、管理者にはコミュニティボードのアーカイブ操作。`tab=reports\|users\|content\|audit\|boards` |
+| `/moderation` | モデレーター／管理者 | `/admin?tab=reports` へリダイレクト。以前はここに通報キューがあった |
 | `/terms` | 公開 | 利用規約。利用できる人、投稿が与える許諾、運営ができること、約束しないこと。他の 3 文書を規約の一部と定める |
 | `/rules` | 公開 | コミュニティルール。表示言語に合わせて出し分ける |
 | `/privacy` | 公開 | プライバシー通知。保存する情報、Cookie、保存期間、閲覧できる人 |
@@ -104,6 +105,7 @@
 
 - 成功: セッション Cookie を設定し、`next` または `/` へリダイレクトします。
 - 失敗: `/login?error=invalid-credentials`。利用者が存在しない場合もパスワードが違う場合も、同じメッセージを返します。
+- 停止中のアカウントは、パスワードが一致した後に `error=suspended` で弾きます。パスワードを知らない相手には `invalid-credentials` のままなので、停止の有無は外から探れません。
 - IP + ユーザー名ごとに 10 分 10 回を超えると `error=rate-limited` を返します。ログインに成功するとカウンターは消えます。
 
 ### `POST /api/auth/logout`
@@ -264,7 +266,22 @@
 - 認証: `MODERATOR` または `ADMIN`。
 - `remove`: 通報された投稿を論理削除し、通報を `removed` にします。
 - `dismiss`: 投稿はそのままにし、通報を `dismissed` にします。
-- どちらの場合も `/moderation` へリダイレクトします。
+- どちらの場合も `/admin?tab=reports` へリダイレクトします。
+
+### 管理コンソールのエンドポイント
+
+6 つとも、ログイン済みのモデレーター（`MODERATOR` または `ADMIN`）だけが使えます。ほかの書き込みと同じくオリジンを検証し、`notice` か `error` を付けて `/admin` へ戻します。判定は `src/lib/admin.ts` にまとめ、単体テストで固定しています。
+
+| エンドポイント | 本文 | 誰が | 効果 |
+| --- | --- | --- | --- |
+| `POST /api/admin/users/[id]/suspend` | `reason`（任意、200 文字まで） | 生徒はモデレーター、モデレーターは管理者 | `isSuspended` を立て、理由を記録し、その利用者の全セッションを削除し、`user.suspend` を書く |
+| `POST /api/admin/users/[id]/restore` | — | 停止と同じ段階 | 停止の 3 列を消し、`user.restore` を書く |
+| `POST /api/admin/users/[id]/role` | `role=STUDENT\|MODERATOR\|ADMIN` | 管理者のみ | 権限を変え、`{from, to}` 付きで `user.role` を書く。自分自身には不可、最後の管理者は降格できない |
+| `POST /api/admin/posts/[id]/remove` | — | モデレーター／管理者 | 投稿を論理削除し、`post.remove` を書く |
+| `POST /api/admin/threads/[id]/remove` | — | モデレーター／管理者 | スレッドを論理削除し、`thread.remove` を書く |
+| `POST /api/admin/threads/[id]/lock` | — | モデレーター／管理者 | `isLocked` を反転し、`thread.lock` / `thread.unlock` を書く |
+
+管理者を停止することはできず、自分のアカウントも停止・解除できません。
 
 ### 未読の表示
 

@@ -25,7 +25,7 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 - Board pagination at 20 threads per page, preserving the newest/popular sort.
 - Public terms of use, community rules, privacy notice, and moderation policy pages, in English and
   Japanese. The terms are the agreement; the other three are declared part of it.
-- An audit log for every moderation action, visible on `/moderation`.
+- An audit log for every moderation action, visible in the console at `/admin`.
 - Author profile pages at `/u/<username>` with an identity banner, thread/post/like/join-date
   counts, and recent-thread and recent-reply tabs.
 - Thread editing within 15 minutes of posting, with a visible "edited" marker.
@@ -58,7 +58,7 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 | Reply | Signed-in user can reply in an unlocked, non-deleted thread |
 | Report | Signed-in user can report any visible post with a 3–500 char reason |
 | Moderate | Moderator can remove a post, lock a thread, remove a thread, and resolve reports |
-| Permissions | Students cannot reach `/moderation` or call moderation endpoints |
+| Permissions | Students cannot reach `/admin` or call moderation endpoints; suspending an account signs it out everywhere and blocks sign-in |
 | Safety placeholder | Removed post remains in the thread as a localized placeholder ("Removed by a moderator" / 「モデレーターが削除しました」) |
 | Language switch | Every page opens in Japanese by default and can be switched to English; the choice survives navigation |
 | React | Signed-in users can like a post and bookmark a thread; counts update and toggling reverses the action |
@@ -140,7 +140,7 @@ As a student, I want to flag a post without confronting its author.
 - The report form is available on every visible post to signed-in users.
 - A reason of 3–500 characters is required.
 - The reporter sees a confirmation notice; the post is not hidden automatically.
-- Reports appear in `/moderation` in oldest-first order.
+- Reports appear in `/admin?tab=reports` in oldest-first order.
 
 ### US-6 Moderate
 

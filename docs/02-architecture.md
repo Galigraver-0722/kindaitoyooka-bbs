@@ -91,13 +91,15 @@ A `303 See Other` is used so that refreshing the result does not resubmit the fo
 | Register / log in | ✅ | — | — | — |
 | Start a thread, reply, report | ❌ | ✅ | ✅ | ✅ |
 | Remove post / thread, lock thread | ❌ | ❌ | ✅ | ✅ |
-| View `/moderation`, resolve reports | ❌ | ❌ | ✅ | ✅ |
-| Create boards or change roles | ❌ | ❌ | ❌ | ❌ (seed / SQL only in v0.1) |
+| Open `/admin`, resolve reports, remove posts, suspend students | ❌ | ❌ | ✅ | ✅ |
+| Change roles, suspend a moderator, archive a board | ❌ | ❌ | ❌ | ✅ |
 
-Admin and moderator currently have the same powers in code. The distinction exists so that a
-future audit log and role-management screen can separate them without a data migration.
+The two roles differ at the account level: a moderator may suspend students, an administrator may
+also suspend moderators, change roles, and archive boards. Nobody may suspend an administrator or
+act on their own account; the ladder lives in `src/lib/admin.ts` and is unit-tested.
 
-Every check is performed in the route handler with `getCurrentUser()` and `isModerator()`.
+Every check is performed in the route handler with `getCurrentUser()`, `isModerator()`, `isAdmin()`,
+and the `canSuspend` / `canChangeRole` decisions in `src/lib/admin.ts`.
 Hiding a button is a UX decision, never a security control.
 
 ### Language

@@ -145,8 +145,8 @@ not user data; no post content is sent to a third party.
 | Role | Can do | Cannot do |
 | --- | --- | --- |
 | Student | Read, post, reply, report | Moderate, see reports |
-| Moderator | Remove posts/threads, lock threads, resolve reports | Change roles, read database, see another user's email |
-| Admin / maintainer | Everything a moderator can, plus database access and deployment | Act without the teacher advisor on critical incidents |
+| Moderator | Remove posts/threads, lock threads, resolve reports, suspend student accounts | Suspend moderators or administrators, change roles, read database, see another user's email |
+| Admin / maintainer | Everything a moderator can, plus role changes, suspending moderators, board archive, database access, deployment | Act without the teacher advisor on critical incidents |
 | Teacher advisor | Oversight, escalation, approval of policy changes | Day-to-day queue (unless they choose to help) |
 
 Rules:
@@ -156,15 +156,31 @@ Rules:
   unchecked moderation power is an accountability hole.
 - Moderators do not moderate threads they are personally involved in. Another moderator handles
   it.
-- Critical decisions (ban, report to police, public statement) involve the teacher advisor.
+- Critical decisions (permanent ban, report to police, public statement) involve the teacher
+  advisor.
+
+### Suspension, the implemented account-level sanction
+
+A moderator can suspend a student account from `/admin?tab=users`; an administrator can suspend a
+moderator. Nobody can suspend an administrator, and nobody can suspend themselves. Suspending:
+
+- signs the account out on every device (all `Session` rows are deleted) and blocks sign-in with
+  `error=suspended`;
+- leaves every post and thread in place, so the record of what happened stays readable;
+- stores the moderator's reason on the account and in the audit row.
+
+Restoring clears the suspension and the person can sign in again. Suspension is reversible by
+design; a permanent removal of an account is not implemented.
 
 ## 7. Moderation ladder
 
 1. **No action** — resolved as dismissed; document why if the report was made in good faith.
 2. **Removal** — the default for prohibited content. The placeholder stays visible.
 3. **Thread lock** — when a discussion is unproductive but the content is not removable.
-4. **Mute** (future) — time-boxed, with a reason and an expiry date.
-5. **Ban** (future) — requires admin + teacher advisor agreement, recorded with evidence.
+4. **Suspension** — implemented, reversible, one account at a time. Use it when the content is
+   removed but the person keeps posting; write the reason so the next moderator understands.
+5. **Permanent ban** (future) — requires admin + teacher advisor agreement, recorded with evidence.
+   Today the closest equivalent is a suspension that nobody restores.
 6. **School process** — bullying, threats, and repeated violations go through the school's
    student guidance procedure. The website is not the disciplinary body.
 

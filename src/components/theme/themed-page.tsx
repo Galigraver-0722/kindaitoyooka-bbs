@@ -123,9 +123,10 @@ export async function ThemedPage({
   const me = username
     ? await prisma.user.findUnique({
         where: { username },
-        select: { id: true, avatarColor: true, avatarRing: true },
+        select: { id: true, avatarColor: true, avatarRing: true, role: true },
       })
     : null;
+  const canModerate = me?.role === "MODERATOR" || me?.role === "ADMIN";
   const copy = t(locale).shell;
   const pages = t(locale).pages;
   const inboxCopy = t(locale).notifications;
@@ -176,6 +177,7 @@ export async function ThemedPage({
             </details>
             <div className="tools">
               {username ? <NotificationInbox items={inboxItems} unseen={noticeFeed.unseen} labels={inboxLabels} themeClass="tw-d" /> : null}
+              {canModerate ? <Link className="adm-entry" href="/admin">{copy.console}</Link> : null}
               <form className="search" action="/" method="get" role="search">
                 {searchIcon}
                 <input name="q" maxLength={100} placeholder={copy.search} aria-label={copy.search} />
@@ -217,6 +219,7 @@ export async function ThemedPage({
               </div>
             </details>
             {username ? <NotificationInbox items={inboxItems} unseen={noticeFeed.unseen} labels={inboxLabels} themeClass="tw-b" /> : null}
+            {canModerate ? <Link className="adm-entry" href="/admin">{copy.console}</Link> : null}
             <form className="cmd" action="/" method="get" role="search">
               <span>&gt;</span>
               <input name="q" maxLength={100} placeholder={copy.search} aria-label={copy.search} />

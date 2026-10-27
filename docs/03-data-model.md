@@ -41,10 +41,16 @@ erDiagram
 | `avatarRing` | string? | `#rrggbb` ring colour; same fallback |
 | `bio` | string? | ≤ 200 chars, shown on the profile page |
 | `notificationsSeenAt` | datetime? | When the reader last opened the header inbox; newer events count as unseen |
+| `isSuspended` | boolean | Set from the console. A suspended account cannot sign in and every session is deleted |
+| `suspendedAt` | datetime? | When the suspension started; cleared on restore |
+| `suspendedReason` | string? | Free text (≤ 200) the moderator typed; also copied into the audit row |
 | `createdAt` | datetime | |
 
 No real name, grade, class, birthday, or photo. Those fields are intentionally absent: the
 cheapest way to protect personal data is not to collect it.
+
+Suspension keeps the row and its posts; it only blocks sign-in. Restoring clears the three
+suspension fields, so nothing about the account has to be reconstructed.
 
 ### Session
 

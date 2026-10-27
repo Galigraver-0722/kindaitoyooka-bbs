@@ -71,7 +71,7 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
     where: { id: hashToken(token) },
     select: {
       expiresAt: true,
-      user: { select: { id: true, username: true, role: true } },
+      user: { select: { id: true, username: true, role: true, isSuspended: true } },
     },
   });
 
@@ -79,7 +79,13 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
     return null;
   }
 
-  return session.user;
+  // A suspended account is treated as signed out on every request, even if a
+  // session row somehow survived (suspending deletes them all).
+  if (session.user.isSuspended) {
+    return null;
+  }
+
+  return { id: session.user.id, username: session.user.username, role: session.user.role };
 });
 
 /**

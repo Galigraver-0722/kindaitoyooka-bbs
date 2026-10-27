@@ -39,6 +39,11 @@ model User {
   avatarColor     String?
   avatarRing      String?
   bio             String?
+  // Suspension is reversible and keeps every row: a suspended account cannot
+  // sign in and every session is deleted, but its posts stay for the record.
+  isSuspended     Boolean          @default(false)
+  suspendedAt     DateTime?
+  suspendedReason String?
   // Last time the reader opened the notification inbox. Anything newer is
   // counted as unseen; the events themselves are derived from existing rows.
   notificationsSeenAt DateTime?
