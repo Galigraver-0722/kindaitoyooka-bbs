@@ -37,7 +37,7 @@ grant and the brand are separate things.
    - `src/lib/locales.ts` — `meta.title`, `meta.description`, and the `footer` block, in both the
      `en` and `ja` dictionaries.
    - `src/components/site-footer.tsx` — the site name in the footer.
-   - `README.md`, `docs/`, and `designs/` — the written material that names the school.
+   - `README.md` and `docs/` — the written material that names the school.
 3. **Drop the school's name and emblem** from the deployment unless the school has given written
    permission to the people running that deployment. This is not something this repository can
    grant.

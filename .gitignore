@@ -46,5 +46,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# generated design screenshots
-/designs/shots/
+# local working material: design exploration, screenshots, prompt drafts, notes.
+# Nothing here belongs to the project deliverable, so it is never committed.
+/local/

@@ -135,9 +135,11 @@ names) is stored once and never translated. Dates and numbers are formatted per 
 │       ├── search.ts      ranking for /?q=
 │       ├── policies.ts    the four published documents
 │       └── …              hot and rising, editing, tags, validation, http
-├── designs/           visual prototypes, kept as the record of the choice
 └── docs/              this documentation set; docs/ja/ mirrors it
 ```
+
+Design exploration and other working material sit in `local/`, which is never committed. The two
+visual systems the application ships live in `src/components/theme/`.
 
 ## 7. Security posture
 
