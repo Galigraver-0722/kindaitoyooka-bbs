@@ -12,7 +12,8 @@
 | pnpm | 12.x（`package.json` で宣言） |
 | データベース | SQLite のファイル。サーバープロセスは不要 |
 | ディスク | テキストだけなら 1 GB で足りる。バックアップの余裕を残す |
-| TLS | ドメインと自動証明書（Caddy が最も簡単） |
+| メモリ | 2 GB、または 1 GB + スワップ 2 GB。`next build` は 1 GB では足りず、稼働中のサーバーは 300〜650 MB を保持する。`deploy/toyooka-bbs.service` は `MemoryMax=900M` を設定している |
+| TLS | ドメインと自動証明書。Caddy 2.7 以降が必要（`deploy/Caddyfile` は 2.6 には無い `request_body` を使う） |
 
 ## 2. 環境変数
 

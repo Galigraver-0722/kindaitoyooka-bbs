@@ -13,7 +13,8 @@ the deployment section but keep the backup and restore rules unchanged.
 | pnpm | 12.x (declared in `package.json`) |
 | Database | SQLite file; no server process |
 | Disk | 1 GB is plenty for text; leave room for backups |
-| TLS | A domain plus automatic certificates (Caddy is the easiest) |
+| RAM | 2 GB, or 1 GB with 2 GB of swap. `next build` needs more than 1 GB, and the running server holds 300–650 MB; `deploy/toyooka-bbs.service` sets `MemoryMax=900M` |
+| TLS | A domain plus automatic certificates. Caddy 2.7 or newer: `deploy/Caddyfile` uses `request_body`, which does not exist in 2.6 |
 
 ## 2. Environment variables
 
