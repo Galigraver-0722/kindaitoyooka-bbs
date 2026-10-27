@@ -17,7 +17,7 @@ import { getUnreadThreadIds } from "@/lib/read-state";
 import { prisma } from "@/lib/db";
 import { sortByHot } from "@/lib/hot";
 import { sortByRising } from "@/lib/rising";
-import { postExcerpt } from "@/lib/excerpt";
+import { openingPostExcerpt } from "@/lib/excerpt";
 import { errorMessage } from "@/lib/messages";
 import { boardPageHref, parsePage, THREADS_PER_PAGE, totalPages } from "@/lib/pagination";
 import { parseSuggestedTags } from "@/lib/tags";
@@ -31,7 +31,7 @@ const THREAD_INCLUDE = {
   board: { select: { slug: true, name: true } },
   author: { select: { username: true, avatarColor: true, avatarRing: true } },
   tags: { select: { name: true } },
-  posts: { orderBy: { createdAt: "asc" }, take: 1, select: { body: true } },
+  posts: { orderBy: { createdAt: "asc" }, take: 1, select: { body: true, isDeleted: true } },
   _count: { select: { posts: true } },
 } satisfies Prisma.ThreadInclude;
 
@@ -157,7 +157,7 @@ export default async function BoardPage({
     lastPostAt: thread.lastPostAt,
     bookmarked: bookmarked.has(thread.id),
     isUnread: unread.has(thread.id),
-    excerpt: postExcerpt(thread.posts[0]?.body ?? ""),
+    excerpt: openingPostExcerpt(thread.posts[0]),
   }));
   const errorText = errorMessage(error, "ja");
   const suggested = parseSuggestedTags(board.suggestedTags).slice(0, 5);

@@ -24,3 +24,15 @@ export function postExcerpt(body: string, max = 120): string {
   // Drop a trailing space before the ellipsis so the cut does not look accidental.
   return `${points.slice(0, max).join("").trimEnd()}${TRUNCATE}`;
 }
+
+/**
+ * Excerpt for a thread's opening post. A soft-deleted post keeps its body in
+ * the database for moderators, so the feed must blank it explicitly — passing
+ * the row through unchanged would print removed text in the list.
+ */
+export function openingPostExcerpt(post: { body: string; isDeleted?: boolean } | undefined, max = 120): string {
+  if (!post || post.isDeleted) {
+    return "";
+  }
+  return postExcerpt(post.body, max);
+}

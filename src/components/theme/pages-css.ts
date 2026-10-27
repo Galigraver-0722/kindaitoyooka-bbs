@@ -705,6 +705,7 @@ export const pagesBCss = `
   .tw-b .lang button{min-height:34px;padding:7px 8px}
   .tw-b .nav-btn{width:40px;height:40px}
   .tw-b .who{width:40px;height:40px}
+  .tw-b .ava{width:38px;height:38px;font-size:12px}
   .tw-b .theme-btn{min-height:40px}
   .tw-b main{padding-bottom:112px}
   .tw-b .fab{width:54px;height:54px;bottom:calc(18px + env(safe-area-inset-bottom,0px))}
@@ -816,6 +817,10 @@ export const pagesBCss = `
   100%{background:transparent;box-shadow:0 0 0 0 rgba(90,230,236,0)}
 }
 @media (prefers-reduced-motion:reduce){.tw-b .flash{background:rgba(90,230,236,.1);outline:2px solid var(--cyan)}}
+/* Header avatar: one class for both designs, filled even before the reader picks colours. */
+.tw-b .ava{width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid rgba(90,230,236,.45);border-radius:4px;background:rgba(90,230,236,.10);color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:500;line-height:1;transition:border-color .18s,background .18s}
+.tw-b .ava:hover{border-color:rgba(90,230,236,.75);background:rgba(90,230,236,.16)}
+
 /* Feed excerpt: the opening of the body, dimmer than the title, at most two lines. */
 .tw-b .excerpt{margin-top:6px;max-width:74ch;color:#7FA6B0;font-size:11.5px;line-height:1.7;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
 .tw-b .trow .excerpt{margin-top:4px;max-width:62ch;font-size:10.5px;line-height:1.65;color:#6E96A0}

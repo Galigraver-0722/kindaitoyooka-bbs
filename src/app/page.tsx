@@ -9,7 +9,7 @@ import {
   type BoardSummary,
 } from "@/components/theme/themed-page";
 import type { HomeThread } from "@/components/home/types";
-import { postExcerpt } from "@/lib/excerpt";
+import { openingPostExcerpt } from "@/lib/excerpt";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookmarkedThreadIds } from "@/lib/bookmarks";
 import { getLikedThreadIds } from "@/lib/likes";
@@ -38,7 +38,7 @@ const FEED_INCLUDE = {
   author: { select: { username: true, avatarColor: true, avatarRing: true } },
   tags: { select: { name: true } },
   // The opening post only, for the excerpt under the title.
-  posts: { orderBy: { createdAt: "asc" }, take: 1, select: { body: true } },
+  posts: { orderBy: { createdAt: "asc" }, take: 1, select: { body: true, isDeleted: true } },
   _count: { select: { posts: true } },
 } satisfies Prisma.ThreadInclude;
 
@@ -186,7 +186,7 @@ export default async function HomePage({
     lastPostAt: row.lastPostAt,
     bookmarked: bookmarked.has(row.id),
     isUnread: unread.has(row.id),
-    excerpt: postExcerpt(row.posts[0]?.body ?? ""),
+    excerpt: openingPostExcerpt(row.posts[0]),
   }));
 
   const href = (patch: { filter?: string; sort?: string }) => {

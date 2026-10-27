@@ -264,16 +264,20 @@ export async function ThemedPage({
             <LanguageToggle locale={locale} />
             <ThemeToggle theme="dark" labels={{ dark: pages.toDark, light: pages.toLight }} />
             <Link
-              className="who"
+              className="ava"
               href={username ? `/u/${username}` : "/login"}
               aria-label={pages.account}
               style={{
-                background: me?.avatarColor ? `${me.avatarColor}22` : undefined,
+                // Solid fill, like the light header. The previous version appended
+                // "22" for a 13% tint and kept the letter colour computed from the
+                // solid value, so an orange avatar showed near-black text on a
+                // nearly transparent square — unreadable on the dark bar.
+                background: me?.avatarColor ?? undefined,
                 borderColor: me?.avatarRing ?? undefined,
                 color: readableInk(me?.avatarColor) ?? undefined,
               }}
             >
-              {username ? username.slice(0, 2).toUpperCase() : "?"}
+              {username ? username.slice(0, 1).toUpperCase() : "?"}
             </Link>
           </header>
           </ScrollHeader>

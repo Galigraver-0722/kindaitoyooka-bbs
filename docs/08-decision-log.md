@@ -1049,6 +1049,9 @@ yet.
   `HomeThread`. It is filled by `postExcerpt` in `src/lib/excerpt.ts`: collapse every run of
   whitespace, including the ideographic space, into one space, trim, cut at 120 code points, and
   append an ellipsis. The cut is on code points, so an emoji is never split.
+- A soft-deleted opening post yields an empty excerpt. Its body stays in the database so moderators
+  can still read it, but printing it in the feed would put removed content back on the front page.
+  The thread title and placeholder remain, per ADR-0007.
 - The excerpt is rendered in the muted colour, clamped to two lines, and is plain text — not a link,
   so the title stays the only navigation target.
 - The composer preview stays in the codebase but is switched off by `FEATURES.postPreview` in
