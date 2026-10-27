@@ -155,7 +155,7 @@ visual systems the application ships live in `src/components/theme/`.
 | Spam / flood | Per-account limits on posts, reports, likes, and bookmarks; per-IP limits on registration; all tunable by environment variable | Tune from real beta traffic |
 | Open redirect | `safeNextPath()` only allows same-site paths | Tests for `//evil` and absolute URLs |
 | Privilege escalation | Server-side role checks; append-only `AuditLog` with actor ids for every moderation action | — |
-| PII leakage | Policy, no uploads, no real-name field, report button | Automated pattern warnings; moderator training |
+| PII leakage | Policy, no uploads, no real-name field, report button, automatic word check on every write | False positives need human review; moderators must be trained |
 | Dependency risk | Small dependency tree, lockfile committed | `pnpm audit` in CI; Dependabot |
 
 ## 8. Deployment options

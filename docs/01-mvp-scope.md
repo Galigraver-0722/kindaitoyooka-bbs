@@ -13,12 +13,14 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 ## What is already implemented (v0.1)
 
 - Email-optional registration, login, logout with server-side sessions.
-- Five seeded boards and sample discussions.
+- Five official boards created by `pnpm bootstrap`, and a development seed with seven boards and
+  sample discussions.
 - Board index, recent activity, thread list, thread view.
 - Create thread, reply to thread.
 - Like posts, bookmark threads, share permalinks, and report posts from one action bar.
 - Saved-threads page and per-user reaction state.
-- Search titles and replies, with newest and popularity sorting.
+- Search titles, replies, and tags, with newest, popularity, and rising sorting; results paginate
+  at 20, and a query scans every match rather than the newest 30.
 - Tags entered in a separate field on the compose and reply forms, with tag-filtered search.
 - Fixed-window rate limits on authentication, posting, reporting, and reactions, tunable by
   environment variable.
@@ -30,14 +32,15 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
   counts, and recent-thread and recent-reply tabs.
 - Thread editing within 15 minutes of posting, with a visible "edited" marker.
 - Plain-text thread export at `/t/<id>/export`.
-- Thread read markers written on view. The "new replies" badge is not rendered yet, so the
-  markers are stored but unread; the badge is on the roadmap.
+- Thread read markers written on view, rendered as the New badge in the feed and on board pages.
 - Per-board tag hints on the compose and reply forms.
 - Manual password recovery with a maintenance command, and `GET /health`.
-- Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, reviewed by a human.
+- Two-layer automatic word checks: a short blocklist refuses a write before it is stored, and a
+  longer list (including the CC BY 4.0 `naughty-words` vocabulary) queues it for a human.
 - Report a post with a required reason.
-- Moderator queue: remove reported post or dismiss report.
-- Moderator actions: remove post, lock/unlock thread, remove thread.
+- Report queue: remove the reported post, or dismiss the report.
+- Moderator actions: remove post, lock/unlock thread, remove thread, suspend and restore a student
+  account. Administrators also change roles and archive or restore a board.
 - Soft deletion with a visible placeholder instead of a silent disappearance.
 - Localized role labels (English `student` / `moderator` / `admin`; Japanese 生徒 / モデレーター / 管理者)
   and server-side permission checks.
@@ -57,7 +60,7 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 | Start a thread | Signed-in user picks a board, title 3–120 chars, body ≤ 10,000 chars |
 | Reply | Signed-in user can reply in an unlocked, non-deleted thread |
 | Report | Signed-in user can report any visible post with a 3–500 char reason |
-| Moderate | Moderator can remove a post, lock a thread, remove a thread, and resolve reports |
+| Moderate | Moderator can remove a post, lock a thread, remove a thread, resolve reports, and suspend or restore a student account |
 | Permissions | Students cannot reach `/admin` or call moderation endpoints; suspending an account signs it out everywhere and blocks sign-in |
 | Safety placeholder | Removed post remains in the thread as a localized placeholder ("Removed by a moderator" / 「モデレーターが削除しました」) |
 | Language switch | Every page opens in Japanese by default and can be switched to English; the choice survives navigation |
@@ -73,7 +76,7 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 | Full-text indexing | `contains` is fine for a few thousand posts; ranking and Japanese tokenization need FTS5 or Postgres FTS | Add when search latency or precision becomes a complaint |
 | Password reset | Otherwise locked-out users need manual help | Manual reset command shipped; self-service email reset still needs a provider |
 | Ban / mute | Removing single posts is not enough for repeat offenders | Time-boxed, with reason |
-| Terms, privacy notice, and rules | Required before school approval | Shipped at `/terms`, `/rules`, `/privacy`, `/moderation-policy`; registration requires accepting the terms and records the accepted version; the advisor still has to approve the wording |
+| Terms, privacy notice, and rules | Required before school approval | Shipped at `/terms`, `/rules`, `/privacy`, `/moderation-policy`; registration requires accepting all four documents and records the version of each; the advisor still has to approve the wording |
 
 ### Could (nice, after the forum is alive)
 

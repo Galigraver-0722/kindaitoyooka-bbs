@@ -323,7 +323,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "6. Automatic flags",
           bullets: [
             "Every write is checked: thread titles, bodies, tags, replies, board names, board descriptions, and profile bios. Matching runs on normalised text: full-width and half-width forms count as the same word, and Japanese matching drops spaces and punctuation, so 「死 ね」 is still caught. English keeps word boundaries, so a deliberately spaced spelling can slip past; report it when you see one.",
-            "The list has two layers. A short blocklist refuses the post outright: terms whose only ordinary use is abusive, such as a direct death threat, sexual violence, sexual content involving minors, or a slur. The author is told the wording cannot be posted, and the text is not stored.",
+            "The list has two layers. A short blocklist refuses the post outright: terms whose only ordinary use is abusive, such as a direct death threat, sexual violence, sexual content involving minors, or a slur. The author is told the wording cannot be posted, and no post is created. A short excerpt is kept for the moderator record, as the privacy notice describes.",
             "A longer list is advisory. It accepts the post and files an automatic entry in the same queue, labelled Auto-detected with the matched terms. Ambiguous words belong here, along with vocabulary from the CC BY 4.0 `naughty-words` lists that a school may legitimately discuss.",
             "Distress is not a violation. Phrases about wanting to disappear or to hurt oneself are queued, never refused, so that a person reads them and can reach out instead of the software hiding them.",
             "A refused write leaves no post, but the attempt is recorded: the account, the surface it came from, which field matched, the matched word, and the first 200 characters of the text. Moderators see this under Blocked in the console. The record is a signal, not a penalty; a student who keeps hitting it needs a conversation, not a removal.",
@@ -815,7 +815,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "6. 自動フラグ",
           bullets: [
             "すべての書き込みを検査します。スレッドのタイトル、本文、タグ、返信、ボード名、ボードの説明、プロフィールの自己紹介が対象です。全角と半角は同じ語として扱います。日本語は空白や記号を取り除いてから照合するので、「死 ね」のように区切っても回避できません。英語は語の区切りを保つため、わざと区切ったつづりはすり抜けます。",
-            "一覧は 2 層です。悪用するしかない短い語（直接の殺害予告、性暴力、子どもに関する性的内容、差別的な呼称）は投稿そのものを拒否します。投稿者には「この言葉は投稿できない」と伝え、本文は保存しません。",
+            "一覧は 2 層です。悪用するしかない短い語（直接の殺害予告、性暴力、子どもに関する性的内容、差別的な呼称）は投稿そのものを拒否します。投稿者には「この言葉は投稿できない」と伝えます。投稿そのものは作成しませんが、確認のために先頭 200 文字だけを別に記録します（プライバシー通知に記載）。",
             "もう一方の一覧は助言用です。投稿は受理し、同じキューに「自動検出」の印と一致した語を添えて記録します。曖昧な語や、CC BY 4.0 の `naughty-words` にある語のうち学校で正当に扱い得るものがここに入ります。",
             "つらさは違反ではありません。消えたい、自分を傷つけたいといった表現は拒否せず、キューに積みます。ソフトウェアが隠すのではなく、人が読んで声をかけられるようにするためです。",
             "拒否された書き込みは投稿になりませんが、試行は記録します。アカウント、どの画面から来たか、どの欄で一致したか、一致した語、本文の先頭 200 文字です。モデレーターは管理画面の「遮断」で確認できます。記録は処分ではなく合図です。何度も引っかかる生徒には、削除ではなく対話が必要です。",

@@ -140,8 +140,8 @@ The list has two layers (`src/lib/sensitive-words.ts`):
 
 - **Blocked.** A short list of terms whose only ordinary use is abusive: a direct death threat,
   sexual violence, sexual content involving minors, a hard slur, hard profanity. The post is not
-  created and the author is told the wording cannot be posted. Only 14 Japanese entries are on this
-  layer; 「殺す」 is not one of them, because "kill time" and games exist.
+  created and the author is told the wording cannot be posted. Only 13 Japanese entries are on this
+  layer (and 14 English ones); 「殺す」 is not one of them, because "kill time" and games exist.
 - **Flagged.** A longer list queues the post with an Auto-detected entry in the reports tab:
   ambiguous violence, insults, drug words, the CC BY 4.0 `naughty-words` sexual vocabulary, and
   self-harm phrases. Flags never hide or delete anything.
