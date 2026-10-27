@@ -378,6 +378,37 @@ export const pagesDCss = `
   100%{background:transparent;box-shadow:0 0 0 0 rgba(18,191,209,0)}
 }
 @media (prefers-reduced-motion:reduce){.tw-d .flash{background:rgba(18,191,209,.14);outline:3px solid var(--cyan)}}
+/* Announcements panel: official notices and the changelog. */
+.tw-d .ann{position:relative;flex:none}
+.tw-d .ann-btn{position:relative;display:grid;place-items:center;width:38px;height:38px;border:2px solid var(--line);border-radius:50%;background:var(--paper);box-shadow:2px 2px 0 var(--line);color:var(--ink);cursor:pointer;transition:.14s}
+.tw-d .ann-btn:hover{background:var(--sky);transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--line)}
+.tw-d .ann.open .ann-btn{background:var(--cyan)}
+.tw-d .ann-count{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border:2px solid var(--line);border-radius:999px;background:#FFD9CF;color:#7A1E0C;font-family:var(--mono);font-size:9.5px;font-weight:800;line-height:14px;text-align:center}
+.tw-d .ann-panel{position:fixed;z-index:210;width:min(420px,calc(100vw - 24px));max-height:min(72vh,520px);overflow:auto;background:var(--paper);border:2px solid var(--line);border-radius:16px;box-shadow:6px 6px 0 var(--line)}
+.tw-d .ann-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:2px solid var(--line);position:sticky;top:0;background:var(--paper)}
+.tw-d .ann-head b{font-size:13px;font-weight:800}
+.tw-d .ann-close{border:0;background:none;font-size:18px;line-height:1;color:var(--muted);cursor:pointer}
+.tw-d .ann-empty{padding:18px 16px;font-size:12.5px;color:var(--muted)}
+.tw-d .ann-list li{padding:12px 14px}
+.tw-d .ann-list li+li{border-top:1.5px solid rgba(6,35,48,.12)}
+.tw-d .ann-list li.is-unread{background:rgba(18,191,209,.07)}
+.tw-d .ann-meta{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.tw-d .ann-kind{border:1.5px solid var(--line);border-radius:999px;padding:1px 8px;background:var(--sky);color:var(--ink);font-weight:700;letter-spacing:.04em}
+.tw-d .ann-kind.k-release{background:var(--cyan)}
+.tw-d .ann-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);border:1.5px solid var(--line);margin-left:auto}
+.tw-d .ann-list h3{margin-top:7px;font-size:13.5px;font-weight:800;line-height:1.5}
+.tw-d .ann-body{margin-top:5px;font-size:12px;line-height:1.75;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:anywhere}
+.tw-d .ann-foot{padding:10px 14px 12px;border-top:1.5px solid rgba(6,35,48,.12);font-size:11px;color:var(--muted)}
+.tw-d .ann-portal{display:contents}
+@media (max-width:900px){.tw-d .ann-panel.sheet{left:12px;right:12px;width:auto;top:auto;bottom:12px;max-height:70vh;box-shadow:0 -4px 0 var(--line)}}
+
+/* Post preview. */
+.tw-d .pv-toggle{padding:9px 16px;font-size:13px}
+.tw-d .pv{margin-top:12px;border:2px dashed var(--line);border-radius:12px;background:var(--bg);padding:12px 14px}
+.tw-d .pv-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted)}
+.tw-d .pv-body{margin-top:8px;font-size:14.5px;line-height:1.95;white-space:pre-wrap;overflow-wrap:anywhere}
+.tw-d .pv-empty{margin-top:8px;font-size:12.5px;color:var(--muted)}
+
 /* Console (/admin): internal tool, dense and plain on purpose. */
 .tw-d .adm-entry{display:inline-flex;align-items:center;border:2px solid var(--line);border-radius:999px;background:var(--cyan);padding:5px 12px;font-size:11.5px;font-weight:800;box-shadow:2px 2px 0 var(--line);white-space:nowrap}
 .tw-d .adm-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px;border-bottom:2px solid var(--line);padding-bottom:10px}
@@ -781,6 +812,37 @@ export const pagesBCss = `
   100%{background:transparent;box-shadow:0 0 0 0 rgba(90,230,236,0)}
 }
 @media (prefers-reduced-motion:reduce){.tw-b .flash{background:rgba(90,230,236,.1);outline:2px solid var(--cyan)}}
+/* Announcements panel: official notices and the changelog. */
+.tw-b .ann{position:relative;flex:none}
+.tw-b .ann-btn{position:relative;display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(90,230,236,.4);border-radius:4px;background:rgba(8,32,43,.6);color:var(--cyan);cursor:pointer;transition:.18s}
+.tw-b .ann-btn:hover{border-color:rgba(90,230,236,.7);background:rgba(90,230,236,.08)}
+.tw-b .ann.open .ann-btn{background:var(--cyan);color:#04121A}
+.tw-b .ann-count{position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#F2B8B8;color:#2A0B0B;font-family:var(--mono);font-size:9px;font-weight:700;line-height:16px;text-align:center}
+.tw-b .ann-panel{position:fixed;z-index:210;width:min(420px,calc(100vw - 24px));max-height:min(72vh,500px);overflow:auto;background:#061821;border:1px solid var(--line);border-radius:6px;box-shadow:0 18px 40px -12px rgba(0,0,0,.85)}
+.tw-b .ann-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#061821}
+.tw-b .ann-head b{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:500}
+.tw-b .ann-close{border:0;background:none;font-size:18px;line-height:1;color:var(--muted);cursor:pointer}
+.tw-b .ann-empty{padding:18px 16px;font-size:12px;color:var(--muted)}
+.tw-b .ann-list li{padding:12px 14px}
+.tw-b .ann-list li+li{border-top:1px solid var(--line-soft)}
+.tw-b .ann-list li.is-unread{background:rgba(90,230,236,.06);box-shadow:inset 2px 0 0 var(--cyan)}
+.tw-b .ann-meta{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.tw-b .ann-kind{border:1px solid rgba(90,230,236,.35);border-radius:3px;padding:1px 7px;color:var(--cyan);letter-spacing:.06em}
+.tw-b .ann-kind.k-release{background:rgba(90,230,236,.14)}
+.tw-b .ann-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);margin-left:auto}
+.tw-b .ann-list h3{margin-top:7px;font-size:13px;font-weight:600;line-height:1.55;color:var(--text)}
+.tw-b .ann-body{margin-top:5px;font-size:11.5px;line-height:1.75;color:#9CC3CB;white-space:pre-wrap;overflow-wrap:anywhere}
+.tw-b .ann-foot{padding:10px 14px 12px;border-top:1px solid var(--line-soft);font-family:var(--mono);font-size:10px;color:var(--muted)}
+.tw-b .ann-portal{display:contents}
+@media (max-width:900px){.tw-b .ann-panel.sheet{left:12px;right:12px;width:auto;top:auto;bottom:12px;max-height:70vh;box-shadow:0 -14px 40px -18px rgba(0,0,0,.9)}}
+
+/* Post preview. */
+.tw-b .pv-toggle{padding:8px 14px;font-size:11px}
+.tw-b .pv{margin-top:12px;border:1px dashed rgba(90,230,236,.35);border-radius:5px;background:rgba(4,15,22,.45);padding:12px 14px}
+.tw-b .pv-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted)}
+.tw-b .pv-body{margin-top:8px;font-size:13px;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text)}
+.tw-b .pv-empty{margin-top:8px;font-size:11.5px;color:var(--muted)}
+
 /* Console (/admin): internal tool, dense and plain on purpose. */
 .tw-b .adm-entry{display:inline-flex;align-items:center;border:1px solid rgba(90,230,236,.45);border-radius:4px;background:rgba(90,230,236,.08);padding:5px 10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--cyan);white-space:nowrap}
 .tw-b .adm-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px;border-bottom:1px solid var(--line);padding-bottom:10px}

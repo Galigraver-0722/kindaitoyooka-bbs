@@ -39,6 +39,7 @@ alternatives considered.
 | ADR-0027 | Live refresh is polling plus client reconciliation, not websockets | Accepted | 2026-10-26 |
 | ADR-0028 | Terms of use and a name policy, because the license covers neither | Accepted | 2026-10-26 |
 | ADR-0029 | One console, and suspension as the account-level sanction | Accepted | 2026-10-27 |
+| ADR-0030 | Announcements ship with the code, and previews are read-only | Accepted | 2026-10-27 |
 
 ---
 
@@ -986,6 +987,48 @@ delete endpoints from the console (they redirect to the thread, which loses the 
 
 **Revisit if.** The school wants temporary mutes with an automatic expiry, needs a per-account
 history page, or a moderator ends up sharing an account with someone else.
+
+---
+
+## ADR-0030 — Announcements ship with the code, and previews are read-only
+
+**Context.** Two small features, with one shared question: where does the source of truth live?
+A changelog or notice fits naturally in a database table with an editor, which means a second
+editor surface to build, permission to reason about, and a way for the notice to disagree with the
+release it describes. The preview of a post body has the mirror-image question: does it need a
+server round trip to be accurate?
+
+**Decision.**
+
+- Announcements and the changelog are a typed array in `src/lib/announcements.ts`, in both
+  languages, with a stable `id` and an ISO date. Editing that file is part of shipping a change.
+- The panel is a client component portalled to `<body>`, opened from the header beside the
+  notification inbox. It is public: guests can read announcements.
+- Unread state is one timestamp per account, `User.announcementsSeenAt`, written by
+  `POST /api/announcements/seen` when a signed-in reader opens the panel. Guests get no dot.
+- The preview is client-side only. It reads the textarea by id, renders the text exactly as the
+  post will be displayed (`white-space: pre-wrap`), shows a live character count, and is
+  available in the compose form, the edit form, and every reply form.
+
+**Consequences.**
+
+- No announcement editor, no `Announcement` table, no migration for content, and no possibility of
+  a notice claiming a feature that this build does not have.
+- A non-developer cannot post a notice. That is deliberate for now: the audience is the same
+  handful of people who deploy the site. If the teacher advisor ever needs to post an
+  announcement without a deploy, that is a new decision, not a small addition.
+- The preview cannot drift from the real rendering, because both use the same whitespace rule.
+  It cannot show the final thread layout (numbering, nesting), only the body.
+- The edit page moved to the shared themed shell as part of this work, so the preview sits in the
+  same form markup as the other two places.
+
+**Alternatives considered.** An `Announcement` table plus an admin tab (an editor to build, test,
+and permission), a panel fed from the markdown in `docs/` (no dates on the rendered page, and the
+docs are canonical in English only), a server-rendered preview endpoint (a round trip for
+something the browser already has, and a second formatting implementation to keep in sync).
+
+**Revisit if.** Someone other than a developer has to publish notices, or announcements need to
+target a board or a year group instead of everyone.
 
 ---
 

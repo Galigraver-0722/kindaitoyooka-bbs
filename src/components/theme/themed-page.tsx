@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { LanguageToggle } from "@/components/theme/language-toggle";
 import { BackButton } from "@/components/theme/nav-buttons";
 import { NotificationInbox, type InboxItem } from "@/components/theme/notification-inbox";
+import { AnnouncementPanel, type AnnouncementItem } from "@/components/theme/announcement-panel";
+import { ANNOUNCEMENTS, unreadAnnouncements } from "@/lib/announcements";
 import { AnchorHighlight } from "@/components/theme/anchor-highlight";
 import { AutoRefresh } from "@/components/theme/auto-refresh";
 import { RouteFreshness } from "@/components/theme/route-freshness";
@@ -123,7 +125,7 @@ export async function ThemedPage({
   const me = username
     ? await prisma.user.findUnique({
         where: { username },
-        select: { id: true, avatarColor: true, avatarRing: true, role: true },
+        select: { id: true, avatarColor: true, avatarRing: true, role: true, announcementsSeenAt: true },
       })
     : null;
   const canModerate = me?.role === "MODERATOR" || me?.role === "ADMIN";
@@ -149,6 +151,26 @@ export async function ThemedPage({
     close: inboxCopy.close,
     unreadWord: inboxCopy.unreadWord,
   };
+  const annCopy = t(locale).announcements;
+  const unreadAnnouncementList = unreadAnnouncements(me?.announcementsSeenAt ?? null);
+  const unreadIds = new Set(unreadAnnouncementList.map((entry) => entry.id));
+  const announcementItems: AnnouncementItem[] = ANNOUNCEMENTS.map((entry) => ({
+    id: entry.id,
+    date: entry.publishedAt,
+    kind: entry.kind,
+    title: entry.title[locale],
+    body: entry.body[locale],
+    unread: unreadIds.has(entry.id),
+  }));
+  const announcementLabels = {
+    title: annCopy.title,
+    close: annCopy.close,
+    empty: annCopy.empty,
+    markSeen: annCopy.markSeen,
+    unreadWord: annCopy.unreadWord,
+    kinds: annCopy.kinds,
+  };
+
   const css = theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss;
   const wrap = theme === "light" ? "tw-d" : "tw-b";
 
@@ -176,6 +198,13 @@ export async function ThemedPage({
               </div>
             </details>
             <div className="tools">
+              <AnnouncementPanel
+                items={announcementItems}
+                unseen={unreadIds.size}
+                labels={announcementLabels}
+                themeClass="tw-d"
+                signedIn={Boolean(username)}
+              />
               {username ? <NotificationInbox items={inboxItems} unseen={noticeFeed.unseen} labels={inboxLabels} themeClass="tw-d" /> : null}
               {canModerate ? <Link className="adm-entry" href="/admin">{copy.console}</Link> : null}
               <form className="search" action="/" method="get" role="search">
@@ -218,6 +247,13 @@ export async function ThemedPage({
                 <BoardLinks boards={boards} />
               </div>
             </details>
+            <AnnouncementPanel
+              items={announcementItems}
+              unseen={unreadIds.size}
+              labels={announcementLabels}
+              themeClass="tw-b"
+              signedIn={Boolean(username)}
+            />
             {username ? <NotificationInbox items={inboxItems} unseen={noticeFeed.unseen} labels={inboxLabels} themeClass="tw-b" /> : null}
             {canModerate ? <Link className="adm-entry" href="/admin">{copy.console}</Link> : null}
             <form className="cmd" action="/" method="get" role="search">

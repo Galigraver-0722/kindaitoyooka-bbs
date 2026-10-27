@@ -121,6 +121,7 @@ export default async function ThreadPage({
     delete: pages.actions.delete,
     removedPost: threadCopy.removed,
     confirmDelete: pages.confirmDelete,
+    preview: t(locale).preview,
   };
 
   const toComment = (node: TreeNode<PostRow>): CommentData => ({

@@ -24,6 +24,8 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/search` | Public | Redirects to `/` with `q`; `tag` becomes a `#tag` query |
 | `/bookmarks` | Signed-in | Redirects to `/?filter=saved` |
 | any signed-in page | Signed-in | The header shows a notification inbox (replies, comments, likes, saves) with an unread count; every item links to a specific post (`#p-<id>`), including thread-level likes and saves, which point at the opening post |
+| every page | Public | The header also has an announcements panel: official notices and the changelog, portalled to the body, newest first, with a dot while something is unread for a signed-in reader |
+| `/new`, `/t/[id]/edit`, reply forms | Signed-in / author | A preview toggle under the body field renders the text the way it will be published (line breaks preserved, no markup language), with a live character count; it reads the textarea by id and never edits it |
 | `/admin` | Moderator / Admin | The console: open reports (10 per page), accounts (search, suspend/restore, role changes for administrators), posts and threads (search, lock, remove), the audit log, and — for administrators — student-board archive controls. `tab=reports\|users\|content\|audit\|boards` |
 | `/moderation` | Moderator / Admin | Redirects to `/admin?tab=reports`; the queue used to live here |
 | `/terms` | Public | Terms of use: who may use the site, the permission a post grants, what the operators may do, and what is not promised. Declares the other three documents part of the agreement |
@@ -203,6 +205,13 @@ success so the browser performs a `GET`.
 - Opening an item always moves the reader: a link to another page navigates, and a link to the
   page already open sets the hash, scrolls the post into view, and flashes it (Next's router treats
   a push to the current path as a no-op, so the panel does this by hand).
+- `Accept: application/json` answers `{ok:true}` (401 for a guest); otherwise redirects to `/`.
+
+### `POST /api/announcements/seen`
+
+- Auth: signed-in user for a change; guests get 401.
+- Sets `User.announcementsSeenAt` to now, which clears the dot on the announcements panel.
+  The entries themselves live in `src/lib/announcements.ts` and ship with the code.
 - `Accept: application/json` answers `{ok:true}` (401 for a guest); otherwise redirects to `/`.
 
 ### `GET /api/pulse`

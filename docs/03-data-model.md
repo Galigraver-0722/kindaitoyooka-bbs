@@ -41,6 +41,7 @@ erDiagram
 | `avatarRing` | string? | `#rrggbb` ring colour; same fallback |
 | `bio` | string? | ≤ 200 chars, shown on the profile page |
 | `notificationsSeenAt` | datetime? | When the reader last opened the header inbox; newer events count as unseen |
+| `announcementsSeenAt` | datetime? | When the reader last opened the announcements panel; entries published after it count as unread |
 | `isSuspended` | boolean | Set from the console. A suspended account cannot sign in and every session is deleted |
 | `suspendedAt` | datetime? | When the suspension started; cleared on restore |
 | `suspendedReason` | string? | Free text (≤ 200) the moderator typed; also copied into the audit row |

@@ -422,6 +422,21 @@ const en = {
     roleModerator: "Moderator",
     reportAgain: "You already reported this post. Moderators will see it soon.",
   },
+  preview: {
+    open: "Preview",
+    close: "Close preview",
+    title: "Preview",
+    empty: "Nothing to preview yet.",
+    countUnit: "characters",
+  },
+  announcements: {
+    title: "Announcements",
+    close: "Close",
+    empty: "Nothing yet.",
+    markSeen: "Opening this panel marks everything as read.",
+    unreadWord: "unread",
+    kinds: { release: "Update", notice: "Notice" } as Record<"release" | "notice", string>,
+  },
   admin: {
     title: "Console",
     lede: (username: string) =>
@@ -935,6 +950,21 @@ const ja: typeof en = {
     roleAdmin: "管理者",
     roleModerator: "モデレーター",
     reportAgain: "この投稿はすでに通報済みです。モデレーターが確認します。",
+  },
+  preview: {
+    open: "プレビュー",
+    close: "プレビューを閉じる",
+    title: "プレビュー",
+    empty: "まだ本文がありません。",
+    countUnit: "文字",
+  },
+  announcements: {
+    title: "お知らせ",
+    close: "閉じる",
+    empty: "まだお知らせはありません。",
+    markSeen: "このパネルを開くと既読になります。",
+    unreadWord: "件の未読",
+    kinds: { release: "更新", notice: "お知らせ" } as Record<"release" | "notice", string>,
   },
   admin: {
     title: "管理コンソール",

@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useSyncExternalStore, type FormEvent } from "react";
+import { useId, useState, useSyncExternalStore, type FormEvent } from "react";
 import { ToggleAction } from "@/components/theme/actions";
 import { Highlight } from "@/components/theme/highlight";
 import { DeleteButton } from "@/components/theme/delete-button";
+import { PostPreview } from "@/components/theme/post-preview";
 import { reconcileComments, treeSignature } from "@/lib/comment-merge";
 import { readableInk } from "@/lib/color";
 
@@ -49,6 +50,7 @@ export type CommentLabels = {
   delete: string;
   removedPost: string;
   confirmDelete: { title: string; post: string; thread: string; confirm: string; cancel: string };
+  preview: { open: string; close: string; title: string; empty: string; countUnit: string };
 };
 
 const foldListeners = new Set<() => void>();
@@ -114,6 +116,7 @@ function ReplyForm({
   onPosted: (comment: CommentData) => void;
 }) {
   const router = useRouter();
+  const fieldId = useId();
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
@@ -168,6 +171,7 @@ function ReplyForm({
   return (
     <form className="reply-form" onSubmit={submit}>
       <textarea
+        id={fieldId}
         name="body"
         required
         maxLength={2000}
@@ -178,6 +182,7 @@ function ReplyForm({
         onChange={(event) => setValue(event.target.value)}
       />
       <div className="form-foot">
+        <PostPreview fieldId={fieldId} labels={labels.preview} maxLength={2000} />
         <button className="btn btn-p" type="submit" disabled={busy}>
           {labels.submit}
         </button>

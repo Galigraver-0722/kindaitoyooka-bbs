@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ThemedPage, Crumb } from "@/components/theme/themed-page";
+import { PostPreview } from "@/components/theme/post-preview";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getLocale, t } from "@/lib/i18n";
@@ -38,6 +39,7 @@ export default async function NewThreadPage({
   const suggestedTags = selectedBoard ? parseSuggestedTags(selectedBoard.suggestedTags) : [];
   const errorText = errorMessage(error, locale);
   const copy = t(locale).pages.compose;
+  const previewLabels = t(locale).preview;
 
   return (
     <ThemedPage theme={theme} username={user.username} active="new">
@@ -75,6 +77,7 @@ export default async function NewThreadPage({
             <textarea id="body" name="body" required maxLength={LIMITS.bodyMax} rows={9} />
 
             <div className="form-foot">
+              <PostPreview fieldId="body" labels={previewLabels} maxLength={LIMITS.bodyMax} />
               <button className="btn btn-p" type="submit">{copy.submit}</button>
               <Link className="hint" href={preferredSlug ? `/b/${preferredSlug}` : "/"}>{copy.cancel}</Link>
             </div>
