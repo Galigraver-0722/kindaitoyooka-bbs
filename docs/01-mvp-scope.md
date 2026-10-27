@@ -73,7 +73,7 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 | Full-text indexing | `contains` is fine for a few thousand posts; ranking and Japanese tokenization need FTS5 or Postgres FTS | Add when search latency or precision becomes a complaint |
 | Password reset | Otherwise locked-out users need manual help | Manual reset command shipped; self-service email reset still needs a provider |
 | Ban / mute | Removing single posts is not enough for repeat offenders | Time-boxed, with reason |
-| Privacy notice and terms | Required before school approval | Shipped at `/rules`, `/privacy`, `/moderation-policy`; the advisor still has to approve the wording |
+| Terms, privacy notice, and rules | Required before school approval | Shipped at `/terms`, `/rules`, `/privacy`, `/moderation-policy`; the advisor still has to approve the wording |
 
 ### Could (nice, after the forum is alive)
 

@@ -107,48 +107,20 @@ sequenceDiagram
 
 ```text
 .
-├── prisma/
-│   ├── schema.prisma        # data model (source of truth)
-│   └── seed.ts              # boards, demo users, sample threads
+├── prisma/            スキーマ、マイグレーション、シードデータ
+├── scripts/           bootstrap、パスワード再設定、バックアップ、復元、ボードのアーカイブ
+├── deploy/            Caddy、systemd、cron のテンプレート
 ├── src/
-│   ├── app/
-│   │   ├── api/             # form endpoints (writes)
-│   │   │   ├── auth/
-│   │   │   ├── locale/
-│   │   │   ├── posts/
-│   │   │   ├── reports/
-│   │   │   └── threads/
-│   │   ├── b/[slug]/        # board page（新着／人気）
-│   │   ├── t/[id]/          # thread page（リアクション、タグ）
-│   │   ├── search/          # 検索とタグ絞り込み
-│   │   ├── bookmarks/       # 保存したスレッド
-│   │   ├── login/           # auth pages
-│   │   ├── register/
-│   │   ├── new/             # create thread
-│   │   ├── moderation/      # report queue
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   ├── components/          # header, footer, role chip, share button
-│   └── lib/
-│       ├── audit.ts         # 追記のみのモデレーション記録
-│       ├── auth.ts          # hashing, sessions, current user
-│       ├── content-filter.ts # 要注意語のフラグ（助言）
-│       ├── db.ts            # Prisma singleton
-│       ├── format.ts        # JST timestamps
-│       ├── editing.ts       # 投稿後 15 分の編集ルール
-│       ├── hot.ts           # 人気順のスコア
-│       ├── http.ts          # redirects, origin check, form parsing
-│       ├── i18n.ts          # locale cookie + request-scoped resolution
-│       ├── locales.ts       # en/ja dictionaries and typed keys
-│       ├── messages.ts      # localized error codes and notices
-│       ├── pagination.ts    # ボードのページ番号とリンク
-│       ├── passwords.ts     # scrypt のハッシュと検証（スクリプトと共用）
-│       ├── policies.ts      # ルール・プライバシー・モデレーションの二言語本文
-│       ├── rate-limit.ts    # プロセス内の固定ウィンドウ制限
-│       ├── read-state.ts    # スレッド単位の既読
-│       ├── tags.ts          # タグの解析とタグリンク
-│       └── validation.ts    # length rules, safe redirect paths
-└── docs/                    # this documentation set
+│   ├── app/           ルートごとに 1 ディレクトリ。api/ にフォームの送信先
+│   ├── components/    theme/（両デザインが共有する器）、home/、共通部品
+│   └── lib/           ドメインのロジック
+│       ├── auth.ts        セッションと scrypt
+│       ├── rate-limit.ts  SQLite に置く固定ウィンドウ
+│       ├── search.ts      `/?q=` の並び替え
+│       ├── policies.ts    公開している 4 つの文書
+│       └── …              人気順・急上昇、編集、タグ、検証、http
+├── designs/           視覚案。選定の記録として残しています
+└── docs/              この文書一式。docs/ja/ が対応する日本語版
 ```
 
 ## 7. セキュリティの現状

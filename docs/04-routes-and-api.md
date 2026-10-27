@@ -36,8 +36,10 @@ All pages are server-rendered per request. There is no client-side data fetching
 
 ### Rate limits
 
-All limits are in-process fixed windows, keyed by IP or account. The defaults are deliberately
-generous because a class can share one school IP:
+All limits are fixed windows kept in SQLite, so a restart does not refund an attacker and two
+processes share one window. A window is keyed by account, and by client address only when the
+deployment runs behind a proxy that sets `TRUST_PROXY=1`; a direct client can send any address it
+likes. The defaults are deliberately generous because a class can share one school IP:
 
 | Action | Default limit |
 | --- | --- |

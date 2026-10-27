@@ -30,17 +30,6 @@ Deliverables:
 
 Exit criteria: `pnpm build`, `pnpm lint`, and the end-to-end manual flow all pass.
 
-### Delivered ahead of the roadmap (2026-10-24)
-
-- Post likes, thread bookmarks, saved threads as a feed filter, and a share action.
-- Title/body/tag search with newest, popularity, and rising sorting.
-- Hashtags as a dedicated field, tag search through `/?q=#tag`, and tag chips on threads.
-- Fixed-window rate limits on login, registration, posting, reporting, and reactions.
-- Append-only audit log for moderation actions, shown on `/moderation`.
-- Automatic sensitive-word flags from the CC BY 4.0 `naughty-words` lists, curated for school use.
-- Tags moved to a separate compose field instead of being parsed from the body.
-- These are not a substitute for the remaining Phase 1 work; they are additive.
-
 ## Phase 1 — Make it safe to open a beta (2 weeks)
 
 **Status: in progress (2026-10-24).** The application-side work is done; deployment, the
@@ -59,9 +48,9 @@ Deliverables:
 4. `AuditLog` table and writes for remove/lock/resolve: shipped with actor, target, and timestamp.
 5. Pagination on board pages and recent activity (20 per page). **Board pagination shipped**;
    the feed shows at most 30 threads per sort and stays a reading surface rather than paging.
-6. Privacy notice, community rules, and a moderation policy page in plain English. **Shipped as
-   bilingual pages** at `/rules`, `/privacy`, and `/moderation-policy`; the advisor must approve
-   the wording.
+6. Terms of use, privacy notice, community rules, and a moderation policy page in plain English.
+   **Shipped as bilingual pages** at `/terms`, `/rules`, `/privacy`, and `/moderation-policy`; the
+   advisor must approve the wording.
 7. A `GET /health` endpoint that checks the database connection. **Shipped 2026-10-24.**
 8. Remove demo users; create a real admin account; rotate every credential.
 9. Moderator briefing: what to remove, what to escalate, response times.
@@ -73,18 +62,6 @@ Exit criteria:
 - Zero open reports older than 48 hours during the beta.
 - Restore drill succeeds and the recovered site serves the same thread.
 - No `database is locked` errors under normal use.
-
-### Delivered in Phase 1 so far (2026-10-24)
-
-- Board pagination at 20 threads per page, keeping the newest/popular sort and the unread badges.
-- Bilingual terms of use, community rules, privacy notice, and moderation policy that match what
-  the code actually does, including the limits (no account suspension yet, no automatic purge).
-  The terms state the permission a post grants, which is open question Q13.
-- `GET /health`, the rate limits, and the audit log from Phase 1.
-- `pnpm backup`, `pnpm verify-backup`, and `pnpm restore`, plus a successful local restore drill:
-  a live backup was restored into a second database, and a second server served the same threads.
-- Deployment templates in `deploy/` for Caddy, systemd, and the daily cron.
-- 38 tests; lint, build, and CI pass.
 
 Still open in Phase 1: a real HTTPS deployment, a server-side backup cron with offsite storage,
 removing the demo accounts, the moderator briefing, and error monitoring.
@@ -112,13 +89,6 @@ Deliverables:
 - Thread editing within a short window, with an "edited" marker. **Shipped** with a 15-minute
   window; locked and removed threads cannot be edited.
 - Export a thread as plain text for printing or archiving. **Shipped** at `/t/<id>/export`.
-
-### Delivered in Phase 2 so far (2026-10-24)
-
-- Profiles, editing, text export, unread badges, board tag hints, manual password recovery, and
-  `/health`.
-- The test suite now has 38 cases; lint, build, and CI pass.
-- These reduce support work but do not replace the remaining Phase 1 deployment and backup work.
 
 Exit criteria:
 

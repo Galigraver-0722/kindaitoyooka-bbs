@@ -19,8 +19,8 @@ thread, and where students can report problems without confronting anyone. See
 ## What works today
 
 - Username-and-password registration, login, logout with server-side sessions.
-- Nine boards (five official, four student-run) and one cross-board feed with newest, popular,
-  and rising sorts over all, saved, and own posts.
+- One cross-board feed with newest, popular, and rising sorts over all, saved, and own posts.
+  The five official boards are created by `pnpm bootstrap`.
 - Create a thread, reply, and see replies in chronological order.
 - Like a post, bookmark a thread, copy a permalink, and report a post from one action bar.
 - Saved threads are the `Saved` filter of the feed; `/bookmarks` still redirects there, so old
@@ -28,12 +28,12 @@ thread, and where students can report problems without confronting anyone. See
 - Search titles, replies, and tags from the feed. A query scans every match (up to 500
   candidates) instead of the newest 30, ranks with published weights, and paginates at 20;
   newest, popularity, and rising stay available as sorts.
-- Tags from a dedicated field, with tag-filtered search and per-board tag hints.
 - Report a post with a reason; moderators review the queue at `/moderation`.
 - Moderator tools: remove post, lock/unlock thread, remove thread, dismiss reports.
 - Soft deletion: removed content leaves a visible placeholder instead of vanishing.
 - Japanese-first interface with a header switch to English; user content is never machine-translated.
-- Tags are a separate field when composing, not parsed out of the body.
+- Tags come from a dedicated field when composing, not parsed out of the body, and search
+  accepts `#tag` as a filter.
 - Board pages paginate at 20 threads, with working newest and popular sorts.
 - Public terms of use, community rules, privacy notice, and moderation policy at `/terms`,
   `/rules`, `/privacy`, and `/moderation-policy`, in both languages. The terms state that your
@@ -64,8 +64,8 @@ thread, and where students can report problems without confronting anyone. See
 - Responsive UI, plain-text content only, no uploads and no trackers.
 
 Not implemented yet: a full-text index (search is `LIKE` plus in-app ranking, see ADR-0022),
-quote reposts, email verification or self-service password reset, notifications, account bans,
-image uploads, and an owner screen where a club edits its own board.
+quote reposts, email verification or self-service password reset, account bans, image uploads,
+and an owner screen where a club edits its own board.
 The full list is in [MVP scope](docs/01-mvp-scope.md).
 
 ## Quick start
@@ -128,7 +128,7 @@ Start with the brief, then read the scope and the safety policy before writing c
 | [05 · Roadmap](docs/05-roadmap.md) | Phases from beta to launch, with exit criteria |
 | [06 · Safety and moderation](docs/06-safety-and-moderation.md) | Content policy, PII rules, escalation, Japanese legal context |
 | [07 · Operations](docs/07-operations.md) | Deploy, backup, restore, incidents, costs |
-| [08 · Decision log](docs/08-decision-log.md) | Why Next.js, SQLite, MIT, and custom sessions |
+| [08 · Decision log](docs/08-decision-log.md) | Every architectural decision, with the alternatives that were rejected |
 | [09 · Learning path](docs/09-learning-path.md) | A six-week path from "no idea" to deployed, with a glossary |
 | [10 · Open questions](docs/10-open-questions.md) | Decisions the owner and the school must make |
 
@@ -146,13 +146,13 @@ Start with the brief, then read the scope and the safety policy before writing c
 ## Repository layout
 
 ```text
-prisma/            schema, seed data
-scripts/           operational scripts (password reset, backup, restore)
+prisma/            schema, migrations, seed data
+scripts/           bootstrap, password reset, backup, restore, board archive
 deploy/            Caddy, systemd, and cron templates
 src/app/           pages and form endpoints
-src/components/    header, footer, role chip
-src/lib/           auth, database client, validation, formatting
-docs/              product, architecture, safety, operations
+src/components/    the themed shell for both designs, home layout, shared pieces
+src/lib/           domain logic: auth, search, policies, rate limits, validation
+docs/              product, architecture, safety, operations; docs/ja/ mirrors it
 ```
 
 ## Contributing

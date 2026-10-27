@@ -62,7 +62,10 @@ Goals: React components, props, Tailwind utilities.
 
 Goals: App Router, dynamic segments, server components, `params`.
 
-1. Add `/rules` as a static page. Link it from the footer.
+1. `/rules` already exists, so do not build it again. Open the page and note that it is a server
+   component that reads the locale cookie. Then open `src/app/bookmarks/page.tsx`: it is not a
+   page at all but a redirect to `/?filter=saved`. Add the same kind of redirect from `/help` to
+   `/rules`.
 2. Open `/b/general` and `/t/<any-id>`. Find where `params` is awaited in
    `src/app/b/[slug]/page.tsx`.
 3. Add the board's thread count to the thread page breadcrumb using the existing query.
@@ -70,8 +73,8 @@ Goals: App Router, dynamic segments, server components, `params`.
    and the dates change, and switch back. Add one new string to both dictionaries in
    `src/lib/locales.ts` and see the parity test fail until both exist.
 
-**Deliverable:** `/rules` page and the updated breadcrumb.
-**Check:** a guest can read it, and the HTML already contains the content (view source).
+**Deliverable:** the `/help` redirect and the updated breadcrumb.
+**Check:** a guest who opens `/help` ends on `/rules`, and the address bar shows `/rules`.
 
 ### Week 4 — Database and migrations
 

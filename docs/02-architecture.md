@@ -123,48 +123,20 @@ names) is stored once and never translated. Dates and numbers are formatted per 
 
 ```text
 .
-├── prisma/
-│   ├── schema.prisma        # data model (source of truth)
-│   └── seed.ts              # boards, demo users, sample threads
+├── prisma/            schema, migrations, seed data
+├── scripts/           bootstrap, password reset, backup, restore, board archive
+├── deploy/            Caddy, systemd, cron templates
 ├── src/
-│   ├── app/
-│   │   ├── api/             # form endpoints (writes)
-│   │   │   ├── auth/
-│   │   │   ├── locale/
-│   │   │   ├── posts/
-│   │   │   ├── reports/
-│   │   │   └── threads/
-│   │   ├── b/[slug]/        # board page (latest/hot)
-│   │   ├── t/[id]/          # thread page (reactions, tags)
-│   │   ├── search/          # search + tag filter
-│   │   ├── bookmarks/       # saved threads
-│   │   ├── login/           # auth pages
-│   │   ├── register/
-│   │   ├── new/             # create thread
-│   │   ├── moderation/      # report queue
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   ├── components/          # header, footer, role chip, share button
-│   └── lib/
-│       ├── audit.ts         # append-only moderation records
-│       ├── auth.ts          # hashing, sessions, current user
-│       ├── content-filter.ts # sensitive-word flags (advisory)
-│       ├── db.ts            # Prisma singleton
-│       ├── format.ts        # JST timestamps
-│       ├── editing.ts       # 15-minute thread edit rule
-│       ├── hot.ts           # popularity score for hot sorting
-│       ├── http.ts          # redirects, origin check, form parsing
-│       ├── i18n.ts          # locale cookie + request-scoped resolution
-│       ├── locales.ts       # en/ja dictionaries and typed keys
-│       ├── messages.ts      # localized error codes and notices
-│       ├── pagination.ts    # board page numbers and links
-│       ├── passwords.ts     # scrypt hash/verify, shared with scripts
-│       ├── policies.ts      # bilingual rules, privacy, moderation text
-│       ├── rate-limit.ts    # in-memory fixed-window limits
-│       ├── read-state.ts    # per-thread unread marks
-│       ├── tags.ts          # tag parsing and tag links
-│       └── validation.ts    # length rules, safe redirect paths
-└── docs/                    # this documentation set
+│   ├── app/           one folder per route; api/ holds the form endpoints
+│   ├── components/    theme/ (the shell both designs share), home/, shared pieces
+│   └── lib/           domain logic
+│       ├── auth.ts        sessions and scrypt
+│       ├── rate-limit.ts  SQLite-backed windows
+│       ├── search.ts      ranking for /?q=
+│       ├── policies.ts    the four published documents
+│       └── …              hot and rising, editing, tags, validation, http
+├── designs/           visual prototypes, kept as the record of the choice
+└── docs/              this documentation set; docs/ja/ mirrors it
 ```
 
 ## 7. Security posture
@@ -175,7 +147,7 @@ names) is stored once and never translated. Dates and numbers are formatted per 
 | SQL injection | Prisma parameterizes queries | — |
 | CSRF | `SameSite=Lax` + `Origin` header check on every POST | Add per-form tokens if a browser edge case appears |
 | Session theft | HttpOnly + Secure cookie, hashed tokens, expiry | Password reset deletes every session; in-app password change is not built yet |
-| Brute-force login | Fixed window: 10 attempts per 10 minutes per IP + username, cleared on success; tunable by environment variable | A shared store when more than one instance runs |
+| Brute-force login | Fixed window: 10 attempts per 10 minutes per IP + username, cleared on success; counters live in SQLite, so a restart does not refund them | The client address is trusted only behind a proxy (`TRUST_PROXY=1`); without one, every request shares a bucket |
 | Spam / flood | Per-account limits on posts, reports, likes, and bookmarks; per-IP limits on registration; all tunable by environment variable | Tune from real beta traffic |
 | Open redirect | `safeNextPath()` only allows same-site paths | Tests for `//evil` and absolute URLs |
 | Privilege escalation | Server-side role checks; append-only `AuditLog` with actor ids for every moderation action | — |
