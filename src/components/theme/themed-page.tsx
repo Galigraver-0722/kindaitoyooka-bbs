@@ -220,7 +220,7 @@ export async function ThemedPage({
               <ThemeToggle theme="light" labels={{ dark: pages.toDark, light: pages.toLight }} />
               <Link
                 className="ava"
-                href={username ? `/u/${username}` : "/login"}
+                href={username ? `/u/${encodeURIComponent(username)}` : "/login"}
                 aria-label={pages.account}
                 style={{
                   background: me?.avatarColor ?? undefined,
@@ -272,7 +272,7 @@ export async function ThemedPage({
             <ThemeToggle theme="dark" labels={{ dark: pages.toDark, light: pages.toLight }} />
             <Link
               className="ava"
-              href={username ? `/u/${username}` : "/login"}
+              href={username ? `/u/${encodeURIComponent(username)}` : "/login"}
               aria-label={pages.account}
               style={{
                 // Solid fill, like the light header. The previous version appended

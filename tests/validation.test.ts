@@ -11,10 +11,11 @@ import {
   validateAnnouncement,
   validateReportReason,
   validateTitle,
+  normalizeUsername,
   validateUsername,
 } from "../src/lib/validation";
 
-test("usernames are 3-20 lowercase letters, digits, or underscores", () => {
+test("usernames are 3-20 letters in any language, digits, or underscores", () => {
   assert.equal(validateUsername("sakura_17"), true);
   assert.equal(validateUsername("a".repeat(20)), true);
   assert.equal(validateUsername("ab"), false);
@@ -22,11 +23,26 @@ test("usernames are 3-20 lowercase letters, digits, or underscores", () => {
   assert.equal(validateUsername("has space"), false);
   assert.equal(validateUsername("sakura-17"), false);
   assert.equal(validateUsername("sakura!"), false);
+
+  // Japanese, and the other scripts a student here might write in.
+  assert.equal(validateUsername("さくら"), true);
+  assert.equal(validateUsername("桜_2026"), true);
+  assert.equal(validateUsername("ソラカナ"), true);
+  assert.equal(validateUsername("한국어"), true);
+  assert.equal(validateUsername("한글"), false); // two characters is below the minimum
+  assert.equal(validateUsername("山田 太郎"), false);
+  assert.equal(validateUsername("さくら！"), false);
+  assert.equal(validateUsername("🎓"), false);
+
+  // Full-width Latin is normalised, so "ＡＢＣ" and "abc" are one account name.
+  assert.equal(normalizeUsername("ＡＢＣ"), "abc");
+  assert.equal(normalizeUsername("  Sora  "), "sora");
+  assert.equal(normalizeUsername("さくら"), "さくら");
 });
 
-test("passwords must be 10-200 characters", () => {
-  assert.equal(validatePassword("1234567890"), true);
-  assert.equal(validatePassword("123456789"), false);
+test("passwords must be 8-200 characters", () => {
+  assert.equal(validatePassword("12345678"), true);
+  assert.equal(validatePassword("1234567"), false);
   assert.equal(validatePassword("a".repeat(200)), true);
   assert.equal(validatePassword("a".repeat(201)), false);
 });

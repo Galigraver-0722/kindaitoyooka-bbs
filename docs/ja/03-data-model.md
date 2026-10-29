@@ -32,7 +32,7 @@ erDiagram
 | カラム | 型 | 備考 |
 | --- | --- | --- |
 | `id` | string（cuid） | URL に使う不透明な識別子 |
-| `username` | string、一意 | 小文字で保存。3〜20 文字 `[a-z0-9_]` |
+| `username` | string、一意 | NFKC 正規化して小文字で保存。3〜20 文字で、どの言語の文字・数字・`_` が使える |
 | `email` | string?、一意 | 任意。SQLite では null 許容の一意制約により複数の `NULL` を許す |
 | `passwordHash` | string | `scrypt:<salt-hex>:<key-hex>` |
 | `role` | enum | `STUDENT`（既定）、`MODERATOR`、`ADMIN` |

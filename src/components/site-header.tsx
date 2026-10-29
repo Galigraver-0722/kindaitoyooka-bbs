@@ -70,7 +70,7 @@ export function SiteHeader({ user, locale }: { user: SessionUser | null; locale:
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-2">
                 <Link
-                  href={`/u/${user.username}`}
+                  href={`/u/${encodeURIComponent(user.username)}`}
                   className="font-mono text-[11px] text-ink transition-colors duration-150 hover:text-accent"
                 >
                   {user.username}

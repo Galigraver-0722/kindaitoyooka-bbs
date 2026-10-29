@@ -15,6 +15,23 @@ import { getTheme } from "@/lib/theme";
 import { timeAgo } from "@/lib/time-ago";
 import { openingPostExcerpt } from "@/lib/excerpt";
 import { getLocale, t } from "@/lib/i18n";
+import { normalizeUsername } from "@/lib/validation";
+
+/**
+ * Next hands the segment over still percent-encoded, so `/u/%E3%81%BF…` and the
+ * raw UTF-8 path would both miss a Japanese account. Decoding here (and
+ * normalising the same way registration does) makes the profile reachable by
+ * either URL. Usernames cannot contain `%`, so the decode cannot lose meaning.
+ */
+function usernameKey(segment: string): string {
+  let decoded = segment;
+  try {
+    decoded = decodeURIComponent(segment);
+  } catch {
+    // A malformed escape is left as it is; the lookup then simply misses.
+  }
+  return normalizeUsername(decoded);
+}
 
 export async function generateMetadata({
   params,
@@ -22,7 +39,7 @@ export async function generateMetadata({
   params: Promise<{ username: string }>;
 }): Promise<Metadata> {
   const [{ username }, locale] = await Promise.all([params, getLocale()]);
-  return { title: `${username} · ${t(locale).profile.title}` };
+  return { title: `${usernameKey(username)} · ${t(locale).profile.title}` };
 }
 
 export const dynamic = "force-dynamic";
@@ -46,7 +63,7 @@ export default async function ProfilePage({
   const roles = t(locale).pages.role;
 
   const profile = await prisma.user.findUnique({
-    where: { username: username.toLowerCase() },
+    where: { username: usernameKey(username) },
     select: {
       id: true,
       username: true,
@@ -136,7 +153,7 @@ export default async function ProfilePage({
   const noticeText = noticeMessage(notice, locale);
   const avatarColor = profile.avatarColor ?? undefined;
   const avatarRing = profile.avatarRing ?? undefined;
-  const baseHref = `/u/${profile.username}`;
+  const baseHref = `/u/${encodeURIComponent(profile.username)}`;
   const tabHref = (next: "threads" | "replies") => (next === "threads" ? baseHref : `${baseHref}?tab=replies`);
 
   return (
@@ -197,7 +214,7 @@ export default async function ProfilePage({
                   />
                 </>
               ) : viewer ? (
-                <Link className="btn" href={`/u/${viewer.username}`}>{copy.ownPage}</Link>
+                <Link className="btn" href={`/u/${encodeURIComponent(viewer.username)}`}>{copy.ownPage}</Link>
               ) : (
                 <>
                   <Link className="btn btn-p" href={`/login?next=${encodeURIComponent(baseHref)}`}>{copy.login}</Link>

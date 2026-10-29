@@ -2,11 +2,12 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ThemedPage, Crumb } from "@/components/theme/themed-page";
+import { PasswordFields } from "@/components/auth/password-fields";
 import { getCurrentUser } from "@/lib/auth";
 import { getLocale, t } from "@/lib/i18n";
 import { errorMessage } from "@/lib/messages";
 import { getTheme } from "@/lib/theme";
-import { safeNextPath } from "@/lib/validation";
+import { LIMITS, safeNextPath } from "@/lib/validation";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -50,8 +51,23 @@ export default async function RegisterPage({
           <input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" />
           <p className="hint">{copy.emailHint}</p>
 
-          <label className="field-label" htmlFor="password">{copy.password}</label>
-          <input id="password" name="password" type="password" autoComplete="new-password" required />
+          <PasswordFields
+            mode="register"
+            minLength={LIMITS.passwordMin}
+            labels={{
+              passwordLabel: copy.password,
+              show: copy.showPassword,
+              hide: copy.hidePassword,
+              confirmLabel: copy.confirmPassword,
+              minLabel: copy.passwordMinLabel,
+              matchLabel: copy.passwordMatch,
+              mismatchLabel: copy.passwordMismatch,
+              strengthLabel: copy.passwordStrengthLabel,
+              weak: copy.strengthWeak,
+              fair: copy.strengthFair,
+              strong: copy.strengthStrong,
+            }}
+          />
           <p className="hint">{copy.passwordNewHint}</p>
 
           <fieldset className="agree">

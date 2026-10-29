@@ -119,16 +119,16 @@ the server parse anything.
 
 | Field | Required | Rules |
 | --- | --- | --- |
-| `username` | yes | 3–20 chars, `[A-Za-z0-9_]`, lowercased |
+| `username` | yes | 3–20 characters: letters in any script (Japanese included), decimal digits, `_`. NFKC-normalised and lowercased before storage and lookup |
 | `email` | no | Valid address, ≤ 254 chars, unique |
-| `password` | yes | 10–200 chars, not trimmed |
+| `password` | yes | 8–200 characters, not trimmed. `passwordConfirm` must repeat it |
 | `next` | no | A path on this site. The value is resolved against a fixed origin and dropped unless the result keeps that origin, so `/\\evil.example`, `//host`, and control characters all fall back to `/` |
 | `agree_terms`, `agree_rules`, `agree_privacy`, `agree_moderation` | yes | Must each arrive as `yes`; the list lives in `AGREEMENT_FIELDS` |
 
 - Success: sets the session cookie, redirects to `next` or `/`.
 - Failure: redirects to `/register?error=<code>`; password is never echoed.
 - Bodies over 64 KB (`MAX_BODY_BYTES`) are refused with `413` before parsing.
-- Codes: `terms-required`, `invalid-input`, `username-taken`, `email-taken`.
+- Codes: `terms-required`, `invalid-input`, `password-mismatch`, `username-taken`, `email-taken`.
 - A request that omits any of the four fields is refused with `terms-required`, so the browser's `required` attributes are not the control.
 - Acceptance is stored on the account as `termsAcceptedAt`, plus `termsVersion` (the `POLICY_UPDATES.terms` value at that moment) and `acceptedPolicies`, which names the version of each document: `terms:<v>;rules:<v>;privacy:<v>;moderation:<v>`.
 

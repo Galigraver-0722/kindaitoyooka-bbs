@@ -2,7 +2,7 @@ import { createSession, SESSION_COOKIE, sessionCookieOptions, verifyPassword } f
 import { prisma } from "@/lib/db";
 import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 import { checkRateLimit, pruneRateLimits, RATE_LIMITS, requestIp, resetRateLimit } from "@/lib/rate-limit";
-import { safeNextPath } from "@/lib/validation";
+import { normalizeUsername, safeNextPath } from "@/lib/validation";
 
 function failure(request: Request, next: string, code = "invalid-credentials") {
   const params = new URLSearchParams({ error: code });
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   }
 
   const data = await request.formData();
-  const username = formText(data, "username").toLowerCase();
+  const username = normalizeUsername(formText(data, "username"));
   const passwordValue = data.get("password");
   const password = typeof passwordValue === "string" ? passwordValue : "";
   const next = safeNextPath(formText(data, "next"), "/");

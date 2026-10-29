@@ -457,6 +457,25 @@ export const pagesDCss = `
 /* Build version and the beta marker, in the header next to the brand. */
 .tw-d .brand .ver{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--ink);background:var(--sky);border:1.5px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:2px;white-space:nowrap}
 @media (max-width:520px){.tw-d .brand .ver{font-size:8px;padding:0 5px}}
+/* Password field: reveal toggle and the live requirement / strength panel. */
+.tw-d .pw-wrap{position:relative}
+.tw-d .pw-wrap > input{padding-right:46px}
+.tw-d .pw-toggle{position:absolute;right:6px;bottom:7px;display:grid;place-items:center;width:32px;height:32px;border:1.5px solid transparent;border-radius:9px;color:var(--muted);background:none;cursor:pointer;transition:.14s}
+.tw-d .pw-toggle:hover{color:var(--ink);background:var(--sky);border-color:var(--line)}
+.tw-d .pw-toggle:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.tw-d .pw-notes{margin-top:9px}
+.tw-d .pw-req{margin:0;font-size:12px;font-weight:700;color:var(--muted)}
+.tw-d .pw-req.ok{color:#0B6B4A}
+.tw-d .pw-req.bad{color:#8A4A16}
+.tw-d .pw-meter{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:7px}
+.tw-d .pw-meter i{display:block;height:5px;border-radius:999px;background:rgba(6,35,48,.14);transition:background .16s}
+.tw-d .pw-meter[data-score="1"] i:nth-child(1){background:#E4A11B}
+.tw-d .pw-meter[data-score="2"] i:nth-child(-n+2){background:var(--cyan)}
+.tw-d .pw-meter[data-score="3"] i{background:#0FA36B}
+.tw-d .pw-strength{margin:6px 0 0;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--muted)}
+.tw-d .pw-check{min-height:1.2em;margin:6px 0 0;font-size:12px;font-weight:700}
+.tw-d .pw-check.ok{color:#0B6B4A}
+.tw-d .pw-check.bad{color:#A03018}
 `;
 
 export const pagesBCss = `
@@ -915,4 +934,23 @@ export const pagesBCss = `
 @media (max-width:520px){.tw-b .brand .ver{font-size:9px;padding:0 4px}}
 
 
+/* Password field: reveal toggle and the live requirement / strength panel. */
+.tw-b .pw-wrap{position:relative}
+.tw-b .pw-wrap > input{padding-right:46px}
+.tw-b .pw-toggle{position:absolute;right:6px;bottom:7px;display:grid;place-items:center;width:32px;height:32px;border:1px solid transparent;border-radius:5px;color:var(--muted);background:none;cursor:pointer;transition:.16s}
+.tw-b .pw-toggle:hover{color:var(--cyan);background:rgba(90,230,236,.08);border-color:var(--line)}
+.tw-b .pw-toggle:focus-visible{outline:1px solid var(--cyan);outline-offset:1px}
+.tw-b .pw-notes{margin-top:9px}
+.tw-b .pw-req{margin:0;font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted)}
+.tw-b .pw-req.ok{color:var(--cyan)}
+.tw-b .pw-req.bad{color:#E8B27A}
+.tw-b .pw-meter{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:7px}
+.tw-b .pw-meter i{display:block;height:4px;border-radius:1px;background:rgba(90,230,236,.14);transition:background .16s}
+.tw-b .pw-meter[data-score="1"] i:nth-child(1){background:#E8B27A}
+.tw-b .pw-meter[data-score="2"] i:nth-child(-n+2){background:var(--teal)}
+.tw-b .pw-meter[data-score="3"] i{background:var(--cyan);box-shadow:0 0 8px -2px rgba(90,230,236,.7)}
+.tw-b .pw-strength{margin:6px 0 0;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--muted)}
+.tw-b .pw-check{min-height:1.2em;margin:6px 0 0;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em}
+.tw-b .pw-check.ok{color:var(--cyan)}
+.tw-b .pw-check.bad{color:#E8B27A}
 `;

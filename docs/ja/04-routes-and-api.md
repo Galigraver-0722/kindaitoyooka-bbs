@@ -89,16 +89,16 @@
 
 | フィールド | 必須 | ルール |
 | --- | --- | --- |
-| `username` | はい | 3〜20 文字、`[A-Za-z0-9_]`、小文字化 |
+| `username` | はい | 3〜20 文字。日本語を含むどの言語の文字・数字・`_`。保存と照合の前に NFKC 正規化して小文字化する |
 | `email` | いいえ | 有効なアドレス、254 文字以内、一意 |
-| `password` | はい | 10〜200 文字、前後の空白は削除しない |
+| `password` | はい | 8〜200 文字、前後の空白は削除しない。`passwordConfirm` で同じものを 2 回入力する |
 | `next` | いいえ | 同一サイトのパス。固定のオリジンに対して解決し、結果のオリジンが変われば `/` に落とします（`/\\evil.example`、`//host`、制御文字は拒否） |
 | `agree_terms`、`agree_rules`、`agree_privacy`、`agree_moderation` | はい | それぞれ `yes` で届く必要があります。一覧は `AGREEMENT_FIELDS` にあります |
 
 - 成功: セッション Cookie を設定し、`next` または `/` へリダイレクトします。
 - 失敗: `/register?error=<code>` へリダイレクトします。パスワードを画面に戻すことはありません。
 - 64 KB（`MAX_BODY_BYTES`）を超える本文は、解析する前に `413` で拒否します。
-- コード: `terms-required`、`invalid-input`、`username-taken`、`email-taken`。
+- コード: `terms-required`、`invalid-input`、`password-mismatch`、`username-taken`、`email-taken`。
 - 4 つのうち 1 つでも欠けたリクエストは `terms-required` で拒否します。ブラウザの `required` は制御ではありません。
 - 同意は `termsAcceptedAt`、その時点の `POLICY_UPDATES.terms` の値 `termsVersion`、そして文書ごとの版を持つ `acceptedPolicies`（`terms:<v>;rules:<v>;privacy:<v>;moderation:<v>`）としてアカウントに保存します。
 

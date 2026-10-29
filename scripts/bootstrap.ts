@@ -21,7 +21,7 @@
 import { BoardKind, PrismaClient, Role } from "@prisma/client";
 import { SEED_ANNOUNCEMENTS } from "../src/lib/announcements";
 import { hashPassword } from "../src/lib/passwords";
-import { LIMITS, validatePassword, validateUsername } from "../src/lib/validation";
+import { LIMITS, normalizeUsername, validatePassword, validateUsername } from "../src/lib/validation";
 import { loadLocalEnv } from "./env";
 
 loadLocalEnv();
@@ -136,7 +136,7 @@ async function promoteExisting(username: string): Promise<void> {
 async function createAdmin(username: string, password: string): Promise<void> {
   if (!validateUsername(username)) {
     console.error(
-      `username must be ${LIMITS.usernameMin}-${LIMITS.usernameMax} characters (letters, digits, _ or -)`,
+      `username must be ${LIMITS.usernameMin}-${LIMITS.usernameMax} characters (letters in any language, digits, _)`,
     );
     process.exitCode = 1;
     return;
@@ -172,7 +172,7 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const boardsOnly = args.includes("--boards-only");
   const promoteIndex = args.indexOf("--promote");
-  const promote = promoteIndex >= 0 ? args[promoteIndex + 1]?.trim().toLowerCase() : undefined;
+  const promote = promoteIndex >= 0 ? normalizeUsername(args[promoteIndex + 1] ?? "") : undefined;
 
   await ensureBoards();
   await ensureAnnouncements();
@@ -186,7 +186,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const username = process.env.BOOTSTRAP_ADMIN_USERNAME?.trim().toLowerCase();
+  const username = normalizeUsername(process.env.BOOTSTRAP_ADMIN_USERNAME ?? "");
   const password = process.env.BOOTSTRAP_ADMIN_PASSWORD ?? "";
 
   if (!username && !password) {

@@ -7,6 +7,7 @@ import {
   AGREEMENT_FIELDS,
   missingAgreements,
   safeNextPath,
+  normalizeUsername,
   validateEmail,
   validatePassword,
   validateUsername,
@@ -30,10 +31,14 @@ export async function POST(request: Request) {
   }
 
   const data = await request.formData();
-  const username = formText(data, "username").toLowerCase();
+  // NFKC + lowercase: a full-width "Ａ" and "A" are one account, and a Japanese
+  // name is stored as typed (the transform is a no-op for kana and kanji).
+  const username = normalizeUsername(formText(data, "username"));
   const email = formText(data, "email").toLowerCase();
   const passwordValue = data.get("password");
   const password = typeof passwordValue === "string" ? passwordValue : "";
+  const confirmValue = data.get("passwordConfirm");
+  const passwordConfirm = typeof confirmValue === "string" ? confirmValue : "";
   const next = safeNextPath(formText(data, "next"), "/");
   // The browser marks all four boxes as required, but that is a convenience: the
   // server decides. A request that skips any of them is refused here.
@@ -61,6 +66,12 @@ export async function POST(request: Request) {
     (email !== "" && !validateEmail(email))
   ) {
     return failure(request, "invalid-input", next);
+  }
+
+  // The confirmation field is compared here as well: the browser check is a
+  // convenience, and a request that skips it lands on the same page.
+  if (password !== passwordConfirm) {
+    return failure(request, "password-mismatch", next);
   }
 
   const existing = await prisma.user.findFirst({

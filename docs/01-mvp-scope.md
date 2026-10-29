@@ -54,7 +54,7 @@ If any of those actions is missing, this is not an MVP; it is a prototype.
 
 | Capability | Acceptance criteria |
 | --- | --- |
-| Register | Username 3–20 chars `[a-z0-9_]`, password ≥ 10 chars, duplicate username rejected with a readable message |
+| Register | Username 3–20 characters (letters in any script, digits, `_`), password ≥ 8 characters typed twice, duplicate username rejected with a readable message |
 | Log in / out | Session persists across refresh; logout invalidates the server-side session |
 | Browse | Guest can read boards, thread lists, and threads without an account |
 | Start a thread | Signed-in user picks a board, title 3–120 chars, body ≤ 10,000 chars |

@@ -360,7 +360,7 @@ async function UsersTab({
             return (
               <li key={row.id} className={`adm-row${row.isSuspended ? " is-suspended" : ""}`}>
                 <div className="adm-who">
-                  <Link href={`/u/${row.username}`}>{row.username}</Link>
+                  <Link href={`/u/${encodeURIComponent(row.username)}`}>{row.username}</Link>
                   <span className="adm-sub">
                     {formatDateTime(row.createdAt, locale)} · {copy.counts(row._count.threads, row._count.posts)}
                   </span>
@@ -768,7 +768,7 @@ async function BlockedTab({ locale }: { locale: Locale }) {
           {rows.map((row) => (
             <li key={row.id} className="adm-row adm-row-blocked">
               <div className="adm-who">
-                <Link href={`/u/${row.user.username}`}>{row.user.username}</Link>
+                <Link href={`/u/${encodeURIComponent(row.user.username)}`}>{row.user.username}</Link>
                 <span className="adm-sub">
                   {copy.where}: {copy.surface[row.surface] ?? row.surface} · {copy.field}:{" "}
                   {copy.fields[row.field] ?? row.field}

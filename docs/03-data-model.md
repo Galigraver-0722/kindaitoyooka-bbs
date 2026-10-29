@@ -33,7 +33,7 @@ erDiagram
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | string (cuid) | Opaque identifier used in URLs |
-| `username` | string, unique | Stored lowercase; 3–20 chars `[a-z0-9_]` |
+| `username` | string, unique | NFKC-normalised and lowercased; 3–20 characters of letters in any script, decimal digits, or `_` |
 | `email` | string?, unique | Optional; nullable uniques allow many `NULL`s in SQLite |
 | `passwordHash` | string | `scrypt:<salt-hex>:<key-hex>` |
 | `role` | enum | `STUDENT` (default), `MODERATOR`, `ADMIN` |

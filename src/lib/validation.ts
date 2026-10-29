@@ -1,10 +1,17 @@
-export const USERNAME_PATTERN = /^[a-z0-9_]{3,20}$/;
+/**
+ * Usernames may be written in any script: Japanese, Latin, Cyrillic, Hangul.
+ * Letters, decimal digits and the underscore only — no spaces, no punctuation,
+ * and no combining or bidi control characters, which would let one name be
+ * displayed as another. Length is checked against `LIMITS` separately.
+ */
+export const USERNAME_PATTERN = /^[\p{L}\p{Nd}_]+$/u;
+
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const LIMITS = {
   usernameMin: 3,
   usernameMax: 20,
-  passwordMin: 10,
+  passwordMin: 8,
   passwordMax: 200,
   titleMin: 3,
   titleMax: 120,
@@ -13,8 +20,21 @@ export const LIMITS = {
   reasonMax: 500,
 } as const;
 
+/**
+ * Stored form of a username: NFKC (so a full-width "Ａ" and "A" are one
+ * account), trimmed, lowercased (a no-op for Japanese, keeps Latin
+ * case-insensitive). Registration, login and the scripts all go through this.
+ */
+export function normalizeUsername(value: string): string {
+  return value.normalize("NFKC").trim().toLowerCase();
+}
+
 export function validateUsername(value: string): boolean {
-  return USERNAME_PATTERN.test(value);
+  const normalized = normalizeUsername(value);
+  if (normalized.length < LIMITS.usernameMin || normalized.length > LIMITS.usernameMax) {
+    return false;
+  }
+  return USERNAME_PATTERN.test(normalized);
 }
 
 export function validatePassword(value: string): boolean {
