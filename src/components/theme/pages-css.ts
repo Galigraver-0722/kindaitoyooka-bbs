@@ -477,7 +477,10 @@ export const pagesDCss = `
 .tw-d .pw-check.ok{color:#0B6B4A}
 .tw-d .pw-check.bad{color:#A03018}
 /* Draft list and the autosave status line on the composer. */
-.tw-d .draft-status{margin:10px 0 0;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--muted)}
+.tw-d .draft-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.tw-d .draft-save{padding:8px 14px;font-size:12px;border-radius:10px}
+.tw-d .draft-save:disabled{opacity:.6;cursor:default}
+.tw-d .draft-status{margin:0;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--muted)}
 .tw-d .draft-status.saved{color:#0B6B4A}
 .tw-d .draft-status.failed{color:#A03018}
 .tw-d .draft-list{display:grid;gap:8px;margin-top:12px}
@@ -964,7 +967,10 @@ export const pagesBCss = `
 .tw-b .pw-check.ok{color:var(--cyan)}
 .tw-b .pw-check.bad{color:#E8B27A}
 /* Draft list and the autosave status line on the composer. */
-.tw-b .draft-status{margin:10px 0 0;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--muted)}
+.tw-b .draft-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.tw-b .draft-save{padding:7px 12px;font-size:11px}
+.tw-b .draft-save:disabled{opacity:.55;cursor:default}
+.tw-b .draft-status{margin:0;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--muted)}
 .tw-b .draft-status.saved{color:var(--cyan)}
 .tw-b .draft-status.failed{color:#E8B27A}
 .tw-b .draft-list{display:grid;gap:8px;margin-top:12px}

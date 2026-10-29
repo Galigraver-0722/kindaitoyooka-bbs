@@ -103,6 +103,7 @@ export default async function NewThreadPage({
                 saving: copy.draftSaving,
                 saved: copy.draftSaved,
                 failed: copy.draftFailed,
+                saveNow: copy.draftSaveNow,
               }}
             />
           </form>
