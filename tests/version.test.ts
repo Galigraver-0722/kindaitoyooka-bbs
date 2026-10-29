@@ -13,7 +13,6 @@ test("the displayed version matches package.json", () => {
 
 test("the tag carries the channel and the number", () => {
   assert.equal(versionTag(), IS_BETA ? `v.beta${pkg.version}` : `v${pkg.version}`);
-  assert.equal(versionTag(), "v.beta0.1.0");
 });
 
 test("the channel is one of the two supported values", () => {

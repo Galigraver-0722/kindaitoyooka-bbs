@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useState, useSyncExternalStore, type FormEvent } from "react";
+import { useEffect, useId, useState, useSyncExternalStore, type FormEvent } from "react";
 import { ToggleAction } from "@/components/theme/actions";
 import { Highlight } from "@/components/theme/highlight";
 import { DeleteButton } from "@/components/theme/delete-button";
@@ -122,6 +122,40 @@ function ReplyForm({
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
+  // The reply box keeps its text on this device, so a reload or an accidental
+  // navigation does not throw away a half-written answer. Nothing leaves the
+  // browser: replies are not stored server-side until they are posted.
+  const storageKey = `draft:reply:${threadId}:${parentId ?? "root"}`;
+
+  useEffect(() => {
+    // Restore after the first paint rather than during it: reading storage in a
+    // lazy initialiser would make the server HTML and the first client render
+    // disagree, and setting state synchronously inside the effect trips the
+    // cascading-render lint. One deferred call keeps both happy.
+    const timer = setTimeout(() => {
+      try {
+        const saved = window.localStorage.getItem(storageKey);
+        if (saved) {
+          setValue(saved);
+        }
+      } catch {
+        // Private mode can refuse storage; the box simply starts empty.
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [storageKey]);
+
+  useEffect(() => {
+    try {
+      if (value.trim() === "") {
+        window.localStorage.removeItem(storageKey);
+      } else {
+        window.localStorage.setItem(storageKey, value);
+      }
+    } catch {
+      // Ignored on purpose: autosave is a convenience, not a requirement.
+    }
+  }, [value, storageKey]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -162,6 +196,11 @@ function ReplyForm({
       const data = (await response.json()) as { comment: CommentData };
       onPosted(data.comment);
       setValue("");
+      try {
+        window.localStorage.removeItem(storageKey);
+      } catch {
+        // The text is posted; failing to clear the local copy is harmless.
+      }
       form.closest("details")?.removeAttribute("open");
       // Keep the cached copy of this thread in step with the server.
       router.refresh();

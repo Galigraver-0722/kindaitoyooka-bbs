@@ -100,6 +100,8 @@ export const RATE_LIMITS = {
   report: fromEnv("REPORT", { limit: 30, windowMs: 24 * 60 * MINUTE }),
   like: fromEnv("LIKE", { limit: 300, windowMs: 60 * MINUTE }),
   bookmark: fromEnv("BOOKMARK", { limit: 300, windowMs: 60 * MINUTE }),
+  // Autosave fires every few seconds while someone types; the window is generous.
+  draft: fromEnv("DRAFT", { limit: 600, windowMs: 60 * MINUTE }),
 } as const;
 
 /**

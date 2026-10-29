@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { scanPost } from "@/lib/content-filter";
 import { recordBlockedAttempt } from "@/lib/content-guard";
 import { prisma } from "@/lib/db";
+import { clearDraftForBoard } from "@/lib/drafts";
 import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { parseTagInput } from "@/lib/tags";
@@ -122,6 +123,10 @@ export async function POST(request: Request) {
 
     return created;
   });
+
+  // The draft is what was just published; keeping it would resurface a posted
+  // thread as "unfinished" on the next visit.
+  await clearDraftForBoard(user.id, board.id);
 
   return seeOther(request, `/t/${thread.id}`);
 }

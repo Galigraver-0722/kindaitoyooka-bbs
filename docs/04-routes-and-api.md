@@ -17,7 +17,7 @@ public API. A future mobile client would need a JSON API with explicit versionin
 | `/t/[id]/edit` | Author | Edit the title, opening post, and tags within 15 minutes of posting |
 | `/t/[id]/export` | Public | Download the thread as a plain-text file |
 | `/u/[username]` | Public | Profile: identity banner, four counts (threads, posts, likes received, join date), recent threads and recent replies as two tabs. Replies inside a removed thread are excluded, so a deleted discussion does not survive on the author's profile |
-| `/new` | Signed-in | Create a thread; guests are redirected to `/login?next=/new` |
+| `/new` | Signed-in | Create a thread; guests are redirected to `/login?next=/new`. The form autosaves to the account every few seconds (or on blur) and lists unfinished drafts below it |
 | `/login` | Public | Login form; redirects signed-in users away |
 | `/register` | Public | Registration form; each of the four policy documents must be ticked; the first account becomes `ADMIN` |
 | `/threads` | Public | Redirects to `/`, keeping `q`, `filter`, and `sort` |
@@ -358,6 +358,8 @@ in `src/lib/admin.ts` and are unit-tested.
 | `POST /api/admin/announcements` | `titleJa`, `titleEn`, `bodyJa`, `bodyEn`, `publishedAt`, `kind`, `status=published\|draft` | Admin only | Creates an announcement, writes `announcement.create` |
 | `POST /api/admin/announcements/[id]` | Same fields | Admin only | Updates it in place, writes `announcement.update` |
 | `POST /api/admin/announcements/[id]/delete` | — | Admin only | Deletes the row, writes `announcement.delete` |
+| `POST /api/drafts` | `boardId`, `title`, `body`, `tags` | Signed-in | Upserts the draft for that board and returns `{ok, savedAt}`. An empty form deletes the row instead. Limited to `RATE_LIMIT_DRAFT_LIMIT` (600/hour) |
+| `POST /api/drafts/[id]/delete` | — | Signed-in, own draft | Deletes it and returns to `/new?notice=draft-discarded` |
 
 Nobody can suspend an administrator, and nobody can suspend or restore their own account.
 

@@ -74,6 +74,7 @@ const NOTICE_MESSAGES: Record<Locale, Record<string, string>> = {
     "announcement-created": "Announcement published.",
     "announcement-updated": "Announcement saved.",
     "announcement-deleted": "Announcement deleted.",
+    "draft-discarded": "Draft discarded.",
   },
   ja: {
     reported: "通報を受け付けました。モデレーターが確認します。",
@@ -91,6 +92,7 @@ const NOTICE_MESSAGES: Record<Locale, Record<string, string>> = {
     "announcement-created": "お知らせを公開しました。",
     "announcement-updated": "お知らせを保存しました。",
     "announcement-deleted": "お知らせを削除しました。",
+    "draft-discarded": "下書きを破棄しました。",
   },
 };
 

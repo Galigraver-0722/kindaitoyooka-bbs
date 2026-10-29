@@ -29,6 +29,16 @@ export type Announcement = {
 
 export const SEED_ANNOUNCEMENTS: Announcement[] = [
   {
+    id: "2026-10-29-drafts",
+    publishedAt: "2026-10-29",
+    kind: "release",
+    title: { ja: "下書きの自動保存を追加しました", en: "Drafts save themselves now" },
+    body: {
+      ja: "書きかけのスレッドは数秒ごとに自動で保存され、次に開いたときに続きから書けます。返信の書きかけは、この端末に残ります。あわせて、ログインと登録の画面を改善しました。",
+      en: "A thread you are writing is saved every few seconds and comes back when you return. A half-written reply stays on this device. The login and registration forms were also improved.",
+    },
+  },
+  {
     id: "2026-10-27-console",
     publishedAt: "2026-10-27",
     kind: "notice",

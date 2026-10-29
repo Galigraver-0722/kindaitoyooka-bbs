@@ -72,6 +72,7 @@ model User {
   auditLogs       AuditLog[]       @relation("AuditActor")
   blockedAttempts BlockedAttempt[]
   announcements   Announcement[]   @relation("AnnouncementAuthor")
+  drafts          Draft[]
 }
 
 model Session {
@@ -99,6 +100,7 @@ model Board {
   suggestedTags String   @default("")
   createdAt     DateTime @default(now())
   threads       Thread[]
+  drafts        Draft[]
 }
 
 model Thread {
@@ -281,4 +283,22 @@ model Announcement {
   updatedAt   DateTime @updatedAt
 
   @@index([publishedAt])
+}
+
+/// A half-written thread. One row per account and board: saving again replaces
+/// the text, publishing deletes the row.
+model Draft {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  boardId   String
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  title     String   @default("")
+  body      String   @default("")
+  tags      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, boardId])
+  @@index([userId, updatedAt])
 }

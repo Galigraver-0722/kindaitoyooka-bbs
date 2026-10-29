@@ -16,7 +16,7 @@
 | `/t/[id]/edit` | 作成者 | 投稿から 15 分以内に、タイトル・最初の投稿・タグを編集 |
 | `/t/[id]/export` | 公開 | スレッドをプレーンテキストのファイルとしてダウンロード |
 | `/u/[username]` | 公開 | プロフィール。身元バナー、4 つの数（スレッド・投稿・もらったいいね・参加日）、最近のスレッドと最近の返信を 2 つのタブで表示。削除されたスレッドへの返信は除外する（削除した議論が投稿者のプロフィールに残らないように） |
-| `/new` | ログイン済み | スレッド作成。ゲストは `/login?next=/new` へリダイレクト |
+| `/new` | ログイン済み | スレッド作成。ゲストは `/login?next=/new` へリダイレクト。フォームは数秒ごと（とフォーカスを外したとき）にアカウントへ自動保存し、下に書きかけの一覧を出す |
 | `/login` | 公開 | ログインフォーム。ログイン済みの利用者はリダイレクト |
 | `/register` | 公開 | 登録フォーム。4 つの政策文書それぞれへの同意が必須。最初のアカウントは `ADMIN` になる |
 | `/threads` | 公開 | `/` へリダイレクト。`q`・`filter`・`sort` は引き継ぐ |
@@ -296,6 +296,8 @@
 | `POST /api/admin/announcements` | `titleJa`、`titleEn`、`bodyJa`、`bodyEn`、`publishedAt`、`kind`、`status=published\|draft` | 管理者のみ | お知らせを作成し、`announcement.create` を書く |
 | `POST /api/admin/announcements/[id]` | 同じ項目 | 管理者のみ | その場で更新し、`announcement.update` を書く |
 | `POST /api/admin/announcements/[id]/delete` | — | 管理者のみ | 行を削除し、`announcement.delete` を書く |
+| `POST /api/drafts` | `boardId`、`title`、`body`、`tags` | ログイン済み | そのボードの下書きを upsert し `{ok, savedAt}` を返す。空のフォームなら行を削除する。`RATE_LIMIT_DRAFT_LIMIT`（毎時 600 回）まで |
+| `POST /api/drafts/[id]/delete` | — | ログイン済み・自分の下書き | 削除して `/new?notice=draft-discarded` へ戻す |
 
 管理者を停止することはできず、自分のアカウントも停止・解除できません。
 

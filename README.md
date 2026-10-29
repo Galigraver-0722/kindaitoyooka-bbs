@@ -39,6 +39,8 @@ thread, and where students can report problems without confronting anyone. See
 - Tags come from a dedicated field when composing, not parsed out of the body, and search
   accepts `#tag` as a filter.
 - Board pages paginate at 20 threads, with working newest and popular sorts.
+- Thread drafts save themselves while you type and come back on the next visit; reply
+  text is kept in the browser so a reload does not lose it.
 - Announcements and a changelog in the header panel, editable from the console, in both
   languages, with drafts that stay hidden until published.
 - Public terms of use, community rules, privacy notice, and moderation policy at `/terms`,

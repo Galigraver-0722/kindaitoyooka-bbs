@@ -167,6 +167,20 @@ label, not a schedule: `isPublished` is the only visibility switch, and a notice
 appears immediately. `pnpm bootstrap` seeds the four entries that used to live in code, and only
 into an empty table, so re-running it never overwrites an edit. ADR-0034 records the move.
 
+### Draft
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | string (cuid) | |
+| `userId`, `boardId` | string | FKs; unique together, one half-written thread per account and board |
+| `title`, `body`, `tags` | string | Clamped to the post limits when saved |
+| `createdAt`, `updatedAt` | datetime | `updatedAt` drives the "unfinished threads" order |
+
+Rows are written by the autosave endpoint every few seconds while someone types,
+read back to prefill the composer, and deleted when the thread is published or
+the draft is discarded. Reply text is deliberately not stored here: a half-written
+reply stays in the browser's `localStorage`, keyed by thread and parent post.
+
 
 ### Tag
 

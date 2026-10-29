@@ -7,7 +7,7 @@
  * deliberate constant, not an environment variable, so a build cannot claim to
  * be beta on one machine and stable on another.
  */
-export const VERSION = "0.1.0";
+export const VERSION = "0.1.1";
 
 /** `beta` while the site is in internal testing; flip to `stable` to ship. */
 export const CHANNEL: "beta" | "stable" = "beta";
