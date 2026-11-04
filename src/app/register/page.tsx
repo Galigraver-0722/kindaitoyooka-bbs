@@ -31,7 +31,7 @@ export default async function RegisterPage({
 
   return (
     <ThemedPage theme={theme} username={null}>
-      <main>
+      <main className="auth-page">
         <div className="page-head">
           <Crumb items={[{ href: "/", label: pages.home }, { label: copy.registerTitle }]} />
           <h1>{copy.registerTitle}</h1>

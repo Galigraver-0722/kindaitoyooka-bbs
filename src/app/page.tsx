@@ -5,7 +5,6 @@ import {
   BoardNav,
   ThemedPage,
   ThreadCards,
-  ThreadRows,
   type BoardSummary,
 } from "@/components/theme/themed-page";
 import type { HomeThread } from "@/components/home/types";
@@ -44,7 +43,6 @@ const FEED_INCLUDE = {
 
 type FeedRow = Prisma.ThreadGetPayload<{ include: typeof FEED_INCLUDE }>;
 
-const num = (value: number) => new Intl.NumberFormat("ja-JP").format(value);
 
 export default async function HomePage({
   searchParams,
@@ -58,6 +56,7 @@ export default async function HomePage({
   ]);
   const user = await getCurrentUser();
   const copy = t(locale).shell;
+  const commons = t(locale).commons;
   const sortCopy = t(locale).sort;
 
   const query = (q ?? "").trim().slice(0, 100);
@@ -84,10 +83,8 @@ export default async function HomePage({
   }));
   const totalThreads = summaries.reduce((sum, board) => sum + board.count, 0);
 
-  const [totalPosts, saved] = await Promise.all([
-    prisma.post.count({ where: { isDeleted: false } }),
-    user ? prisma.threadBookmark.count({ where: { userId: user.id } }) : Promise.resolve(0),
-  ]);
+  const totalPosts = await prisma.post.count({ where: { isDeleted: false } });
+
 
   let rows: FeedRow[] = [];
 
@@ -236,60 +233,30 @@ export default async function HomePage({
         ? copy.empty.mine
         : copy.empty.none;
 
-  const maxBoard = Math.max(1, ...summaries.map((board) => board.count));
-  const chartBoards = [...summaries].sort((a, b) => b.count - a.count).slice(0, 5);
-
-  const chart = (
-    <div className="chart">
-      <div className="chart-head">
-        <span>BOARD ACTIVITY</span>
-        <b>{num(totalThreads)}</b>
-      </div>
-      <div className="chart-bars">
-        {chartBoards.map((board) => (
-          <div className="chart-bar" key={board.slug} title={`${board.name} · ${board.count}`}>
-            <i style={{ height: `${18 + Math.round((board.count / maxBoard) * 62)}%` }} />
-            <span>{board.name}</span>
-          </div>
-        ))}
-      </div>
-      <div className="chart-foot">
-        {num(summaries.length)} BOARDS · {num(totalPosts)} REPLIES
-      </div>
-    </div>
-  );
 
   return (
     <ThemedPage theme={theme} username={user?.username ?? null}>
       <main>
         <section className="cover">
-          {theme === "light" ? (
-            <div className="cover-copy">
-              <div className="eyebrow">
-                <span className="sticker"><b>●</b> {copy.threadCount(totalThreads)}</span>
-                <span className="sticker">{copy.replyCount(totalPosts)}</span>
-                <span className="sticker">{copy.boardCount(summaries.length)}</span>
-              </div>
-              <h1>{copy.cover.dLead}<mark>{copy.cover.dAccent}</mark>{copy.cover.dTail}</h1>
-              <p className="lede">{copy.cover.dLede}</p>
+          <div className="cover-copy">
+            <p className="hero-eyebrow"><span />{commons.eyebrow}</p>
+            <h1>{<>{commons.lead}<br /><em>{commons.accent}</em></>}</h1>
+            <p className="lede">{commons.description}</p>
+            <div className="hero-actions">
+              <Link className="btn btn-p" href="/new">{copy.newThread}<span aria-hidden="true">↗</span></Link>
+              <a className="hero-browse" href="#discussions">{commons.browse}<span aria-hidden="true">↓</span></a>
             </div>
-          ) : (
-            <div className="cover-copy">
-              <p className="kicker"><b>[ 01 ]</b> student network / since 2026</p>
-              <h1>{copy.cover.bLead}<span className="fade">{copy.cover.bAccent}</span>{copy.cover.bTail}</h1>
-              <p className="lede">{copy.cover.bLede}</p>
-              <div className="cover-stats">
-                <span><b>{num(totalThreads)}</b> THREADS</span>
-                <span><b>{num(totalPosts)}</b> REPLIES</span>
-                <span><b>{num(summaries.length)}</b> BOARDS</span>
-                <span><b>{num(saved)}</b> SAVED</span>
-              </div>
-            </div>
-          )}
-          {chart}
+            <div className="hero-stats"><span>{copy.threadCount(totalThreads)}</span><span>{copy.boardCount(summaries.length)}</span><span>{copy.replyCount(totalPosts)}</span></div>
+          </div>
+          <div className="community-art" aria-hidden="true">
+            <div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" />
+            <div className="art-note note-back"><span>TOYOOKA / BBS</span><b>つながる。</b><i /></div>
+            <div className="art-note note-front"><span>HELLO, COMMUNITY</span><b>話そう<span className="art-dot">●</span></b><div className="art-lines"><i/><i/><i/></div><div className="art-avatars"><i>豊</i><i>岡</i><i>＋</i></div></div>
+            <span className="art-star">✳</span><span className="art-label">A PLACE FOR YOUR IDEAS</span>
+          </div>
         </section>
 
-        <div className="feed-cols">
+        <div className="feed-cols" id="discussions">
           <aside className="feed-side">
             <div>
               <h2 className="side-title">{copy.boards}</h2>
@@ -325,10 +292,8 @@ export default async function HomePage({
               </p>
             ) : list.length === 0 ? (
               <p className="empty">{emptyText}</p>
-            ) : theme === "light" ? (
-              <ThreadCards threads={list} locale={locale} query={query || undefined} />
             ) : (
-              <ThreadRows threads={list} locale={locale} query={query || undefined} />
+              <ThreadCards threads={list} locale={locale} query={query || undefined} />
             )}
 
             {query && pageCount > 1 ? (

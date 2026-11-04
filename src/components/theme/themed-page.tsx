@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { LanguageToggle } from "@/components/theme/language-toggle";
-import { BackButton } from "@/components/theme/nav-buttons";
 import { NotificationInbox, type InboxItem } from "@/components/theme/notification-inbox";
 import { AnnouncementPanel, type AnnouncementItem } from "@/components/theme/announcement-panel";
 import { listAnnouncements, unreadAnnouncements } from "@/lib/announcements";
@@ -13,6 +12,9 @@ import { ScrollHeader } from "@/components/theme/scroll-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { homeDCss } from "@/components/home/home-d-css";
 import { homeBCss } from "@/components/home/home-b-css";
+import { redesignCss } from "@/components/theme/redesign-css";
+import { ShellInteractions } from "@/components/theme/shell-interactions";
+import { polishCss } from "@/components/theme/polish-css";
 import { pagesDCss, pagesBCss } from "@/components/theme/pages-css";
 import type { HomeThread } from "@/components/home/types";
 import { ToggleAction } from "@/components/theme/actions";
@@ -21,7 +23,6 @@ import { getLocale, t } from "@/lib/i18n";
 import { timeAgo } from "@/lib/time-ago";
 import type { Locale } from "@/lib/locales";
 import { readableInk } from "@/lib/color";
-import { versionTag } from "@/lib/version";
 import { Highlight } from "@/components/theme/highlight";
 
 const replyIcon = (
@@ -173,7 +174,7 @@ export async function ThemedPage({
     kinds: annCopy.kinds,
   };
 
-  const css = theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss;
+  const css = (theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss) + polishCss + redesignCss;
   const wrap = theme === "light" ? "tw-d" : "tw-b";
 
   return (
@@ -182,121 +183,48 @@ export async function ThemedPage({
       <RouteFreshness />
       <AnchorHighlight />
       <AutoRefresh />
-      {theme === "light" ? (
-        <ScrollHeader>
-          <header className="top">
-          <div className="top-in">
-            <div className="nav-left">
-              <BackButton label={copy.back} />
-              <Link className="nav-btn" href="/" aria-label={copy.home} title={copy.home}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z" /></svg></Link>
-            </div>
-            <Link className="brand" href="/">
-              <span className="sq">豊</span>豊岡BBS<small>/TOYOOKA</small>
-              <span className="ver" title={`${copy.betaNote} · ${versionTag()}`}>
-                {versionTag()}
-              </span>
-            </Link>
-            <details className="bd-drawer">
-              <summary>{copy.boards}</summary>
-              <div className="bd-panel">
-                <BoardLinks boards={boards} />
-              </div>
+      <ShellInteractions />
+      <a className="skip-link" href="#page-content">{t(locale).commons.skip}</a>
+      <ScrollHeader>
+        <header className="site-nav">
+          <Link className="site-brand" href="/" aria-label={copy.home}>
+            <span className="brand-symbol" aria-hidden="true">豊</span>
+            <span>TOYOOKA<span className="brand-sub">{t(locale).commons.brand}</span></span>
+          </Link>
+          <form className="nav-search" action="/" method="get" role="search">
+            {searchIcon}
+            <input name="q" maxLength={100} placeholder={copy.search} aria-label={copy.search} />
+            <kbd aria-hidden="true">⌘ K</kbd>
+          </form>
+          <div className="nav-controls">
+            <details className="board-menu">
+              <summary>{copy.boards}<span aria-hidden="true">⌄</span></summary>
+              <div className="board-menu-panel"><BoardLinks boards={boards} /></div>
             </details>
-            <div className="tools">
-              <AnnouncementPanel
-                items={announcementItems}
-                unseen={unreadIds.size}
-                labels={announcementLabels}
-                themeClass="tw-d"
-                signedIn={Boolean(username)}
-              />
-              {username ? <NotificationInbox items={inboxItems} unseen={noticeFeed.unseen} labels={inboxLabels} themeClass="tw-d" /> : null}
-              {canModerate ? <Link className="adm-entry" href="/admin">{copy.console}</Link> : null}
-              <form className="search" action="/" method="get" role="search">
-                {searchIcon}
-                <input name="q" maxLength={100} placeholder={copy.search} aria-label={copy.search} />
-              </form>
-              <LanguageToggle locale={locale} />
-              <ThemeToggle theme="light" labels={{ dark: pages.toDark, light: pages.toLight }} />
-              <Link
-                className="ava"
-                href={username ? `/u/${encodeURIComponent(username)}` : "/login"}
-                aria-label={pages.account}
-                style={{
-                  background: me?.avatarColor ?? undefined,
-                  borderColor: me?.avatarRing ?? undefined,
-                  color: readableInk(me?.avatarColor),
-                }}
-              >
-                {username ? username.slice(0, 1).toUpperCase() : "?"}
-              </Link>
-            </div>
-          </div>
-          </header>
-        </ScrollHeader>
-      ) : (
-        <>
-          <ScrollHeader>
-          <header className="bar">
-            <div className="nav-left">
-              <BackButton label={copy.back} />
-              <Link className="nav-btn" href="/" aria-label={copy.home} title={copy.home}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z" /></svg></Link>
-            </div>
-            <Link className="brand" href="/">
-              <span className="sig"><i /><i /><i /></span>TOYOOKA<span style={{ color: "var(--teal)" }}>{"//"}</span>BBS
-              <span className="ver" title={`${copy.betaNote} · ${versionTag()}`}>
-                {versionTag()}
-              </span>
-            </Link>
-            <details className="bd-drawer">
-              <summary>{copy.boards}</summary>
-              <div className="bd-panel">
-                <BoardLinks boards={boards} />
-              </div>
-            </details>
-            <AnnouncementPanel
-              items={announcementItems}
-              unseen={unreadIds.size}
-              labels={announcementLabels}
-              themeClass="tw-b"
-              signedIn={Boolean(username)}
-            />
-            {username ? <NotificationInbox items={inboxItems} unseen={noticeFeed.unseen} labels={inboxLabels} themeClass="tw-b" /> : null}
+            <AnnouncementPanel items={announcementItems} unseen={unreadIds.size} labels={announcementLabels} themeClass={wrap} signedIn={Boolean(username)} />
+            {username ? <NotificationInbox items={inboxItems} unseen={noticeFeed.unseen} labels={inboxLabels} themeClass={wrap} /> : null}
             {canModerate ? <Link className="adm-entry" href="/admin">{copy.console}</Link> : null}
-            <form className="cmd" action="/" method="get" role="search">
-              <span>&gt;</span>
-              <input name="q" maxLength={100} placeholder={copy.search} aria-label={copy.search} />
-              <kbd>⌘K</kbd>
-            </form>
             <LanguageToggle locale={locale} />
-            <ThemeToggle theme="dark" labels={{ dark: pages.toDark, light: pages.toLight }} />
-            <Link
-              className="ava"
-              href={username ? `/u/${encodeURIComponent(username)}` : "/login"}
-              aria-label={pages.account}
-              style={{
-                // Solid fill, like the light header. The previous version appended
-                // "22" for a 13% tint and kept the letter colour computed from the
-                // solid value, so an orange avatar showed near-black text on a
-                // nearly transparent square — unreadable on the dark bar.
-                background: me?.avatarColor ?? undefined,
-                borderColor: me?.avatarRing ?? undefined,
-                color: readableInk(me?.avatarColor) ?? undefined,
-              }}
-            >
-              {username ? username.slice(0, 1).toUpperCase() : "?"}
+            <ThemeToggle theme={theme} labels={{ dark: pages.toDark, light: pages.toLight }} />
+            <Link className="ava" href={username ? `/u/${encodeURIComponent(username)}` : "/login"} aria-label={pages.account}
+              style={{ background: me?.avatarColor ?? undefined, borderColor: me?.avatarRing ?? undefined, color: readableInk(me?.avatarColor) ?? undefined }}>
+              {username ? username.slice(0, 1).toUpperCase() : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>}
             </Link>
-          </header>
-          </ScrollHeader>
-          <div className="rail" aria-hidden="true">
-            <span className="v">TOYOOKA STUDENT NETWORK</span>
-            <span className="ticks"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></span>
-            <span className="v">2026 — 10</span>
           </div>
-        </>
-      )}
+        </header>
+      </ScrollHeader>
+      <div id="page-content" tabIndex={-1} />
 
       {children}
+      <footer className="commons-footer">
+        <div><strong>TOYOOKA BBS</strong><p>{t(locale).footer.disclaimer}</p></div>
+        <nav aria-label={t(locale).footer.policies}>
+          <Link href="/terms">{t(locale).footer.terms}</Link>
+          <Link href="/rules">{t(locale).footer.rules}</Link>
+          <Link href="/privacy">{t(locale).footer.privacy}</Link>
+          <Link href="/moderation-policy">{t(locale).footer.moderation}</Link>
+        </nav>
+      </footer>
 
       <Link
         className="fab"
@@ -307,6 +235,7 @@ export async function ThemedPage({
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
           <path d="M12 5v14M5 12h14" />
         </svg>
+        <span>{copy.newThread}</span>
       </Link>
     </div>
   );
@@ -399,39 +328,7 @@ export function ThreadCards({ threads, locale, query }: { threads: HomeThread[];
 }
 
 export function ThreadRows({ threads, locale, query }: { threads: HomeThread[]; locale: Locale; query?: string }) {
-  const copy = t(locale).pages;
-  return (
-    <section className="list">
-      <div className="thead" aria-hidden="true">
-        <span>ID</span><span>SUBJECT</span><span /><span>BOARD</span><span>UPDATED</span><span>REPLIES</span><span />
-      </div>
-      <ol>
-        {threads.map((thread, index) => (
-          <li className="trow" key={thread.id} id={`t-${thread.id}`}>
-            <span className="id">#{String(index + 1).padStart(4, "0")}</span>
-            <div className="subj">
-              <Link href={`/t/${thread.id}${query ? `?q=${encodeURIComponent(query)}` : ""}`}>
-                <Highlight text={thread.title} term={query} />
-              </Link>
-              {thread.isUnread ? <span className="unread" title={t(locale).shell.unread}>{t(locale).shell.unread}</span> : null}
-              {thread.excerpt ? <p className="excerpt">{thread.excerpt}</p> : null}
-              <div className="chips">
-                {thread.tags.slice(0, 3).map((tag) => (
-                  <span key={tag.name}>#{tag.name}</span>
-                ))}
-                <span className="by">{thread.author.username}</span>
-              </div>
-            </div>
-            <span className="leader" />
-            <span className="bname"><i />{thread.board.name}</span>
-            <span className="time">{timeAgo(thread.lastPostAt, locale)}</span>
-            <span className="num"><b>{thread.replyCount}</b></span>
-            <ThreadActions thread={thread} likeLabel={copy.actions.like} saveLabel={copy.actions.save} />
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
+  return <ThreadCards threads={threads} locale={locale} query={query} />;
 }
 
 export { num };

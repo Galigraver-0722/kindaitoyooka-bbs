@@ -9,6 +9,12 @@ export function isLocale(value: string | null | undefined): value is Locale {
 }
 
 const en = {
+  commons: {
+    skip: "Skip to content", brand: "THE COMMUNITY BOARD", eyebrow: "YOUR CAMPUS. YOUR CONVERSATION.",
+    lead: "Small questions.", accent: "Big connections.",
+    description: "Study questions, club plans, and everything in between. A shared space for life at Toyooka.",
+    browse: "Explore discussions",
+  },
   notifications: {
     title: "Notifications",
     empty: "Nothing yet. Replies, comments, likes and saves land here.",
@@ -643,6 +649,12 @@ const en = {
 };
 
 const ja: typeof en = {
+  commons: {
+    skip: "本文へ移動", brand: "みんなの掲示板", eyebrow: "ここから、つながる。",
+    lead: "ひとつの疑問から、", accent: "広がる毎日。",
+    description: "勉強のこと、部活のこと、ちょっと気になること。みんなの声が集まる、豊岡の掲示板。",
+    browse: "みんなの投稿を見る",
+  },
   notifications: {
     title: "通知",
     empty: "まだ通知はありません。返信・コメント・いいね・保存がここに届きます。",
