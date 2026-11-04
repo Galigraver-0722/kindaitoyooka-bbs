@@ -49,10 +49,10 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "board-limit": "ボードは 1 アカウント 3 つまでです。",
     "terms-required": "アカウントを作るには 4 つの文書すべてへの同意が必要です。",
     self: "自分のアカウントにはこの操作を行えません。",
-    "blocked-word": "この言葉は投稿できません。語を書き換えてください。",
+    "blocked-word": "この言葉は投稿できません。別の言葉に書き換えてください。",
     "last-admin": "管理者は最低 1 人必要です。",
     "password-mismatch": "パスワードが一致していません。",
-    "announcement-invalid": "タイトルと本文を英日どちらも入力してください（タイトルは 120 文字、本文は 2000 文字まで）。",
+    "announcement-invalid": "タイトルと本文を、英語と日本語の両方で入力してください（タイトルは 120 文字、本文は 2000 文字まで）。",
     "announcement-not-found": "そのお知らせは見つかりません。",
   },
 };
