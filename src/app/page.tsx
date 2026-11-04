@@ -249,7 +249,8 @@ export default async function HomePage({
 
   return (
     <ThemedPage theme={theme} username={user?.username ?? null}>
-      <main>
+      <main className={query || view !== "all" ? "feed-only" : undefined}>
+        {!query && view === "all" ? <>
         <section className="cover">
           <div className="cover-copy">
             <p className="hero-eyebrow"><span />{commons.eyebrow}</p>
@@ -262,30 +263,17 @@ export default async function HomePage({
             <div className="hero-stats"><span>{copy.threadCount(totalThreads)}</span><span>{copy.boardCount(summaries.length)}</span><span>{new Intl.NumberFormat(locale).format(totalPosts)} {neighborhood.posts}</span></div>
           </div>
           <div className="kinjo-village" aria-hidden="true">
-            <div className="village-sun" /><div className="village-ring" />
-            <svg className="village-path" viewBox="0 0 360 280"><path d="M20 210 Q90 260 160 180 T340 190" /></svg>
+            <div className="village-sun" />
+            <svg className="village-path" viewBox="0 0 360 280"><path d="M18 244 Q150 230 340 244" /></svg>
             <div className="village-house house-one"><div className="house-roof"/><div className="house-windows"><i/><i/><i/><i/></div><div className="house-door"/></div>
             <div className="village-house house-two"><div className="house-roof"/><div className="house-windows"><i/><i/></div><div className="house-door"/></div>
             <div className="village-house house-three"><div className="house-roof"/><div className="house-windows"><i/><i/></div><div className="house-door"/></div>
-            <div className="village-message">{neighborhood.greeting}<span>♡</span></div>
-            <span className="village-tree tree-one">✳</span><span className="village-tree tree-two">✳</span>
-            <span className="village-caption">{neighborhood.street}</span>
+            <svg className="village-tree tree-one" viewBox="0 0 60 100"><path className="tree-leaves" d="M30 4C5 6 7 31 14 37C-3 59 16 74 29 69C49 80 66 54 47 37C58 20 45 4 30 4Z"/><path className="tree-trunk" d="M30 38V98M30 67L18 54M30 53L40 43"/></svg>
+            <svg className="village-tree tree-two" viewBox="0 0 60 100"><path className="tree-leaves" d="M31 7C10 6 5 26 15 41C-2 57 12 76 30 70C52 78 66 56 46 40C56 23 50 9 31 7Z"/><path className="tree-trunk" d="M30 39V98M30 65L19 52"/></svg>
           </div>
         </section>
 
-        <section className="neighborhood-dashboard" aria-label={neighborhood.around}>
-          <ActivityChart days={activity} labels={{ title: neighborhood.activity, hint: neighborhood.activityHint, days7: neighborhood.days7, days14: neighborhood.days14, posts: neighborhood.posts, empty: neighborhood.chartEmpty }} />
-          <section className="neighborhood-panel board-chart" aria-label={neighborhood.boards}>
-            <div className="neighborhood-panel-head"><h3>{neighborhood.boards}</h3><span aria-hidden="true">↗</span></div>
-            <p className="chart-caption">{neighborhood.boardsHint}</p>
-            <div className="board-chart-list">
-              {chartBoards.length ? chartBoards.map((board) => <Link key={board.slug} href={`/b/${board.slug}`} className="board-chart-row">
-                <span>{board.name}</span><b>{board.count}</b>
-                <div className="board-chart-track"><i style={{ width: `${board.count / maxBoard * 100}%` }} /></div>
-              </Link>) : <p className="chart-caption">{neighborhood.noBoards}</p>}
-            </div>
-          </section>
-        </section>
+        </> : null}
 
         <div className="feed-cols" id="discussions">
           <aside className="feed-side">
@@ -340,10 +328,25 @@ export default async function HomePage({
             ) : null}
           </div>
         </div>
-        <section className="kinjo-story">
-          <span className="story-symbol" aria-hidden="true">近</span>
-          <div><p className="hero-eyebrow">{neighborhood.storyLabel}</p><h2>{neighborhood.storyTitle}</h2><p>{neighborhood.storyBody}</p><Link href="/about">{neighborhood.storyCta} <span aria-hidden="true">↗</span></Link></div>
+        {!query && view === "all" ? <>
+        <section className="neighborhood-dashboard" aria-label={neighborhood.around}>
+          <ActivityChart days={activity} labels={{ title: neighborhood.activity, hint: neighborhood.activityHint, days7: neighborhood.days7, days14: neighborhood.days14, posts: neighborhood.posts, empty: neighborhood.chartEmpty }} />
+          <section className="neighborhood-panel board-chart" aria-label={neighborhood.boards}>
+            <div className="neighborhood-panel-head"><h3>{neighborhood.boards}</h3><span aria-hidden="true">↗</span></div>
+            <p className="chart-caption">{neighborhood.boardsHint}</p>
+            <div className="board-chart-list">
+              {chartBoards.length ? chartBoards.map((board) => <Link key={board.slug} href={`/b/${board.slug}`} className="board-chart-row">
+                <span>{board.name}</span><b>{board.count}</b>
+                <div className="board-chart-track"><i style={{ width: `${board.count / maxBoard * 100}%` }} /></div>
+              </Link>) : <p className="chart-caption">{neighborhood.noBoards}</p>}
+            </div>
+          </section>
         </section>
+
+        <section className="kinjo-story">
+          <div><h2>{neighborhood.storyTitle}</h2><p>{neighborhood.storyBody}</p><Link href="/about">{neighborhood.storyCta} <span aria-hidden="true">↗</span></Link></div>
+        </section>
+        </> : null}
       </main>
     </ThemedPage>
   );

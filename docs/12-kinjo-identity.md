@@ -17,3 +17,9 @@ The activity chart switches between 7 and 14 days. It counts non-deleted posts a
 The board chart shows the four active boards with the most visible threads and links to their pages. It measures thread counts, not online users or views. Existing announcement rows and user-written content keep their historical wording; new starter announcements use Kinjo.
 
 Validate English and Japanese, light and dark themes, narrow phones and desktop, chart range controls, keyboard behavior, reduced motion, and empty data. The date-bucketing tests cover JST midnight and quiet days.
+
+## Everyday reading refinement
+
+The welcome area is now smaller and uses the original plain-language tagline. The houses stand along one ground line, with drawn trees; the speech bubble, orbit, decorative caption, gradients, and floating animation have been removed. Cards use lighter metadata, less empty space, and a small hover response rather than staggered entrance motion.
+
+Discussions precede the activity charts. Charts and the short About introduction use simple dividers instead of additional framed cards. Search, Saved, and My posts skip the welcome area and community summary entirely so readers reach their selected view directly. Mobile layouts keep the illustration small and omit the duplicated totals. Chart range animations and reduced-motion support remain.

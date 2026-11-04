@@ -318,7 +318,7 @@ export function ThreadCards({ threads, locale, query }: { threads: HomeThread[];
               >
                 {thread.author.username.slice(0, 1).toUpperCase()}
               </span>
-              {thread.author.username}・{timeAgo(thread.lastPostAt, locale)}
+              {thread.author.username}<span aria-hidden="true"> · </span>{timeAgo(thread.lastPostAt, locale)}
             </span>
             <span className="metric">{replyIcon}{thread.replyCount}</span>
             <ThreadActions thread={thread} likeLabel={copy.actions.like} saveLabel={copy.actions.save} />
