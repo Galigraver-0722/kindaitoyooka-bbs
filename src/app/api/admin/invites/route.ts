@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { recordAudit } from "@/lib/audit";
 import { getCurrentUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -9,8 +8,8 @@ const BACK = "/admin?tab=invites";
 
 /**
  * Issue the registration code. Only one code is active at a time, so issuing a
- * new one retires the old one. The plaintext goes into a short-lived HttpOnly
- * cookie so it is shown once, without landing in the URL or history.
+ * new one retires the old one. The value is stored on the row and shown in the
+ * console, so an administrator can read it whenever it is needed.
  */
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
@@ -31,22 +30,13 @@ export async function POST(request: Request) {
   const data = await request.formData();
   const note = String(data.get("note") ?? "").trim().slice(0, 120) || null;
 
-  const code = await issueInviteCode(note);
+  await issueInviteCode(note);
   await recordAudit(prisma, {
     actorId: user.id,
     action: "invite.create",
     targetType: "invite",
     targetId: "active",
     details: { note },
-  });
-
-  const jar = await cookies();
-  jar.set("invite_code", code, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/admin",
-    maxAge: 120,
   });
 
   return seeOther(request, `${BACK}&notice=invite-created`);

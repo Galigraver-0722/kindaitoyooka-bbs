@@ -174,7 +174,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "3. What is stored",
           bullets: [
             "Your account: username (public), an optional email address (never shown to other users), a password hash made with scrypt, and the colours and bio you choose for your profile.",
-            "The invite code you registered with: the first four characters and when you registered with it. Only a SHA-256 hash of the code is stored; the code itself is not.",
+            "The invite code you registered with: the first four characters and when you registered with it. The current code itself is stored so an administrator can read it out, and only administrators see it.",
             "When you registered, the moment you accepted the four documents and the version of each one: terms, rules, privacy notice, moderation policy. This is the record that you consented.",
             "Your content: threads, replies, titles, tags, likes, bookmarks, and the boards you open. Public unless a moderator removes them.",
             "Read markers: a timestamp per thread, used for the New badge. They store a time and a thread id, nothing else.",
@@ -671,7 +671,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "3. 保存する情報",
           bullets: [
             "アカウント：ユーザー名（公開）、任意のメールアドレス（他の利用者には表示しません）、scrypt により生成したパスワードハッシュ、プロフィールに設定した色および自己紹介。",
-            "登録に使用した招待コード：コードの先頭 4 文字と、そのコードで登録した日時。コード自体は SHA-256 ハッシュのみを保存し、平文は保存しません。",
+            "登録に使用した招待コード：コードの先頭 4 文字と、そのコードで登録した日時。現在有効なコード自体は、管理者が読み上げられるようデータベースにも保存し、閲覧できるのは管理者だけです。",
             "登録時に 4 つの文書へ同意した日時、および文書ごとの版。同意の記録として保存します。",
             "投稿した内容：スレッド、返信、タイトル、タグ、いいね、保存、開いたボード。モデレーターが削除しない限り公開されます。",
             "既読の記録：スレッドごとの時刻。「新着」の表示に使用し、時刻とスレッド ID のみを保存します。",

@@ -43,7 +43,7 @@ export async function issueInviteCode(note: string | null): Promise<string> {
       data: { retiredAt: new Date() },
     }),
     prisma.inviteCode.create({
-      data: { codeHash: hashInviteCode(code), prefix: code.slice(0, 4), note },
+      data: { codeHash: hashInviteCode(code), code, prefix: code.slice(0, 4), note },
     }),
   ]);
   return code;
@@ -56,6 +56,7 @@ export async function activeInviteCode() {
     select: {
       id: true,
       prefix: true,
+      code: true,
       note: true,
       createdAt: true,
       _count: { select: { uses: true } },

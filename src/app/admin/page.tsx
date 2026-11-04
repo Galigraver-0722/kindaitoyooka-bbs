@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Crumb, ThemedPage } from "@/components/theme/themed-page";
@@ -802,8 +801,7 @@ async function InvitesTab({
   copy: ReturnType<typeof t>["admin"]["invites"];
   locale: Locale;
 }) {
-  const [current, uses, jar] = await Promise.all([activeInviteCode(), listInviteUses(), cookies()]);
-  const issued = jar.get("invite_code")?.value;
+  const [current, uses] = await Promise.all([activeInviteCode(), listInviteUses()]);
 
   return (
     <>
@@ -811,18 +809,18 @@ async function InvitesTab({
         <h2>{copy.title}</h2>
         <p className="hint">{copy.hint}</p>
 
-        {issued ? (
-          <div className="notice success">
-            <p>{copy.batchHint}</p>
-            <p className="mono invite-code">{formatInviteCode(issued)}</p>
+        {current ? (
+          <div className="invite-current">
+            <span className="hint">{copy.current}</span>
+            <code className="invite-code">{current.code ? formatInviteCode(current.code) : `${current.prefix}-****`}</code>
+            <span className="hint">
+              {formatDateTime(current.createdAt, locale)} · {copy.uses(current._count.uses)}
+              {current.note ? ` · ${current.note}` : ""}
+            </span>
           </div>
-        ) : null}
-
-        <p className="hint">
-          {current
-            ? `${copy.current}: ${current.prefix}-**** · ${formatDateTime(current.createdAt, locale)} · ${copy.uses(current._count.uses)}`
-            : copy.none}
-        </p>
+        ) : (
+          <p className="hint">{copy.none}</p>
+        )}
 
         <form action="/api/admin/invites" method="post" className="form-foot">
           <label className="field-label" htmlFor="invite-note">

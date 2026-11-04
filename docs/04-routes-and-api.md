@@ -123,7 +123,7 @@ the server parse anything.
 | `email` | no | Valid address, ≤ 254 chars, unique |
 | `password` | yes | 8–200 characters, not trimmed. `passwordConfirm` must repeat it |
 | `next` | no | A path on this site. The value is resolved against a fixed origin and dropped unless the result keeps that origin, so `/\\evil.example`, `//host`, and control characters all fall back to `/` |
-| `invite` | yes | The current registration code from `/admin?tab=invites` or `pnpm invite`. One code is active at a time and it can be used by any number of accounts; the account records which code it used |
+| `invite` | yes | The current registration code, shown in `/admin?tab=invites` and by `pnpm invite`. One code is active at a time and it can be used by any number of accounts; the account records which code it used |
 | `agree_terms`, `agree_rules`, `agree_privacy`, `agree_moderation` | yes | Must each arrive as `yes`; the list lives in `AGREEMENT_FIELDS` |
 
 - Success: sets the session cookie, redirects to `next` or `/`.

@@ -10,8 +10,9 @@ the intent behind it.
 
 Registration is invite-only with one shared code: at most one row has
 `retiredAt = NULL`, and issuing a new code retires the previous one. The table
-stores only the code's SHA-256 hash, its first four characters, an optional note,
-and the moment it was retired. The plaintext is printed once and never stored.
+stores the code itself (so the console can show it), its SHA-256 hash for
+lookup, its first four characters, an optional note, and the moment it was
+retired.
 
 `InviteUse` records one row per account that came in through a code (`codeId`,
 `userId`, `createdAt`). It is the audit trail of who was invited, and the

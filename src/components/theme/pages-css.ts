@@ -492,6 +492,10 @@ export const pagesDCss = `
 /* Auth switch link: accent + underline on both themes. */
 .auth-link{color:var(--cyan);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
 
+/* Invite code: show the value in full, large enough to read out loud. */
+.invite-current{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:12px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:rgba(90,230,236,.05)}
+.invite-code{font-family:var(--mono);font-size:20px;line-height:1.2;letter-spacing:.16em;font-weight:600;color:var(--cyan);user-select:all}
+
 `;
 
 export const pagesBCss = `
@@ -831,8 +835,12 @@ export const pagesBCss = `
 .tw-b .board-admin .btn:hover{border-color:rgba(90,230,236,.5);color:var(--cyan)}
 
 /* Notification inbox (shared markup, per-theme skin). */
-.tw-b .inbox{position:relative;flex:none;margin-left:auto;margin-right:-12px}
-.tw-b .bar .cmd{margin-left:auto}
+.tw-b .inbox{position:relative;flex:none;margin-left:0;margin-right:-12px}
+/* Right-hand group: notices, console link, search, toggles, avatar. It starts at
+   the announcement trigger, as the light header does. */
+.tw-b .bar .ann{margin-left:auto}
+@media (max-width:900px){.tw-b .bar .ann{margin-left:0}}
+.tw-b .bar .cmd{margin-left:0}
 .tw-b .bar .inbox{margin-right:-10px}
 .tw-b .inbox-btn{position:relative;display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:4px;background:rgba(90,230,236,.03);color:var(--muted);cursor:pointer;transition:.18s}
 .tw-b .inbox-btn:hover{color:var(--cyan);border-color:rgba(90,230,236,.5)}
@@ -986,5 +994,9 @@ export const pagesBCss = `
    it the accent colour and an underline so it reads as clickable on both themes. */
 .auth-link{color:var(--cyan);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
 .tw-d .auth-link:hover{color:#0A94A6}
+
+/* Invite code: show the value in full, large enough to read out loud. */
+.invite-current{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:12px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:rgba(90,230,236,.05)}
+.invite-code{font-family:var(--mono);font-size:20px;line-height:1.2;letter-spacing:.16em;font-weight:600;color:var(--cyan);user-select:all}
 
 `;

@@ -43,7 +43,9 @@ export function AnnouncementPanel({
 }) {
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(unseen);
-  const [box, setBox] = useState<{ top: number; right: number; sheet: boolean } | null>(null);
+  const [box, setBox] = useState<{ top: number; right: number; sheet: boolean; maxHeight: number } | null>(
+    null,
+  );
   const root = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
 
@@ -56,10 +58,15 @@ export function AnnouncementPanel({
     if (!button) return;
     const rect = button.getBoundingClientRect();
     const sheet = window.innerWidth <= 900;
+    const top = Math.round(rect.bottom + 10);
     setBox({
       sheet,
-      top: Math.round(rect.bottom + 10),
+      top,
       right: Math.max(8, Math.round(window.innerWidth - rect.right)),
+      // The panel hangs below the trigger, so a fixed 72vh cap can run past the
+      // bottom of the window and cut the last announcement. Size it against the
+      // space that is actually left.
+      maxHeight: Math.max(240, window.innerHeight - top - 16),
     });
   }, []);
 
@@ -132,7 +139,9 @@ export function AnnouncementPanel({
                 aria-label={labels.title}
                 style={{
                   visibility: box ? "visible" : "hidden",
-                  ...(box?.sheet ? {} : { top: box?.top, right: box?.right, left: "auto" }),
+                  ...(box?.sheet
+                    ? {}
+                    : { top: box?.top, right: box?.right, left: "auto", maxHeight: box?.maxHeight }),
                 }}
               >
                 <div className="ann-head">

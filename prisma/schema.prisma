@@ -315,6 +315,8 @@ model Draft {
 model InviteCode {
   id        String      @id @default(cuid())
   codeHash  String      @unique
+  /// The value itself, so an administrator can read it out at any time.
+  code      String?
   prefix    String
   note      String?
   createdAt DateTime    @default(now())
