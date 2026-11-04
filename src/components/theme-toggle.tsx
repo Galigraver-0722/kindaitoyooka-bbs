@@ -48,7 +48,7 @@ export function ThemeToggle({ theme, labels }: { theme: "light" | "dark"; labels
       zIndex: "400",
       pointerEvents: "none",
       opacity: "1",
-      background: next === "dark" ? "#0c171e" : "#f8f9f5",
+      background: next === "dark" ? "#040F16" : "#F0FBFE",
     });
     document.body.appendChild(wipe);
 

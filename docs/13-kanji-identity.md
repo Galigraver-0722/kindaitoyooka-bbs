@@ -11,3 +11,7 @@ The outlined mark has no font or external asset dependency. Keep the stroke geom
 ## Layout
 
 The bulletin layout was tried and then withdrawn at the project owner's request. The previous rounded Kinjo design is restored: neighborhood illustration, discussion cards, and charts below the feed. Only the approved kanji identity remains from that experiment. `src/components/theme/logo-css.ts` styles the header and footer lockups without altering layout or palette.
+
+## Aqua refinement
+
+At the owner's request, the original AQUA POP palette, outlined controls, dot-grid background, and hard shadows are restored over the existing Kinjo structure. The kanji SVG geometry, homepage sections, discussion-card grid, activity chart controls, and chart locations are preserved. `src/components/theme/aqua-css.ts` supplies this styling layer. Dark mode returns to SIGNAL cyan and technical grid colors while keeping the same page elements. Theme-switch wipe colors match the restored canvases.

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { KinjoMark } from "@/components/kinjo-mark";
+import { aquaCss } from "@/components/theme/aqua-css";
 import { logoCss } from "@/components/theme/logo-css";
 import type { ReactNode } from "react";
 import { LanguageToggle } from "@/components/theme/language-toggle";
@@ -177,7 +178,7 @@ export async function ThemedPage({
     kinds: annCopy.kinds,
   };
 
-  const css = (theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss) + polishCss + redesignCss + kinjoCss + logoCss;
+  const css = (theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss) + polishCss + redesignCss + kinjoCss + logoCss + aquaCss;
   const wrap = theme === "light" ? "tw-d" : "tw-b";
 
   return (
