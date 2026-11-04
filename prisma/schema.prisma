@@ -53,7 +53,7 @@ model User {
   // Last time the reader opened the announcements panel. The entries live in
   // their own table, so only the moment is stored on the reader.
   announcementsSeenAt DateTime?
-  invitesUsed         InviteCode[]     @relation("InviteUses")
+  inviteUse           InviteUse?
   // Registration requires accepting the terms. The timestamp and the version
   // accepted are the evidence; accounts created before the requirement existed
   // carry null and are not re-prompted.
@@ -308,17 +308,31 @@ model Draft {
   @@index([userId, updatedAt])
 }
 
-/// A single-use registration code. Only the SHA-256 hash is stored; the prefix
-/// (first four characters) lets a maintainer tell codes apart in a list.
+/// The registration code. There is at most one active row at a time: issuing a
+/// new code retires the previous one, so the school has a single value to share
+/// and to rotate. Only the SHA-256 hash is stored; the prefix (first four
+/// characters) is what the console can show afterwards.
 model InviteCode {
-  id        String    @id @default(cuid())
-  codeHash  String    @unique
+  id        String      @id @default(cuid())
+  codeHash  String      @unique
   prefix    String
   note      String?
-  createdAt DateTime  @default(now())
-  usedAt    DateTime?
-  usedById  String?
-  usedBy    User?     @relation("InviteUses", fields: [usedById], references: [id], onDelete: SetNull)
+  createdAt DateTime    @default(now())
+  retiredAt DateTime?
+  uses      InviteUse[]
 
-  @@index([usedAt])
+  @@index([retiredAt])
+}
+
+/// One row per account that registered with the code. The code itself is
+/// reusable; this table keeps the audit trail of who came in through it.
+model InviteUse {
+  id        String     @id @default(cuid())
+  codeId    String
+  code      InviteCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  @@index([codeId])
 }

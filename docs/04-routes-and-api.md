@@ -123,14 +123,14 @@ the server parse anything.
 | `email` | no | Valid address, ≤ 254 chars, unique |
 | `password` | yes | 8–200 characters, not trimmed. `passwordConfirm` must repeat it |
 | `next` | no | A path on this site. The value is resolved against a fixed origin and dropped unless the result keeps that origin, so `/\\evil.example`, `//host`, and control characters all fall back to `/` |
-| `invite` | yes | A single-use code from `pnpm invite create`; the code is consumed in the same transaction that creates the account |
+| `invite` | yes | The current registration code from `/admin?tab=invites` or `pnpm invite`. One code is active at a time and it can be used by any number of accounts; the account records which code it used |
 | `agree_terms`, `agree_rules`, `agree_privacy`, `agree_moderation` | yes | Must each arrive as `yes`; the list lives in `AGREEMENT_FIELDS` |
 
 - Success: sets the session cookie, redirects to `next` or `/`.
 - Failure: redirects to `/register?error=<code>`; password is never echoed.
 - Bodies over 64 KB (`MAX_BODY_BYTES`) are refused with `413` before parsing.
 - Codes: `invite-required`, `invite-invalid`, `terms-required`, `invalid-input`, `password-mismatch`, `username-taken`, `email-taken`.
-- The invite code is checked before the account is created and claimed with a conditional update, so a used or unknown code returns `invite-invalid`.
+- The invite code is checked before the account is created; a retired or unknown code returns `invite-invalid`. A successful registration writes an `InviteUse` row in the same transaction.
 - A request that omits any of the four fields is refused with `terms-required`, so the browser's `required` attributes are not the control.
 - Acceptance is stored on the account as `termsAcceptedAt`, plus `termsVersion` (the `POLICY_UPDATES.terms` value at that moment) and `acceptedPolicies`, which names the version of each document: `terms:<v>;rules:<v>;privacy:<v>;moderation:<v>`.
 

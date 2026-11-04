@@ -1,59 +1,50 @@
 /**
- * Issue, list and revoke registration codes.
+ * Issue, inspect and stop the registration code.
  *
- *   pnpm invite create 5 "1-A 2026-11"
- *   pnpm invite list
- *   pnpm invite revoke ABCD
+ *   pnpm invite                 # show the active code's prefix, note and uses
+ *   pnpm invite new "4月"       # issue a new code (the old one stops working)
+ *   pnpm invite stop            # stop the current code
  *
- * Codes are printed once, in plaintext, and only their SHA-256 hash is stored.
+ * Registration uses one shared code, so the plaintext is printed once when it
+ * is issued; only its SHA-256 hash is stored. The same actions exist in the
+ * console under /admin?tab=invites.
  */
-import { createInviteCodes, formatInviteCode, listInviteCodes, revokeInviteCode } from "../src/lib/invites";
 import { prisma } from "../src/lib/db";
+import {
+  activeInviteCode,
+  formatInviteCode,
+  issueInviteCode,
+  listInviteUses,
+  retireActiveInviteCode,
+} from "../src/lib/invites";
 
 async function main() {
   const [action, ...rest] = process.argv.slice(2);
 
-  if (action === "create") {
-    const count = Number(rest[0] ?? "1");
-    if (!Number.isInteger(count) || count < 1 || count > 100) {
-      console.error("usage: pnpm invite create <1-100> [note]");
-      process.exit(1);
-    }
-    const note = rest.slice(1).join(" ") || null;
-    const codes = await createInviteCodes(count, note);
-    console.log(`created ${codes.length} invite code(s). Shown once; hashes only are stored.`);
-    for (const code of codes) {
-      console.log(`  ${formatInviteCode(code)}`);
-    }
+  if (action === "new" || action === "create") {
+    const note = rest.join(" ") || null;
+    const code = await issueInviteCode(note);
+    console.log(`active code: ${formatInviteCode(code)}`);
+    console.log("The previous code no longer works. This value is shown once.");
     return;
   }
 
-  if (action === "list") {
-    const rows = await listInviteCodes();
-    if (rows.length === 0) {
-      console.log("no invite codes yet");
-      return;
-    }
-    for (const row of rows) {
-      const state = row.usedAt ? `used ${row.usedAt.toISOString()}` : "unused";
-      console.log(`${row.prefix}-****  ${state}  ${row.note ?? ""}`);
-    }
+  if (action === "stop" || action === "revoke") {
+    const stopped = await retireActiveInviteCode();
+    console.log(stopped ? "current code stopped" : "no active code");
     return;
   }
 
-  if (action === "revoke") {
-    const prefix = rest[0];
-    if (!prefix) {
-      console.error("usage: pnpm invite revoke <prefix>");
-      process.exit(1);
-    }
-    const removed = await revokeInviteCode(prefix);
-    console.log(removed === 0 ? "no unused code with that prefix" : `revoked ${removed} code(s)`);
+  const current = await activeInviteCode();
+  if (!current) {
+    console.log("no active code; issue one with `pnpm invite new`");
     return;
   }
-
-  console.error("usage: pnpm invite <create|list|revoke>");
-  process.exit(1);
+  console.log(`active code: ${current.prefix}-****  ${current.note ?? ""}`);
+  console.log(`issued ${current.createdAt.toISOString()}, ${current._count.uses} account(s)`);
+  for (const use of await listInviteUses(10)) {
+    console.log(`  ${use.createdAt.toISOString()}  ${use.user.username}`);
+  }
 }
 
 main()

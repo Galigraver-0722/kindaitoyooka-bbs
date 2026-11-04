@@ -2,7 +2,7 @@ import { createSession, hashPassword, SESSION_COOKIE, sessionCookieOptions } fro
 import { prisma } from "@/lib/db";
 import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 import { POLICY_UPDATES } from "@/lib/policies";
-import { hashInviteCode, isValidInviteCode, normalizeInviteCode } from "@/lib/invites";
+import { findActiveCodeByHash, hashInviteCode, isValidInviteCode, normalizeInviteCode } from "@/lib/invites";
 import { checkRateLimit, RATE_LIMITS, requestIp } from "@/lib/rate-limit";
 import {
   AGREEMENT_FIELDS,
@@ -100,10 +100,9 @@ export async function POST(request: Request) {
   const userCount = await prisma.user.count();
   const role = userCount === 0 ? "ADMIN" : "STUDENT";
 
-  const inviteRow = await prisma.inviteCode.findFirst({
-    where: { codeHash: hashInviteCode(invite), usedAt: null },
-    select: { id: true },
-  });
+  // The code is shared and reusable: it only has to be the one currently
+  // active. Registration records which code was used, for the audit trail.
+  const inviteRow = await findActiveCodeByHash(hashInviteCode(invite));
   if (!inviteRow) {
     return failure(request, "invite-invalid", next);
   }
@@ -131,15 +130,9 @@ export async function POST(request: Request) {
     },
     select: { id: true },
     });
-    // Single use: the update is conditional on the row still being unused, so
-    // two requests racing on the same code cannot both succeed.
-    const claimed = await tx.inviteCode.updateMany({
-      where: { id: inviteRow.id, usedAt: null },
-      data: { usedAt: new Date(), usedById: created.id },
+    await tx.inviteUse.create({
+      data: { codeId: inviteRow.id, userId: created.id },
     });
-    if (claimed.count !== 1) {
-      throw new Error("invite-already-used");
-    }
     return created;
     });
   } catch {

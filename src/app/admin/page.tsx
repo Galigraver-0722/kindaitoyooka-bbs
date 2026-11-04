@@ -9,7 +9,7 @@ import { getCurrentUser, isAdmin, isModerator } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { getLocale, t } from "@/lib/i18n";
-import { formatInviteCode, listInviteCodes } from "@/lib/invites";
+import { activeInviteCode, formatInviteCode, listInviteUses } from "@/lib/invites";
 import { errorMessage, noticeMessage } from "@/lib/messages";
 import type { Locale } from "@/lib/locales";
 import { getTheme } from "@/lib/theme";
@@ -802,11 +802,8 @@ async function InvitesTab({
   copy: ReturnType<typeof t>["admin"]["invites"];
   locale: Locale;
 }) {
-  const [codes, jar] = await Promise.all([listInviteCodes(), cookies()]);
-  const batch = (jar.get("invite_batch")?.value ?? "")
-    .split(",")
-    .map((code) => code.trim())
-    .filter(Boolean);
+  const [current, uses, jar] = await Promise.all([activeInviteCode(), listInviteUses(), cookies()]);
+  const issued = jar.get("invite_code")?.value;
 
   return (
     <>
@@ -814,56 +811,52 @@ async function InvitesTab({
         <h2>{copy.title}</h2>
         <p className="hint">{copy.hint}</p>
 
-        {batch.length > 0 ? (
+        {issued ? (
           <div className="notice success">
             <p>{copy.batchHint}</p>
-            <ul className="invite-batch">
-              {batch.map((code) => (
-                <li key={code}>
-                  <code>{formatInviteCode(code)}</code>
-                </li>
-              ))}
-            </ul>
+            <p className="mono invite-code">{formatInviteCode(issued)}</p>
           </div>
         ) : null}
 
+        <p className="hint">
+          {current
+            ? `${copy.current}: ${current.prefix}-**** · ${formatDateTime(current.createdAt, locale)} · ${copy.uses(current._count.uses)}`
+            : copy.none}
+        </p>
+
         <form action="/api/admin/invites" method="post" className="form-foot">
-          <label className="field-label" htmlFor="invite-count">
-            {copy.count}
-          </label>
-          <input id="invite-count" name="count" type="number" min={1} max={50} defaultValue={5} />
           <label className="field-label" htmlFor="invite-note">
             {copy.note}
           </label>
           <input id="invite-note" name="note" maxLength={120} placeholder={copy.notePlaceholder} />
           <button className="btn btn-p" type="submit">
-            {copy.create}
+            {current ? copy.replace : copy.create}
           </button>
         </form>
+
+        {current ? (
+          <form action="/api/admin/invites/retire" method="post">
+            <button className="btn ghost" type="submit">
+              {copy.retire}
+            </button>
+          </form>
+        ) : null}
       </div>
 
       <div className="form-card">
-        <h2>{copy.listTitle}</h2>
-        {codes.length === 0 ? (
-          <p className="hint">{copy.empty}</p>
+        <h2>{copy.usesTitle}</h2>
+        {uses.length === 0 ? (
+          <p className="hint">{copy.usesEmpty}</p>
         ) : (
           <ul className="board-admin">
-            {codes.map((code) => (
-              <li key={code.id}>
+            {uses.map((entry) => (
+              <li key={entry.id}>
                 <div className="ba-main">
-                  <span className="mono">{code.prefix}-****</span>
+                  <span>{entry.user.username}</span>
                   <span className="ba-meta">
-                    {code.note ?? "—"} · {formatDateTime(code.createdAt, locale)} ·{" "}
-                    {code.usedAt ? `${copy.used} ${code.usedBy?.username ?? ""}` : copy.unused}
+                    {entry.code.prefix}-**** · {formatDateTime(entry.createdAt, locale)}
                   </span>
                 </div>
-                {code.usedAt ? null : (
-                  <form action={`/api/admin/invites/${code.id}/delete`} method="post">
-                    <button className="btn ghost" type="submit">
-                      {copy.revoke}
-                    </button>
-                  </form>
-                )}
               </li>
             ))}
           </ul>

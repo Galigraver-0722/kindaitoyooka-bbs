@@ -174,7 +174,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "3. What is stored",
           bullets: [
             "Your account: username (public), an optional email address (never shown to other users), a password hash made with scrypt, and the colours and bio you choose for your profile.",
-            "The invite code you registered with: the first four characters, the moment it was used, and the account that used it. Only a SHA-256 hash of the code is stored; the code itself is not.",
+            "The invite code you registered with: the first four characters and when you registered with it. Only a SHA-256 hash of the code is stored; the code itself is not.",
             "When you registered, the moment you accepted the four documents and the version of each one: terms, rules, privacy notice, moderation policy. This is the record that you consented.",
             "Your content: threads, replies, titles, tags, likes, bookmarks, and the boards you open. Public unless a moderator removes them.",
             "Read markers: a timestamp per thread, used for the New badge. They store a time and a thread id, nothing else.",
@@ -419,7 +419,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           bullets: [
             "The site is for students and staff of the school. Guests may read public threads without an account.",
             "If you are under 18, use the site with the knowledge of a teacher or your guardian.",
-            "Registration requires a single-use invite code issued by a teacher or the maintainer. The code is recorded against the account that used it. The site cannot check school membership, so eligibility rests on what each person states; a false statement is a breach of these terms.",
+            "Registration requires the current invite code, issued by a teacher or the maintainer. One code is active at a time and the same code can be used by any number of accounts; each account records which code it used. The site cannot check school membership, so eligibility rests on what each person states; a false statement is a breach of these terms.",
             "One account per person. Opening another account to get around a removal, a limit, or a suspension is a breach of these terms.",
           ],
         },
@@ -671,7 +671,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "3. 保存する情報",
           bullets: [
             "アカウント：ユーザー名（公開）、任意のメールアドレス（他の利用者には表示しません）、scrypt により生成したパスワードハッシュ、プロフィールに設定した色および自己紹介。",
-            "登録に使用した招待コード：コードの先頭 4 文字、使用した日時、使用したアカウント。コード自体は SHA-256 ハッシュのみを保存し、平文は保存しません。",
+            "登録に使用した招待コード：コードの先頭 4 文字と、そのコードで登録した日時。コード自体は SHA-256 ハッシュのみを保存し、平文は保存しません。",
             "登録時に 4 つの文書へ同意した日時、および文書ごとの版。同意の記録として保存します。",
             "投稿した内容：スレッド、返信、タイトル、タグ、いいね、保存、開いたボード。モデレーターが削除しない限り公開されます。",
             "既読の記録：スレッドごとの時刻。「新着」の表示に使用し、時刻とスレッド ID のみを保存します。",
@@ -916,7 +916,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           bullets: [
             "本サイトを利用できるのは、本校の生徒および教職員です。公開されているスレッドは、アカウントがなくても閲覧できます。",
             "18 歳未満の方は、教員または保護者が利用を認識している状態でご利用ください。",
-            "登録には、教員または保守担当が発行する招待コードが必要です。コードは 1 回だけ使用でき、使用したコードはアカウントとともに記録します。本サイトは学校への所属を確認できないため、利用資格は利用者自身の申告に基づきます。虚偽の申告は本規約違反となります。",
+            "登録には、教員または保守担当が発行する招待コードが必要です。コードは何度でも使用でき、有効なコードは常に 1 つです。同じコードで登録したアカウントは記録します。本サイトは学校への所属を確認できないため、利用資格は利用者自身の申告に基づきます。虚偽の申告は本規約違反となります。",
             "アカウントは 1 人 1 つです。削除、回数制限、利用停止を回避するために別のアカウントを作成することは、本規約違反です。",
           ],
         },

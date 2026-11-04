@@ -2,9 +2,10 @@ import { createHash, randomInt } from "node:crypto";
 import { prisma } from "@/lib/db";
 
 /**
- * Registration is invite-only. A code is eight characters drawn from an
- * alphabet without look-alikes (no 0/O, 1/I/L), so a code read aloud or copied
- * off a blackboard is unambiguous.
+ * Registration uses one code, shared and reusable. A code is eight characters
+ * drawn from an alphabet without look-alikes (no 0/O, 1/I/L), so a value read
+ * aloud in class is unambiguous. Issuing a new code retires the previous one:
+ * the school always has exactly one value to hand out.
  */
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 const CODE_LENGTH = 8;
@@ -33,55 +34,60 @@ export function generateInviteCode(): string {
   return out;
 }
 
-/** Create `count` unused codes and return them in plaintext, once. */
-export async function createInviteCodes(count: number, note: string | null): Promise<string[]> {
-  const codes: string[] = [];
-  for (let i = 0; i < count; i += 1) {
-    const code = generateInviteCode();
-    await prisma.inviteCode.create({
-      data: {
-        codeHash: hashInviteCode(code),
-        prefix: code.slice(0, 4),
-        note,
-      },
-    });
-    codes.push(code);
-  }
-  return codes;
+/** Issue the active code, retiring whatever was active before. Plaintext is returned once. */
+export async function issueInviteCode(note: string | null): Promise<string> {
+  const code = generateInviteCode();
+  await prisma.$transaction([
+    prisma.inviteCode.updateMany({
+      where: { retiredAt: null },
+      data: { retiredAt: new Date() },
+    }),
+    prisma.inviteCode.create({
+      data: { codeHash: hashInviteCode(code), prefix: code.slice(0, 4), note },
+    }),
+  ]);
+  return code;
 }
 
-export async function listInviteCodes(): Promise<
-  {
-    id: string;
-    prefix: string;
-    note: string | null;
-    createdAt: Date;
-    usedAt: Date | null;
-    usedBy: { username: string } | null;
-  }[]
-> {
-  return prisma.inviteCode.findMany({
+export async function activeInviteCode() {
+  return prisma.inviteCode.findFirst({
+    where: { retiredAt: null },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
       prefix: true,
       note: true,
       createdAt: true,
-      usedAt: true,
-      usedBy: { select: { username: true } },
+      _count: { select: { uses: true } },
     },
   });
 }
 
-export async function revokeInviteCode(prefix: string): Promise<number> {
-  const result = await prisma.inviteCode.deleteMany({
-    where: { prefix: prefix.toUpperCase(), usedAt: null },
+export async function findActiveCodeByHash(hash: string) {
+  return prisma.inviteCode.findFirst({
+    where: { codeHash: hash, retiredAt: null },
+    select: { id: true, prefix: true },
   });
-  return result.count;
 }
 
-/** Delete an unused code by id. A used code stays as the record of the account. */
-export async function revokeInviteById(id: string): Promise<boolean> {
-  const result = await prisma.inviteCode.deleteMany({ where: { id, usedAt: null } });
-  return result.count === 1;
+export async function retireActiveInviteCode(): Promise<boolean> {
+  const result = await prisma.inviteCode.updateMany({
+    where: { retiredAt: null },
+    data: { retiredAt: new Date() },
+  });
+  return result.count > 0;
+}
+
+/** Accounts that came in through the code, newest first. */
+export async function listInviteUses(limit = 20) {
+  return prisma.inviteUse.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: {
+      id: true,
+      createdAt: true,
+      user: { select: { username: true } },
+      code: { select: { prefix: true } },
+    },
+  });
 }

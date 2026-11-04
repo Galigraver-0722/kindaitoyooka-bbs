@@ -229,9 +229,9 @@ copy. Copying a live `.db` file with `cp` can capture a half-written page.
 | Command | What it does |
 | --- | --- |
 | `pnpm backup [dir]` | Write `bbs-<timestamp>.db`, check integrity, print SHA-256 and row counts |
-| `pnpm invite create <n> [note]` | Print `n` single-use registration codes once; only their hashes are stored |
-| `pnpm invite list` | List code prefixes and whether each has been used |
-| `pnpm invite revoke <prefix>` | Delete an unused code by its prefix |
+| `pnpm invite` | Show the active code's prefix, note, and recent accounts |
+| `pnpm invite new [note]` | Issue a new shared code, retiring the previous one; the value is printed once |
+| `pnpm invite stop` | Stop the current code; nobody can register until a new one is issued |
 | `pnpm delete-account <username>` | Anonymise an account (keeps posts, clears email/password, deletes sessions) |
 | `pnpm purge` | Apply the retention schedule: 7-day excerpts, 90-day deleted bodies, 1-year reports, 3-year audit rows, expired sessions |
 | `pnpm verify-backup <file>` | Re-check integrity and show counts before trusting a file |

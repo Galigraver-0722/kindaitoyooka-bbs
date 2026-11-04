@@ -6,14 +6,16 @@ The schema lives in `prisma/schema.prisma` and is the source of truth. This docu
 the intent behind it.
 
 
-### `InviteCode`
+### `InviteCode` and `InviteUse`
 
-Registration is invite-only. A code is eight characters from an alphabet without
-look-alikes, printed once by `pnpm invite create`. The table stores only its
-SHA-256 hash, the first four characters for identification, an optional note,
-and the account and moment it was used. A code is consumed inside the same
-transaction that creates the account, so two requests racing on one code cannot
-both succeed.
+Registration is invite-only with one shared code: at most one row has
+`retiredAt = NULL`, and issuing a new code retires the previous one. The table
+stores only the code's SHA-256 hash, its first four characters, an optional note,
+and the moment it was retired. The plaintext is printed once and never stored.
+
+`InviteUse` records one row per account that came in through a code (`codeId`,
+`userId`, `createdAt`). It is the audit trail of who was invited, and the
+console shows the most recent entries next to the active code.
 
 ## 1. Entity relationship diagram
 

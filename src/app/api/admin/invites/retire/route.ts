@@ -2,12 +2,12 @@ import { recordAudit } from "@/lib/audit";
 import { getCurrentUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
-import { revokeInviteById } from "@/lib/invites";
+import { retireActiveInviteCode } from "@/lib/invites";
 
 const BACK = "/admin?tab=invites";
 
-/** Revoke a code that has not been used. Used codes are kept as evidence. */
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+/** Stop the current code. Nobody can register until a new one is issued. */
+export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
   }
@@ -23,9 +23,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return seeOther(request, `${BACK}&error=forbidden`);
   }
 
-  const { id } = await params;
-  const removed = await revokeInviteById(id);
-  if (!removed) {
+  const retired = await retireActiveInviteCode();
+  if (!retired) {
     return seeOther(request, `${BACK}&error=invite-not-found`);
   }
 
@@ -33,7 +32,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     actorId: user.id,
     action: "invite.revoke",
     targetType: "invite",
-    targetId: id,
+    targetId: "active",
   });
 
   return seeOther(request, `${BACK}&notice=invite-revoked`);

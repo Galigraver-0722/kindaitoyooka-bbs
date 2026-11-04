@@ -3,14 +3,14 @@ import { recordAudit } from "@/lib/audit";
 import { getCurrentUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
-import { createInviteCodes } from "@/lib/invites";
+import { issueInviteCode } from "@/lib/invites";
 
 const BACK = "/admin?tab=invites";
 
 /**
- * Create registration codes from the console. The plaintext codes are shown
- * once: they go into a short-lived HttpOnly cookie so that the redirect does not
- * put them in the URL, where they would land in history and logs.
+ * Issue the registration code. Only one code is active at a time, so issuing a
+ * new one retires the old one. The plaintext goes into a short-lived HttpOnly
+ * cookie so it is shown once, without landing in the URL or history.
  */
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
@@ -29,21 +29,19 @@ export async function POST(request: Request) {
   }
 
   const data = await request.formData();
-  const rawCount = String(data.get("count") ?? "1");
-  const count = Math.min(50, Math.max(1, Number.parseInt(rawCount, 10) || 1));
   const note = String(data.get("note") ?? "").trim().slice(0, 120) || null;
 
-  const codes = await createInviteCodes(count, note);
+  const code = await issueInviteCode(note);
   await recordAudit(prisma, {
     actorId: user.id,
     action: "invite.create",
     targetType: "invite",
-    targetId: codes[0] ? `batch:${count}` : `batch:${count}`,
-    details: { count, note },
+    targetId: "active",
+    details: { note },
   });
 
   const jar = await cookies();
-  jar.set("invite_batch", codes.join(","), {
+  jar.set("invite_code", code, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
