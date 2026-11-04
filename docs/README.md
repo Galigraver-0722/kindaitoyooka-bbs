@@ -31,3 +31,5 @@ Read in this order when you are new to the project.
 - [11 · Interface design](11-interface-design.md)
 
 - [12 · Kinjo identity](12-kinjo-identity.md)
+
+- [13 · Kanji identity and bulletin layout](13-kanji-identity.md)

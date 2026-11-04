@@ -30,3 +30,5 @@
 - [11 · インターフェース設計](11-interface-design.md)
 
 - [12 · Kinjoの名前とデザイン](12-kinjo-identity.md)
+
+- [13 · 漢字のロゴと掲示板レイアウト](13-kanji-identity.md)

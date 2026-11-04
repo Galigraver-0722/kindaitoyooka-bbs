@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { KinjoMark } from "@/components/kinjo-mark";
+import { bulletinCss } from "@/components/theme/bulletin-css";
 import type { ReactNode } from "react";
 import { LanguageToggle } from "@/components/theme/language-toggle";
 import { NotificationInbox, type InboxItem } from "@/components/theme/notification-inbox";
@@ -175,7 +177,7 @@ export async function ThemedPage({
     kinds: annCopy.kinds,
   };
 
-  const css = (theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss) + polishCss + redesignCss + kinjoCss;
+  const css = (theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss) + polishCss + redesignCss + kinjoCss + bulletinCss;
   const wrap = theme === "light" ? "tw-d" : "tw-b";
 
   return (
@@ -188,9 +190,9 @@ export async function ThemedPage({
       <a className="skip-link" href="#page-content">{t(locale).commons.skip}</a>
       <ScrollHeader>
         <header className="site-nav">
-          <Link className="site-brand" href="/" aria-label={copy.home}>
-            <span className="brand-symbol" aria-hidden="true">近</span>
-            <span className="kinjo-wordmark">kinjo<span className="brand-sub">{t(locale).commons.brand}</span></span>
+          <Link className="site-brand" href="/" aria-label={`Kinjo · 近所 · ${copy.home}`}>
+            <KinjoMark className="brand-mark" />
+            <span className="kanji-lockup"><b lang="ja">近所</b><span>kinjo</span></span>
           </Link>
           <form className="nav-search" action="/" method="get" role="search">
             {searchIcon}
@@ -218,7 +220,7 @@ export async function ThemedPage({
 
       {children}
       <footer className="commons-footer">
-        <div><strong>Kinjo · 近所</strong><p>{t(locale).footer.disclaimer}</p></div>
+        <div><div className="footer-lockup"><KinjoMark className="footer-mark" /><strong>近所 <span>kinjo</span></strong></div><p>{t(locale).footer.disclaimer}</p></div>
         <nav aria-label={t(locale).footer.policies}>
           <Link href="/about">{t(locale).kinjo.about}</Link>
           <Link href="/terms">{t(locale).footer.terms}</Link>
