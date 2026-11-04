@@ -43,6 +43,10 @@ export default async function RegisterPage({
         <form className="form-card" action="/api/auth/register" method="post">
           <input type="hidden" name="next" value={nextPath} />
 
+          <label className="field-label" htmlFor="invite">{copy.invite}</label>
+          <input id="invite" name="invite" autoComplete="one-time-code" placeholder="ABCD-2345" required />
+          <p className="hint">{copy.inviteHint}</p>
+
           <label className="field-label" htmlFor="username">{copy.username}</label>
           <input id="username" name="username" autoComplete="username" placeholder="hanako_2026" required />
           <p className="hint">{copy.usernameHint}</p>

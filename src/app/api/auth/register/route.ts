@@ -2,6 +2,7 @@ import { createSession, hashPassword, SESSION_COOKIE, sessionCookieOptions } fro
 import { prisma } from "@/lib/db";
 import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 import { POLICY_UPDATES } from "@/lib/policies";
+import { hashInviteCode, isValidInviteCode, normalizeInviteCode } from "@/lib/invites";
 import { checkRateLimit, RATE_LIMITS, requestIp } from "@/lib/rate-limit";
 import {
   AGREEMENT_FIELDS,
@@ -40,6 +41,10 @@ export async function POST(request: Request) {
   const confirmValue = data.get("passwordConfirm");
   const passwordConfirm = typeof confirmValue === "string" ? confirmValue : "";
   const next = safeNextPath(formText(data, "next"), "/");
+  // Membership is invite-only. The code is a product decision from 2026-11-04:
+  // the school is not able to check affiliation, so a maintainer or teacher
+  // hands out single-use codes instead.
+  const invite = normalizeInviteCode(formText(data, "invite"));
   // The browser marks all four boxes as required, but that is a convenience: the
   // server decides. A request that skips any of them is refused here.
   const agreements = Object.fromEntries(
@@ -58,6 +63,10 @@ export async function POST(request: Request) {
 
   if (missing.length > 0) {
     return failure(request, "terms-required", next);
+  }
+
+  if (!isValidInviteCode(invite)) {
+    return failure(request, invite === "" ? "invite-required" : "invite-invalid", next);
   }
 
   if (
@@ -91,7 +100,18 @@ export async function POST(request: Request) {
   const userCount = await prisma.user.count();
   const role = userCount === 0 ? "ADMIN" : "STUDENT";
 
-  const user = await prisma.user.create({
+  const inviteRow = await prisma.inviteCode.findFirst({
+    where: { codeHash: hashInviteCode(invite), usedAt: null },
+    select: { id: true },
+  });
+  if (!inviteRow) {
+    return failure(request, "invite-invalid", next);
+  }
+
+  let user: { id: string };
+  try {
+    user = await prisma.$transaction(async (tx) => {
+    const created = await tx.user.create({
     data: {
       username,
       email: email || null,
@@ -110,7 +130,21 @@ export async function POST(request: Request) {
       }).join(";"),
     },
     select: { id: true },
-  });
+    });
+    // Single use: the update is conditional on the row still being unused, so
+    // two requests racing on the same code cannot both succeed.
+    const claimed = await tx.inviteCode.updateMany({
+      where: { id: inviteRow.id, usedAt: null },
+      data: { usedAt: new Date(), usedById: created.id },
+    });
+    if (claimed.count !== 1) {
+      throw new Error("invite-already-used");
+    }
+    return created;
+    });
+  } catch {
+    return failure(request, "invite-invalid", next);
+  }
 
   const { token, expiresAt } = await createSession(user.id);
   const response = seeOther(request, next);

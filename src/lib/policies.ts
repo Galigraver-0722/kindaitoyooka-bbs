@@ -21,14 +21,14 @@ export type PolicyKey = "rules" | "privacy" | "moderation" | "terms";
  * judge whether a promise they relied on has been rewritten.
  */
 export const POLICY_UPDATES: Record<PolicyKey, string> = {
-  rules: "2026-10-27",
-  privacy: "2026-10-27",
-  moderation: "2026-10-27",
-  terms: "2026-10-27",
+  rules: "2026-11-04",
+  privacy: "2026-11-04",
+  moderation: "2026-11-04",
+  terms: "2026-11-04",
 };
 
 /** The newest revision in the set; equal to the latest value in POLICY_UPDATES. */
-export const POLICY_UPDATED = "2026-10-27";
+export const POLICY_UPDATED = "2026-11-04";
 
 /**
  * Public policy text lives in code so the English and Japanese editions change
@@ -64,14 +64,14 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           bullets: [
             "Do not post anyone's real name, address, phone number, email address, class schedule, student number, photographs, family details, health information, or club membership without their permission.",
             "Do not try to work out who is posting under a pseudonym, and do not publish a guess. A pseudonym is there so that a question can be asked at all.",
-            "Do not screenshot or forward private messages, and do not share someone's account details.",
+            "This site has no private messaging. Do not bring a private exchange from outside the site (another service, email) into the site as a screenshot or forward without the other person's consent. Do not share someone's account details.",
             "Your own username is public. Your email address is optional and is never shown to other users.",
           ],
         },
         {
           heading: "4. No sexual content, and nothing sexual about minors",
           paragraphs: [
-            "Sexual content is not allowed anywhere on this site. Content that sexualises a minor is not allowed in any form, including jokes, links, and descriptions.",
+            "Sexual or titillating content, and any sexualisation of a minor, may not be posted anywhere on this site. Questions about biology or health classes, medical questions about sexual health, and academic discussion of literature or social phenomena may be posted for educational purposes only. Even for an educational purpose, sexualised depictions of minors, sexual images or descriptions, and obscene expression are prohibited. If you are unsure, ask a teacher or the maintainer before posting.",
             "If something of that kind appears, report it immediately. It is treated as an emergency case rather than an ordinary report.",
           ],
         },
@@ -88,7 +88,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           bullets: [
             "Do not share exam questions or answers while an exam is running.",
             "Do not impersonate a teacher, a student, a club officer, a moderator, or the site itself.",
-            "Ask about assignments and study methods; do not ask someone else to do the work for you.",
+            "You may discuss assignments, explain them to each other, teach each other, and review drafts together. Having someone else complete your assignment for you, and submitting someone else's work as your own, are prohibited.",
             "When you use someone else's explanation or source, say where it came from.",
           ],
         },
@@ -132,7 +132,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "11. Reports are a feature, not a weapon",
           paragraphs: [
             "The Report button reaches the moderators. The reported person is not told who filed the report.",
-            "Do not report an opinion you merely dislike, and do not report several times to push a post up the queue. Reporting in bad faith is itself a breach.",
+            "A good-faith report that turns out to be mistaken is never sanctioned. Thin or frequent reports may be noted and discussed with you, but are not normally sanctioned. Repeatedly reporting something you know to be false in order to harm someone is a breach of these rules.",
             "Do not retaliate against someone who reported you, and do not retaliate against a moderator for a decision.",
           ],
         },
@@ -163,8 +163,10 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
         {
           heading: "2. Who is responsible",
           bullets: [
-            "The student maintainer operates the site and has direct access to the database for operation and repair.",
-            "The teacher advisor can ask the maintainer for specific records when there is a safety concern. There is no bulk staff access and no staff account role.",
+            "The site is run by three roles. One person may hold more than one of them.",
+            "Project maintainer: software maintenance, server operation, direct database access, and backups. Does not decide removals or suspensions.",
+            "Administrator: handles reports, removes posts, suspends accounts, and changes roles. Has no direct database access and takes no backups.",
+            "Faculty contact (the teacher advisor): the channel for safety concerns, serious disputes, and coordination with the school. Does not handle the daily queue, holds no console permissions, and may request individual records. That role is the site's safety contact, not an unlimited background administrator.",
             "There is no data protection officer, and no company operates the site. For any request in this notice, contact the maintainer through the Site Feedback board or the address on the project's repository page.",
           ],
         },
@@ -172,13 +174,14 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "3. What is stored",
           bullets: [
             "Your account: username (public), an optional email address (never shown to other users), a password hash made with scrypt, and the colours and bio you choose for your profile.",
+            "The invite code you registered with: the first four characters, the moment it was used, and the account that used it. Only a SHA-256 hash of the code is stored; the code itself is not.",
             "When you registered, the moment you accepted the four documents and the version of each one: terms, rules, privacy notice, moderation policy. This is the record that you consented.",
             "Your content: threads, replies, titles, tags, likes, bookmarks, and the boards you open. Public unless a moderator removes them.",
             "Read markers: a timestamp per thread, used for the New badge. They store a time and a thread id, nothing else.",
             "Two inbox timestamps: when you last opened the notification panel and when you last opened the announcements panel. The lists themselves are computed from other rows; only the moment is stored.",
             "Reports you file: the reason, the post, and whether the report came from a person or from the automatic word check. Moderators see the report; the reported person does not see who filed it.",
             "Moderation records: the audit log stores the account, the action, the target, the time, and an optional detail for every removal, lock, report decision, suspension, role change, and board archive.",
-            "Refused writes: when the word check stops a post, the site stores your account, the page you were writing on, which field matched, the matched word, the first 200 characters of the text, and the time. The post itself is not created. Moderators see this list; other readers do not.",
+            "Refused writes: when the word check stops a post, the site stores your account, the page you were writing on, which field matched, the matched word, the first 40 characters of the text, and the time. The post itself is not created. The excerpt is deleted within 7 days. Moderators see this list; other readers do not.",
             "Sessions: a SHA-256 hash of the session token, its expiry, and when it was created. The token itself is never stored.",
             "Rate-limit rows: one row per time window, holding a key, a count, and a reset time. When the deployment runs behind a reverse proxy, the key includes the client IP address; without a proxy, every request shares a single key. Expired rows are deleted, and the longest window is 24 hours.",
           ],
@@ -187,8 +190,8 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "4. What is not stored",
           bullets: [
             "No real name, grade, class, birthday, photograph, student number, or address is required or requested.",
-            "No IP address is stored except inside a rate-limit key, as described above.",
-            "The site has no analytics, advertising identifier, third-party tracking script, or social plug-in.",
+            "The application stores an IP address only inside a rate-limit key, and only when the deployment runs behind a reverse proxy. Those rows expire within 24 hours. No IP address is stored with posts, accounts, reports, or audit entries. The server keeps no access log, and the application writes no IP address to its own output. A backup can contain the rate-limit rows for the 30-day backup window. Network logs kept by the hosting provider follow that provider's terms.",
+            "The site loads no external fonts, CDN assets, analytics, advertising, images, or JavaScript: everything needed to render a page comes from the site's own server. Hosting-provider traffic at the network layer follows that provider's terms.",
             "No private messages, no file uploads, and no images: the site accepts text only.",
             "No profile of your interests or behaviour is built, and nothing is sold or shared for advertising.",
           ],
@@ -208,7 +211,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
             "`toyooka_session` keeps you signed in. It is HttpOnly, SameSite=Lax, Secure in production, and expires after 30 days. Signing out deletes the server-side session.",
             "`locale` remembers whether you chose Japanese or English. It lasts one year and carries no identity.",
             "`theme` remembers which of the two designs you chose. It lasts one year, is set by the page rather than the server, and carries no identity.",
-            "There are no other cookies and no third-party requests. Clearing cookies signs you out and resets both choices.",
+            "There are no other cookies. Clearing cookies signs you out and resets both choices.",
           ],
         },
         {
@@ -224,12 +227,14 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
         {
           heading: "8. How long it is kept",
           bullets: [
-            "Active threads and replies stay until you ask for removal or the site is retired.",
-            "Removed content is soft-deleted: the text stays in the database so a decision can be reviewed, and the page shows a placeholder. No purge period has been agreed yet, and the code does not enforce one.",
-            "Sessions expire after 30 days. Signing out, changing a password through the maintainer, and suspension all delete the account's sessions.",
+            "Retention is set per data type. Sessions expire after 30 days; signing out, a reset by the maintainer, and a suspension all delete the account's sessions.",
             "Rate-limit rows are deleted when their window expires; the longest window is 24 hours.",
-            "Reports and audit rows are kept while they are useful for safety and accountability.",
-            "Backups are files taken by the operator. A copy of your content inside a backup remains until that backup is deleted, on whatever schedule the operator keeps. This notice cannot promise that schedule for the operator.",
+            "Refused-write excerpts are deleted within 7 days.",
+            "Reports are kept for 1 year, and audit rows for 3 years, as the period needed to review a decision.",
+            "The body of a deleted post stays in the database so that a decision can be reviewed, and is erased 90 days after deletion; the page keeps only the placeholder.",
+            "Active threads and replies stay until you ask for removal or the site is retired.",
+            "Deleting an account does not delete its posts: they stay public and the author is shown as a deleted user. You may ask for individual posts to be removed.",
+            "Backups are files taken by the operator and rotated after 30 days. A copy of your content inside a backup remains until that backup is deleted. Hosting-provider copies follow the provider's terms.",
           ],
         },
         {
@@ -323,10 +328,10 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "6. Automatic flags",
           bullets: [
             "Every write is checked: thread titles, bodies, tags, replies, board names, board descriptions, and profile bios. Matching runs on normalised text: full-width and half-width forms count as the same word, and Japanese matching drops spaces and punctuation, so 「死 ね」 is still caught. English keeps word boundaries, so a deliberately spaced spelling can slip past; report it when you see one.",
-            "The list has two layers. A short blocklist refuses the post outright: terms whose only ordinary use is abusive, such as a direct death threat, sexual violence, sexual content involving minors, or a slur. The author is told the wording cannot be posted, and no post is created. A short excerpt is kept for the moderator record, as the privacy notice describes.",
+            "The list has two layers. A short blocklist refuses the post outright: terms whose only ordinary use is abusive, such as a direct death threat, sexual violence, sexual content involving minors, or a slur. The author is told the wording cannot be posted, and no post is created. The first 40 characters are kept for the moderator record and are deleted within 7 days, as the privacy notice describes.",
             "A longer list is advisory. It accepts the post and files an automatic entry in the same queue, labelled Auto-detected with the matched terms. Ambiguous words belong here, along with vocabulary from the CC BY 4.0 `naughty-words` lists that a school may legitimately discuss.",
             "Distress is not a violation. Phrases about wanting to disappear or to hurt oneself are queued, never refused, so that a person reads them and can reach out instead of the software hiding them.",
-            "A refused write leaves no post, but the attempt is recorded: the account, the surface it came from, which field matched, the matched word, and the first 200 characters of the text. Moderators see this under Blocked in the console. The record is a signal, not a penalty; a student who keeps hitting it needs a conversation, not a removal.",
+            "A refused write leaves no post, but the attempt is recorded: the account, the surface it came from, which field matched, the matched word, and the first 40 characters of the text, deleted within 7 days. Moderators see this under Blocked in the console. The record is a signal, not a penalty; a student who keeps hitting it needs a conversation, not a removal.",
             "A moderator who dismisses a flag leaves no trace on the post and no penalty on the author.",
           ],
         },
@@ -412,9 +417,9 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
         {
           heading: "3. Who may use the site",
           bullets: [
-            "The intended users are students and staff of the school. Guests may read public threads without an account.",
+            "The site is for students and staff of the school. Guests may read public threads without an account.",
             "If you are under 18, use the site with the knowledge of a teacher or your guardian.",
-            "Registration is not restricted by school membership: the site does not check that you belong to the school. Belonging is a condition of use, not an access control, and how registration should be restricted is still an open question for the school.",
+            "Registration requires a single-use invite code issued by a teacher or the maintainer. The code is recorded against the account that used it. The site cannot check school membership, so eligibility rests on what each person states; a false statement is a breach of these terms.",
             "One account per person. Opening another account to get around a removal, a limit, or a suspension is a breach of these terms.",
           ],
         },
@@ -424,7 +429,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
             "You choose a username, which is public, and optionally an email address, which is never shown to other users.",
             "You are responsible for your password. Every action taken while your account is signed in is attributed to it, including moderation actions if you hold a role.",
             "There is no email reset. If you lose the password, ask a teacher or the maintainer; a reset prints a new password once and signs out every session on the account.",
-            "You may ask the maintainer to delete your account. Deletion is done by hand today; there is no self-service button.",
+            "You may ask the maintainer to delete your account. Deletion is done by hand today; there is no self-service button. Your posts stay public under the next clause, and the author is shown as a deleted user.",
             "An administrator may change your role. A moderator or administrator may suspend the account under the moderation policy; a suspended account cannot sign in and its sessions are deleted.",
           ],
         },
@@ -433,7 +438,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           bullets: [
             "You keep the copyright in what you post. These terms do not transfer it to the school, to the operators, or to anyone else.",
             "You grant the operators a non-exclusive, royalty-free permission to store, display, back up, export, and moderate your content. The permission exists to operate this site and covers nothing else: it does not allow selling your writing, licensing it to a third party, or publishing it outside this site.",
-            "The permission to show your content to other students ends when it is removed or your account is deleted. A removed item stays in the database as a placeholder, and a moderator handling a report can still read it. Copies inside a backup, an audit record, or a downloaded thread keep the permission until that copy is deleted under the retention rules in the privacy notice, which the code does not enforce yet.",
+            "The permission to show your content to other students continues until that content is deleted. If you delete your account, your posts stay public and the author is shown as a deleted user. You may ask for individual posts to be removed. A removed item keeps its body in the database, and a moderator handling a report can still read it. Copies inside a backup, an audit record, or a downloaded thread keep the permission until that copy is deleted under the retention rules in the privacy notice.",
             "Post only what you wrote yourself, or what you have the right to post. Do not copy text from elsewhere without saying where it came from.",
             "A moderator may remove content and leave a placeholder. Registering means accepting that this can happen without your prior consent.",
           ],
@@ -444,11 +449,11 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
             "Harassment, threats, intimidation, stalking, or organising other people against one person.",
             "Discrimination or slurs about nationality, ethnicity, religion, sex, disability, appearance, or family.",
             "Another person's real name, address, phone number, schedule, photograph, or account details without permission, or an attempt to identify someone posting under a pseudonym.",
-            "Any sexual content, and any sexualisation of a minor in any form.",
+            "Sexual or titillating content, and any sexualisation of a minor in any form. Questions about biology or health classes, medical questions about sexual health, and academic discussion of literature or social phenomena are allowed for educational purposes only; sexualised depictions of minors, sexual images or descriptions, and obscene expression remain prohibited.",
             "Encouraging suicide, self-harm, or disordered eating, or describing how to do it.",
             "Illegal activity, weapons, drugs, or instructions for harming a person.",
             "Impersonating a teacher, a student, a club officer, a moderator, or the site.",
-            "Exam questions or answers while an exam is running, or asking someone else to do your work.",
+            "Exam questions or answers while an exam is running, or having someone else complete your assignment and submitting it, or submitting someone else's work as your own.",
             "Advertising, referral links, scams, or repeated off-topic promotion.",
             "Malware, phishing, or content designed to break the site or someone's device.",
           ],
@@ -556,14 +561,14 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           bullets: [
             "本人の許可なく、実名、住所、電話番号、メールアドレス、時間割、出席番号、写真、家族に関する情報、健康に関する情報、所属部活動を投稿してはなりません。",
             "偽名で投稿する者の身元を推測し、またはその推測を公開してはなりません。偽名は、安心して質問を行うための仕組みです。",
-            "私的なメッセージのスクリーンショットおよび転送、他人のアカウント情報の共有も禁止します。",
+            "本サイトには私的なメッセージ機能がありません。他のサービスやメールなど、本サイト外で交わされた私的なやり取りを、相手の同意なくスクリーンショットや転送によって本サイトへ持ち込んではなりません。他人のアカウント情報の共有も同様に禁止します。",
             "自身のユーザー名は公開されます。メールアドレスは任意であり、他の利用者に表示されることはありません。",
           ],
         },
         {
           heading: "4. 性的な内容、とくに未成年に関するものは禁止",
           paragraphs: [
-            "性的な内容は、本サイトのいずれの場所にも投稿できません。未成年者を性的に扱う内容は、冗談、リンク、説明のいずれの形式であっても禁止します。",
+            "性的・扇情的な内容、および未成年者を性的に扱う内容は、本サイトのいずれの場所にも投稿できません。他方、生物や保健の授業に関する質問、医学的な性の健康に関する相談、文学や社会現象についての学術的な議論は、教育・学習の目的に限り投稿できます。教育目的であっても、未成年者を性的に扱う内容、性的な画像や描写、わいせつな表現は禁止します。判断に迷う場合は、投稿する前に教員または保守担当にご相談ください。",
             "発見した場合は直ちに通報してください。通常の通報とは区別し、緊急性の高い案件として扱います。",
           ],
         },
@@ -580,7 +585,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           bullets: [
             "試験の実施中に、問題や解答を共有してはなりません。",
             "教員、生徒、部活動の役員、モデレーター、または本サイトになりすましてはなりません。",
-            "課題や学習方法について尋ねることは差し支えありませんが、他者に課題を代行させることはお控えください。",
+            "課題について相談し、互いに説明し、教え合い、下書きを添削し合うことは認められます。他者に自分の課題を完成させて提出すること、および他者の成果を自分のものとして提出することは禁止します。",
             "他者の説明や資料を利用する場合は、出典を明記してください。",
           ],
         },
@@ -624,7 +629,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "11. 通報は武器ではない",
           paragraphs: [
             "通報ボタンから送信された内容は、モデレーターに届きます。通報された者に、通報者が誰であるかは伝わりません。",
-            "好まない意見であることを理由とする通報、および順位を上げる目的で複数回行う通報は控えてください。悪意による通報もルール違反です。",
+            "善意で行った通報が判断と異なっていても、処分の対象にはなりません。根拠が薄い通報や回数の多い通報は、記録のうえで声をかけることがありますが、原則として処分しません。内容が虚偽であると知りながら、相手を傷つける目的で通報を繰り返す行為は、ルール違反として扱います。",
             "通報者に対する報復、および判断を行ったモデレーターに対する報復は禁止します。",
           ],
         },
@@ -655,8 +660,10 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
         {
           heading: "2. 責任者",
           bullets: [
-            "本サイトは学生の保守担当が運営しており、同担当は運用および修理のためにデータベースへ直接アクセスします。",
-            "担当教員は、安全上の懸念がある場合、保守担当に対して個別の記録を求めることができます。教職員が一括して閲覧する仕組み、および教職員専用のアカウント区分はありません。",
+            "本サイトは次の三つの役割で運営しており、同一の人物が複数の役割を兼ねる場合があります。",
+            "プロジェクト維持担当：ソフトウェアの保守、サーバーの運用、データベースへの直接アクセス、バックアップの取得を行います。投稿内容の削除や利用停止の判断は行いません。",
+            "管理者：通報の処理、投稿の削除、利用停止、役割の変更を行います。データベースへの直接アクセスとバックアップの取得は行いません。",
+            "担当教員（安全上の連絡窓口）：安全上の懸念、重大な紛争、学校との調整の窓口です。日常の通報処理は行わず、管理画面の権限も持ちません。個別の記録の開示を求めることができます。",
             "データ保護責任者および運営企業は存在しません。本通知に関する連絡は、「サイトへの意見」ボードまたはプロジェクトのリポジトリページに記載のアドレスまでお願いします。",
           ],
         },
@@ -664,13 +671,14 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "3. 保存する情報",
           bullets: [
             "アカウント：ユーザー名（公開）、任意のメールアドレス（他の利用者には表示しません）、scrypt により生成したパスワードハッシュ、プロフィールに設定した色および自己紹介。",
+            "登録に使用した招待コード：コードの先頭 4 文字、使用した日時、使用したアカウント。コード自体は SHA-256 ハッシュのみを保存し、平文は保存しません。",
             "登録時に 4 つの文書へ同意した日時、および文書ごとの版。同意の記録として保存します。",
             "投稿した内容：スレッド、返信、タイトル、タグ、いいね、保存、開いたボード。モデレーターが削除しない限り公開されます。",
             "既読の記録：スレッドごとの時刻。「新着」の表示に使用し、時刻とスレッド ID のみを保存します。",
             "受信箱の時刻：通知パネルおよびお知らせを最後に開いた時刻。一覧は他の記録から算出し、保存するのは時刻のみです。",
             "通報した内容：理由、対象の投稿、人による通報か自動の語句チェックによるものかの区分。モデレーターは閲覧できますが、通報された者に通報者は伝わりません。",
             "モデレーションの記録：削除、ロック、通報の判断、利用停止、解除、役割の変更、ボードのアーカイブの都度、実行したアカウント、操作、対象、時刻、任意の補足を監査ログに記録します。",
-            "拒否された書き込み：語句チェックが投稿を拒否した場合、アカウント、投稿しようとした画面、一致した入力欄、一致した語、本文の先頭 200 文字、時刻を保存します。投稿自体は作成しません。この一覧はモデレーターが確認でき、他の利用者には表示されません。",
+            "拒否された書き込み：語句チェックが投稿を拒否した場合、アカウント、投稿しようとした画面、一致した入力欄、一致した語、本文の先頭 40 文字、時刻を保存します。投稿自体は作成しません。本文の抜粋は 7 日以内に削除します。この一覧はモデレーターが確認でき、他の利用者には表示されません。",
             "セッション：トークンの SHA-256 ハッシュ、有効期限、作成時刻。トークン自体は保存しません。",
             "回数制限の記録：一定の時間枠ごとに 1 行、キー、回数、リセット時刻を保持します。リバースプロキシの背後で運用する場合、キーには接続元の IP アドレスが含まれ、プロキシがない場合はすべてのリクエストが単一のキーを共有します。期限切れの行は削除され、最長の時間枠は 24 時間です。",
           ],
@@ -679,7 +687,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "4. 保存しない情報",
           bullets: [
             "本名、学年、クラス、生年月日、写真、出席番号、住所は求めず、保存しません。",
-            "上記の回数制限のキーを除き、IP アドレスは保存しません。",
+            "アプリケーションがデータベースに保存する IP アドレスは、回数制限のキーに含まれるものに限られます。この保存はリバースプロキシの背後で運用する場合に限られ、保持期間は最長 24 時間です。投稿、アカウント、通報、監査ログに IP アドレスを保存することはありません。サーバーのアクセスログは取得しておらず、アプリケーションの出力にも IP アドレスは含まれません。バックアップには回数制限の記録が含まれるため、バックアップの保存期間（30 日）中は、その複製に IP アドレスが残る場合があります。ホスティング事業者が保持するネットワークログについては、同事業者の定めに従います。",
             "アクセス解析、広告識別子、外部の追跡スクリプト、SNS の埋め込みはありません。",
             "私的なメッセージ、ファイル添付、画像は取り扱いません。受け取るのは文章のみです。",
             "興味や行動の記録を作成、販売、または広告目的で共有することはありません。",
@@ -700,7 +708,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
             "`toyooka_session` はログイン状態を維持します。HttpOnly、SameSite=Lax、本番環境では Secure を付与し、30 日で有効期限が切れます。ログアウトするとサーバー側のセッションは削除されます。",
             "`locale` は日本語と英語のいずれを選択したかを記憶します。有効期間は 1 年で、個人を識別する情報は含みません。",
             "`theme` は 2 つのデザインのいずれを選択したかを記憶します。有効期間は 1 年で、ページ側が設定し、個人を識別する情報は含みません。",
-            "上記以外の Cookie はなく、外部へのリクエストもありません。Cookie を削除するとログアウトされ、2 つの選択も初期状態に戻ります。",
+            "上記以外の Cookie はありません。本サイトは、外部のフォント、CDN、アクセス解析、広告、外部画像、外部 JavaScript を読み込みません。ページの表示に必要な資源は、すべて本サイトのサーバーから配信されます。Cookie を削除するとログアウトされ、2 つの選択も初期状態に戻ります。",
           ],
         },
         {
@@ -716,12 +724,14 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
         {
           heading: "8. 保存する期間",
           bullets: [
-            "有効なスレッドおよび返信は、削除を依頼するか、サイトを終了するまで保存されます。",
-            "削除された内容は論理削除です。判断を後から確認できるよう本文はデータベースに残り、画面にはプレースホルダーが表示されます。削除した本文を消去する時期は未定であり、コードによる自動化も行っていません。",
-            "セッションは 30 日で有効期限が切れます。ログアウト、保守担当によるパスワード再設定、利用停止のいずれの場合も、当該アカウントのセッションは削除されます。",
+            "保存期間はデータの種類ごとに定めています。セッションは 30 日で有効期限が切れ、ログアウト、保守担当によるパスワード再設定、利用停止のいずれの場合も、当該アカウントのセッションは削除されます。",
             "回数制限の記録は、期限が切れると削除されます。最長の時間枠は 24 時間です。",
-            "通報および監査の記録は、安全と説明責任のために有用な期間、保存します。",
-            "バックアップは運営者が取得するファイルです。バックアップ内の複製は、運営者が定める周期で当該バックアップを削除するまで残ります。本通知は、運営者に代わってその期間を約束するものではありません。",
+            "拒否された書き込みの抜粋は、7 日以内に削除します。",
+            "通報の記録は 1 年、監査ログは 3 年を目安に保存します。いずれも判断を後から確認するために必要な期間です。",
+            "削除された投稿の本文は、判断を確認できるようデータベースに残し、削除から 90 日後に消去します。画面にはプレースホルダーのみが残ります。",
+            "有効なスレッドおよび返信は、削除を依頼するか、サイトを終了するまで保存されます。",
+            "アカウントを削除しても投稿内容は削除されず、公開されたまま残ります。作成者の表示は「削除済み利用者」に置き換わります。個別の投稿内容の削除を求めることはできます。",
+            "バックアップは運営者が取得するファイルで、30 日で入れ替わります。バックアップ内の複製は、当該バックアップが削除されるまで残ります。ホスティング事業者が保持する複製については、同事業者の定めに従います。",
           ],
         },
         {
@@ -815,10 +825,10 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           heading: "6. 自動フラグ",
           bullets: [
             "すべての書き込みを検査します。スレッドのタイトル、本文、タグ、返信、ボード名、ボードの説明、プロフィールの自己紹介が対象です。全角と半角は同一の語として扱います。日本語は空白および記号を除去したうえで照合するため、「死 ね」のように区切っても回避できません。英語は語の区切りを保持するため、意図的に区切った表記は検出を免れます。",
-            "一覧は 2 層です。悪用以外の用途がない短い語（直接の殺害予告、性暴力、児童に関する性的内容、差別的な呼称）は、投稿自体を拒否します。投稿者には「この言葉は投稿できない」と伝えます。投稿自体は作成しませんが、確認のために本文の先頭 200 文字のみを別途記録します（プライバシー通知に記載）。",
+            "一覧は 2 層です。悪用以外の用途がない短い語（直接の殺害予告、性暴力、児童に関する性的内容、差別的な呼称）は、投稿自体を拒否します。投稿者には「この言葉は投稿できない」と伝えます。投稿自体は作成しませんが、確認のために本文の先頭 40 文字のみを別途記録し、7 日以内に削除します（プライバシー通知に記載）。",
             "もう一方の一覧は助言用です。投稿は受理し、同一のキューに「自動検出」の表示と一致した語を付して記録します。曖昧な語、および CC BY 4.0 の `naughty-words` に含まれる語のうち、学校で正当に扱い得るものがここに該当します。",
             "苦痛は違反ではありません。消えたい、自分を傷つけたいといった表現は拒否せず、キューに登録します。ソフトウェアが隠すのではなく、人が読んで声をかけることを可能にするためです。",
-            "拒否された書き込みは投稿になりませんが、試行は記録します。アカウント、投稿しようとした画面、一致した入力欄、一致した語、本文の先頭 200 文字です。モデレーターは管理画面の「遮断」で確認できます。記録は処分ではなく合図です。繰り返し該当する生徒には、削除ではなく対話が必要です。",
+            "拒否された書き込みは投稿になりませんが、試行は記録します。アカウント、投稿しようとした画面、一致した入力欄、一致した語、本文の先頭 40 文字で、7 日以内に削除します。モデレーターは管理画面の「遮断」で確認できます。記録は処分ではなく合図です。繰り返し該当する生徒には、削除ではなく対話が必要です。",
             "却下したフラグは投稿に痕跡を残さず、投稿者にも不利益を与えません。",
           ],
         },
@@ -904,9 +914,9 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
         {
           heading: "3. 利用できる人",
           bullets: [
-            "対象は本校の生徒および教職員です。公開されているスレッドは、アカウントがなくても閲覧できます。",
+            "本サイトを利用できるのは、本校の生徒および教職員です。公開されているスレッドは、アカウントがなくても閲覧できます。",
             "18 歳未満の方は、教員または保護者が利用を認識している状態でご利用ください。",
-            "登録は学校への所属によって制限されていません。所属は利用の条件であり、入場の制限ではありません。登録の制限方法は、学校側の未決事項です。",
+            "登録には、教員または保守担当が発行する招待コードが必要です。コードは 1 回だけ使用でき、使用したコードはアカウントとともに記録します。本サイトは学校への所属を確認できないため、利用資格は利用者自身の申告に基づきます。虚偽の申告は本規約違反となります。",
             "アカウントは 1 人 1 つです。削除、回数制限、利用停止を回避するために別のアカウントを作成することは、本規約違反です。",
           ],
         },
@@ -916,7 +926,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
             "ユーザー名は自身で決定し、公開されます。メールアドレスは任意であり、他の利用者に表示されることはありません。",
             "パスワードは自身で管理してください。ログイン中のアカウントによる操作は、すべて当該アカウントのものとして扱います。役割を有する場合、モデレーション操作も含みます。",
             "メールによる再設定はありません。パスワードを忘れた場合は、教員または保守担当にご相談ください。再設定では、新しいパスワードを一度だけ表示し、当該アカウントのすべてのセッションをログアウトさせます。",
-            "アカウントの削除は保守担当に依頼できます。現在は手作業で行っており、利用者自身が削除できるボタンはありません。",
+            "アカウントの削除は保守担当に依頼できます。現在は手作業で行っており、利用者自身が削除できるボタンはありません。削除後も投稿内容は公開されたまま残り、作成者の表示は「削除済み利用者」に置き換わります。",
             "役割の変更は管理者が行います。モデレーターまたは管理者は、モデレーション方針に従ってアカウントを停止できます。停止されたアカウントはログインできず、セッションは削除されます。",
           ],
         },
@@ -925,7 +935,7 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
           bullets: [
             "投稿した内容の著作権は、利用者に留保されます。本規約は、その権利を学校、運営者、その他の者へ譲渡するものではありません。",
             "利用者は運営者に対し、投稿内容を保存、表示、バックアップ、書き出し、およびモデレーションする非独占的かつ無償の許諾を与えるものとします。目的は本サイトの運営に限られ、販売、第三者への利用許諾、サイト外での公開を含みません。",
-            "他の生徒に対する表示の許諾は、削除された場合またはアカウントが削除された場合に終了します。削除された項目はプレースホルダーとしてデータベースに残り、通報を取り扱うモデレーターは本文を閲覧できます。バックアップ、監査記録、書き出したスレッド内の複製については、プライバシー通知に定める保存の定めに従って削除されるまで許諾が継続します（同定めはコードによる自動化が未了です）。",
+            "他の生徒に対する表示の許諾は、当該投稿内容が削除されるまで継続します。アカウントを削除した場合、投稿内容は公開されたまま残り、作成者の表示は「削除済み利用者」に置き換わります。本人の希望により、個別の投稿内容の削除を求めることができます。削除された項目の本文はデータベースに残り、通報を取り扱うモデレーターは閲覧できます。バックアップ、監査記録、書き出したスレッド内の複製については、プライバシー通知に定める保存の定めに従って削除されるまで許諾が継続します。",
             "自身が作成したもの、または投稿する権利を有するもののみを投稿してください。他者から取得した文章は、出典を明記してください。",
             "モデレーターは投稿内容を削除し、その箇所にプレースホルダーを残す場合があります。登録は、事前の同意なくこれが生じ得ることを受諾することを意味します。",
           ],
@@ -936,11 +946,11 @@ export const POLICIES: Record<Locale, Record<PolicyKey, PolicyDocument>> = {
             "嫌がらせ、脅し、威圧、つきまとい、および集団で特定の個人を攻撃する行為。",
             "国籍、民族、宗教、性別、障害、外見、家族に関する差別的表現および中傷。",
             "本人の許可のない実名、住所、電話番号、時間割、写真、アカウント情報の投稿。偽名の投稿者の特定、およびその推測の公開。",
-            "性的な内容全般、および未成年者を性的に扱う内容すべて。",
+            "性的・扇情的な内容、および未成年者を性的に扱う内容。生物学や保健の授業に関する質問、医学的な性の健康に関する相談、文学や社会現象についての学術的な議論は、教育・学習の目的に限り認められます。教育目的であっても、未成年者を性的に扱う内容、性的な画像や描写、わいせつな表現は禁止します。",
             "自殺、自傷、摂食障害を勧める行為、またはその方法の記載。",
             "違法行為、武器、薬物、人を傷つける方法の説明。",
             "教員、生徒、部活動の役員、モデレーター、または本サイトになりすます行為。",
-            "試験実施中の問題または解答の共有、および他者に課題を代行させる行為。",
+            "試験実施中の問題または解答の共有、他者に自分の課題を完成させて提出させる行為、他者の成果を自分のものとして提出する行為。",
             "宣伝、紹介リンク、詐欺、および話題と無関係な勧誘の繰り返し。",
             "マルウェア、フィッシング、本サイトまたは端末を破壊する目的の内容。",
           ],

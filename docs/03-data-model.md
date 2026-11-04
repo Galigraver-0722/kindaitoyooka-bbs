@@ -5,6 +5,16 @@
 The schema lives in `prisma/schema.prisma` and is the source of truth. This document explains
 the intent behind it.
 
+
+### `InviteCode`
+
+Registration is invite-only. A code is eight characters from an alphabet without
+look-alikes, printed once by `pnpm invite create`. The table stores only its
+SHA-256 hash, the first four characters for identification, an optional note,
+and the account and moment it was used. A code is consumed inside the same
+transaction that creates the account, so two requests racing on one code cannot
+both succeed.
+
 ## 1. Entity relationship diagram
 
 ```mermaid
@@ -45,6 +55,7 @@ erDiagram
 | `termsAcceptedAt` | datetime? | When the account accepted the terms of use. Registration stores it; accounts created before the requirement carry `NULL` |
 | `termsVersion` | string? | The `POLICY_UPDATES.terms` value accepted at registration |
 | `acceptedPolicies` | string? | Version of each of the four documents accepted at registration, as `terms:<v>;rules:<v>;privacy:<v>;moderation:<v>`. `NULL` for accounts created before the four-checkbox gate |
+| `deletedAt` | datetime? | Set when an account is anonymised by `pnpm delete-account`. The row stays so posts keep their author; the name becomes 「削除済み利用者」, email and password are cleared, and every session is deleted |
 | `isSuspended` | boolean | Set from the console. A suspended account cannot sign in and every session is deleted |
 | `suspendedAt` | datetime? | When the suspension started; cleared on restore |
 | `suspendedReason` | string? | Free text (≤ 200) the moderator typed; also copied into the audit row |

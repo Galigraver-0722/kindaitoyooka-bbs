@@ -29,6 +29,23 @@ export type Announcement = {
 
 export const SEED_ANNOUNCEMENTS: Announcement[] = [
   {
+    id: "2026-11-04-policies",
+    publishedAt: "2026-11-04",
+    kind: "release",
+    title: {
+      ja: "登録を招待制にし、四つの文書を改訂しました",
+      en: "Registration is invite-only, and the four documents changed",
+    },
+    body: {
+      ja:
+        "登録には、先生または保守担当が発行する招待コードが必要になりました。\n" +
+        "あわせて、アカウント削除後の投稿の扱い、保存期間、責任の分担、性に関する内容と課題の扱いを明確にするため、四つの文書を改訂しました。",
+      en:
+        "Registration now requires a single-use invite code from a teacher or the maintainer.\n" +
+        "The four documents were revised to settle what happens to posts after an account is deleted, how long each kind of data is kept, who is responsible for what, and where the line sits for sexual content and homework.",
+    },
+  },
+  {
     id: "2026-10-29-drafts",
     publishedAt: "2026-10-29",
     kind: "release",

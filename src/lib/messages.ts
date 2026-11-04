@@ -4,6 +4,8 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
   en: {
     "invalid-input": "Please check the form and try again.",
     "terms-required": "Read and accept all four documents to create an account.",
+    "invite-required": "An invite code is required to register.",
+    "invite-invalid": "That invite code is not valid or has already been used.",
     "username-taken": "That username is already taken.",
     "email-taken": "That email address is already registered.",
     "invalid-credentials": "Wrong username or password.",
@@ -48,6 +50,8 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "slug-taken": "その URL はすでに使われています。",
     "board-limit": "ボードは 1 アカウント 3 つまでです。",
     "terms-required": "アカウントを作るには 4 つの文書すべてへの同意が必要です。",
+    "invite-required": "登録には招待コードが必要です。",
+    "invite-invalid": "その招待コードは使えません。入力が正しいか、まだ使われていないかをご確認ください。",
     self: "自分のアカウントにはこの操作を行えません。",
     "blocked-word": "この言葉は投稿できません。別の言葉に書き換えてください。",
     "last-admin": "管理者は最低 1 人必要です。",

@@ -15,7 +15,7 @@ export type BlockSurface = "thread" | "reply" | "edit" | "board" | "profile";
 export function excerptOf(texts: string[]): string {
   const flat = texts.join(" / ").replace(/\s+/g, " ").trim();
   const points = Array.from(flat);
-  return points.length > 200 ? `${points.slice(0, 200).join("")}…` : flat;
+  return points.length > 40 ? `${points.slice(0, 40).join("")}…` : flat;
 }
 
 export async function recordBlockedAttempt(input: {

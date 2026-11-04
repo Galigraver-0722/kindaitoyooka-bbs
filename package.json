@@ -1,6 +1,6 @@
 {
   "name": "kindaitoyooka-bbs",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "A school-run bulletin board for Kindai University Toyooka Junior & Senior High School.",
   "license": "MIT",
@@ -21,7 +21,10 @@
     "backup": "tsx scripts/backup.ts",
     "verify-backup": "tsx scripts/verify-backup.ts",
     "restore": "tsx scripts/restore.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "invite": "tsx scripts/invite.ts",
+    "delete-account": "tsx scripts/delete-account.ts",
+    "purge": "tsx scripts/purge.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

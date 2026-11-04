@@ -53,11 +53,15 @@ model User {
   // Last time the reader opened the announcements panel. The entries live in
   // their own table, so only the moment is stored on the reader.
   announcementsSeenAt DateTime?
+  invitesUsed         InviteCode[]     @relation("InviteUses")
   // Registration requires accepting the terms. The timestamp and the version
   // accepted are the evidence; accounts created before the requirement existed
   // carry null and are not re-prompted.
   termsAcceptedAt DateTime?
   termsVersion    String?
+  // Account deletion is manual and anonymises in place: the row stays so that
+  // posts keep their author, but the name is replaced and sign-in is disabled.
+  deletedAt       DateTime?
   createdAt       DateTime         @default(now())
   sessions        Session[]
   threads         Thread[]
@@ -240,7 +244,8 @@ model BlockedAttempt {
   field     String
   /// Comma-joined matched terms, exactly as the filter saw them.
   words     String
-  /// First 200 characters of the refused text, so the moderator has context.
+  /// First 40 characters of the refused text, so the moderator has context.
+  /// Purged within 7 days.
   excerpt   String
   createdAt DateTime @default(now())
 
@@ -301,4 +306,19 @@ model Draft {
 
   @@unique([userId, boardId])
   @@index([userId, updatedAt])
+}
+
+/// A single-use registration code. Only the SHA-256 hash is stored; the prefix
+/// (first four characters) lets a maintainer tell codes apart in a list.
+model InviteCode {
+  id        String    @id @default(cuid())
+  codeHash  String    @unique
+  prefix    String
+  note      String?
+  createdAt DateTime  @default(now())
+  usedAt    DateTime?
+  usedById  String?
+  usedBy    User?     @relation("InviteUses", fields: [usedById], references: [id], onDelete: SetNull)
+
+  @@index([usedAt])
 }
