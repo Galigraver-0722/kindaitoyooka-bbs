@@ -10,8 +10,4 @@ The outlined mark has no font or external asset dependency. Keep the stroke geom
 
 ## Layout
 
-The homepage now follows a neighborhood bulletin: a plain masthead, board navigation, a single-column discussion stream, and a narrow activity sidebar. Thread titles, excerpts, tags, authors, and actions remain together in each row. Rules separate conversations rather than rounded card containers. Cream paper, forest ink, and a pale-green accent carry the identity; dark mode uses the same hierarchy.
-
-Below 1000px the activity sidebar moves beneath the discussion stream, and below 700px board navigation moves to the existing header menu. The welcome area stays compact on phones. Search, Saved, and My posts use a wider discussion column with no empty space reserved for the activity sidebar. Existing chart controls, permissions, routes, and reduced-motion preferences remain in effect.
-
-Validation covers English and Japanese, both themes, desktop/tablet/phone widths, keyboard navigation, chart range changes, filtered views, and authenticated screens. Earlier design notes describe previous iterations; this document records the current layout and mark.
+The bulletin layout was tried and then withdrawn at the project owner's request. The previous rounded Kinjo design is restored: neighborhood illustration, discussion cards, and charts below the feed. Only the approved kanji identity remains from that experiment. `src/components/theme/logo-css.ts` styles the header and footer lockups without altering layout or palette.
