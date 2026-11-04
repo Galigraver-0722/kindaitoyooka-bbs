@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Crumb, ThemedPage } from "@/components/theme/themed-page";
@@ -8,6 +9,7 @@ import { getCurrentUser, isAdmin, isModerator } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { getLocale, t } from "@/lib/i18n";
+import { formatInviteCode, listInviteCodes } from "@/lib/invites";
 import { errorMessage, noticeMessage } from "@/lib/messages";
 import type { Locale } from "@/lib/locales";
 import { getTheme } from "@/lib/theme";
@@ -23,7 +25,7 @@ const PER_PAGE = 20;
 const REPORTS_PER_PAGE = 10;
 const ROLES = ["STUDENT", "MODERATOR", "ADMIN"] as const;
 
-type Tab = "reports" | "users" | "content" | "blocked" | "announcements" | "boards" | "audit";
+type Tab = "reports" | "users" | "content" | "blocked" | "announcements" | "boards" | "invites" | "audit";
 
 export default async function ConsolePage({
   searchParams,
@@ -63,6 +65,7 @@ export default async function ConsolePage({
     params.tab === "blocked" ||
     params.tab === "announcements" ||
     params.tab === "boards" ||
+    params.tab === "invites" ||
     params.tab === "audit"
       ? (params.tab as Tab)
       : "reports";
@@ -127,6 +130,7 @@ export default async function ConsolePage({
                 ? ([
                     ["announcements", copy.tabs.announcements],
                     ["boards", copy.tabs.boards],
+                    ["invites", copy.tabs.invites],
                   ] as Array<[Tab, string]>)
                 : []),
             ] as Array<[Tab, string]>
@@ -166,6 +170,8 @@ export default async function ConsolePage({
         {tab === "announcements" && admin ? (
           <AnnouncementsTab copy={copy.announcements} locale={locale} editId={params.edit} />
         ) : null}
+
+        {tab === "invites" && admin ? <InvitesTab copy={copy.invites} locale={locale} /> : null}
 
         {tab === "boards" && admin ? <BoardsTab copy={moderation} /> : null}
 
@@ -786,5 +792,83 @@ async function BlockedTab({ locale }: { locale: Locale }) {
         </ul>
       )}
     </section>
+  );
+}
+
+async function InvitesTab({
+  copy,
+  locale,
+}: {
+  copy: ReturnType<typeof t>["admin"]["invites"];
+  locale: Locale;
+}) {
+  const [codes, jar] = await Promise.all([listInviteCodes(), cookies()]);
+  const batch = (jar.get("invite_batch")?.value ?? "")
+    .split(",")
+    .map((code) => code.trim())
+    .filter(Boolean);
+
+  return (
+    <>
+      <div className="form-card">
+        <h2>{copy.title}</h2>
+        <p className="hint">{copy.hint}</p>
+
+        {batch.length > 0 ? (
+          <div className="notice success">
+            <p>{copy.batchHint}</p>
+            <ul className="invite-batch">
+              {batch.map((code) => (
+                <li key={code}>
+                  <code>{formatInviteCode(code)}</code>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        <form action="/api/admin/invites" method="post" className="form-foot">
+          <label className="field-label" htmlFor="invite-count">
+            {copy.count}
+          </label>
+          <input id="invite-count" name="count" type="number" min={1} max={50} defaultValue={5} />
+          <label className="field-label" htmlFor="invite-note">
+            {copy.note}
+          </label>
+          <input id="invite-note" name="note" maxLength={120} placeholder={copy.notePlaceholder} />
+          <button className="btn btn-p" type="submit">
+            {copy.create}
+          </button>
+        </form>
+      </div>
+
+      <div className="form-card">
+        <h2>{copy.listTitle}</h2>
+        {codes.length === 0 ? (
+          <p className="hint">{copy.empty}</p>
+        ) : (
+          <ul className="board-admin">
+            {codes.map((code) => (
+              <li key={code.id}>
+                <div className="ba-main">
+                  <span className="mono">{code.prefix}-****</span>
+                  <span className="ba-meta">
+                    {code.note ?? "—"} · {formatDateTime(code.createdAt, locale)} ·{" "}
+                    {code.usedAt ? `${copy.used} ${code.usedBy?.username ?? ""}` : copy.unused}
+                  </span>
+                </div>
+                {code.usedAt ? null : (
+                  <form action={`/api/admin/invites/${code.id}/delete`} method="post">
+                    <button className="btn ghost" type="submit">
+                      {copy.revoke}
+                    </button>
+                  </form>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
   );
 }

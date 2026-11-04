@@ -489,6 +489,9 @@ export const pagesDCss = `
 .tw-d .draft-row .dr-main a{font-weight:800;overflow-wrap:anywhere}
 .tw-d .draft-row .dr-meta{font-family:var(--mono);font-size:10px;color:var(--muted)}
 .tw-d .draft-row form{margin-left:auto}
+/* Auth switch link: accent + underline on both themes. */
+.auth-link{color:var(--cyan);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+
 `;
 
 export const pagesBCss = `
@@ -829,7 +832,7 @@ export const pagesBCss = `
 
 /* Notification inbox (shared markup, per-theme skin). */
 .tw-b .inbox{position:relative;flex:none;margin-left:auto;margin-right:-12px}
-.tw-b .bar .cmd{margin-left:0}
+.tw-b .bar .cmd{margin-left:auto}
 .tw-b .bar .inbox{margin-right:-10px}
 .tw-b .inbox-btn{position:relative;display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:4px;background:rgba(90,230,236,.03);color:var(--muted);cursor:pointer;transition:.18s}
 .tw-b .inbox-btn:hover{color:var(--cyan);border-color:rgba(90,230,236,.5)}
@@ -979,4 +982,9 @@ export const pagesBCss = `
 .tw-b .draft-row .dr-main a{font-weight:600;overflow-wrap:anywhere}
 .tw-b .draft-row .dr-meta{font-family:var(--mono);font-size:9.5px;color:var(--muted)}
 .tw-b .draft-row form{margin-left:auto}
+/* The "already have an account / register" link is a control, not a note: give
+   it the accent colour and an underline so it reads as clickable on both themes. */
+.auth-link{color:var(--cyan);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.tw-d .auth-link:hover{color:#0A94A6}
+
 `;

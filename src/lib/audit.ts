@@ -12,12 +12,14 @@ export type AuditAction =
   | "user.role"
   | "announcement.create"
   | "announcement.update"
-  | "announcement.delete";
+  | "announcement.delete"
+  | "invite.create"
+  | "invite.revoke";
 
 export type AuditInput = {
   actorId: string;
   action: AuditAction;
-  targetType: "post" | "thread" | "report" | "user" | "board" | "announcement";
+  targetType: "post" | "thread" | "report" | "user" | "board" | "announcement" | "invite";
   targetId: string;
   details?: Record<string, unknown>;
 };

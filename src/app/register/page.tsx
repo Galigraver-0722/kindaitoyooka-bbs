@@ -97,7 +97,7 @@ export default async function RegisterPage({
 
           <div className="form-foot">
             <button className="btn btn-p" type="submit">{copy.registerSubmit}</button>
-            <span className="hint">{copy.haveAccount} <Link href={loginHref}>{copy.loginLink}</Link></span>
+            <span className="hint">{copy.haveAccount} <Link className="auth-link" href={loginHref}>{copy.loginLink}</Link></span>
           </div>
         </form>
 

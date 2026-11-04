@@ -29,6 +29,7 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "password-mismatch": "The two passwords do not match.",
     "announcement-invalid": "A title and a body in both languages are required (title up to 120 characters, body up to 2000).",
     "announcement-not-found": "That announcement does not exist.",
+    "invite-not-found": "That code is already used or does not exist.",
   },
   ja: {
     "invalid-input": "入力内容を確認して、もう一度お試しください。",
@@ -58,6 +59,7 @@ const ERROR_MESSAGES: Record<Locale, Record<string, string>> = {
     "password-mismatch": "パスワードが一致していません。",
     "announcement-invalid": "タイトルと本文を、英語と日本語の両方で入力してください（タイトルは 120 文字、本文は 2000 文字まで）。",
     "announcement-not-found": "そのお知らせは見つかりません。",
+    "invite-not-found": "そのコードは使用済みか、存在しません。",
   },
 };
 
@@ -78,6 +80,8 @@ const NOTICE_MESSAGES: Record<Locale, Record<string, string>> = {
     "announcement-created": "Announcement published.",
     "announcement-updated": "Announcement saved.",
     "announcement-deleted": "Announcement deleted.",
+    "invite-created": "Codes created.",
+    "invite-revoked": "Code revoked.",
     "draft-discarded": "Draft discarded.",
   },
   ja: {
@@ -96,6 +100,8 @@ const NOTICE_MESSAGES: Record<Locale, Record<string, string>> = {
     "announcement-created": "お知らせを公開しました。",
     "announcement-updated": "お知らせを保存しました。",
     "announcement-deleted": "お知らせを削除しました。",
+    "invite-created": "招待コードを作成しました。",
+    "invite-revoked": "招待コードを失効させました。",
     "draft-discarded": "下書きを破棄しました。",
   },
 };

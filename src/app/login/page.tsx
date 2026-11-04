@@ -70,7 +70,7 @@ export default async function LoginPage({
 
           <div className="form-foot">
             <button className="btn btn-p" type="submit">{copy.login}</button>
-            <span className="hint">{copy.noAccount} <Link href={registerHref}>{copy.register}</Link></span>
+            <span className="hint">{copy.noAccount} <Link className="auth-link" href={registerHref}>{copy.register}</Link></span>
           </div>
         </form>
 

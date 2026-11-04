@@ -51,11 +51,25 @@ export async function createInviteCodes(count: number, note: string | null): Pro
 }
 
 export async function listInviteCodes(): Promise<
-  { id: string; prefix: string; note: string | null; createdAt: Date; usedAt: Date | null }[]
+  {
+    id: string;
+    prefix: string;
+    note: string | null;
+    createdAt: Date;
+    usedAt: Date | null;
+    usedBy: { username: string } | null;
+  }[]
 > {
   return prisma.inviteCode.findMany({
     orderBy: { createdAt: "desc" },
-    select: { id: true, prefix: true, note: true, createdAt: true, usedAt: true },
+    select: {
+      id: true,
+      prefix: true,
+      note: true,
+      createdAt: true,
+      usedAt: true,
+      usedBy: { select: { username: true } },
+    },
   });
 }
 
@@ -64,4 +78,10 @@ export async function revokeInviteCode(prefix: string): Promise<number> {
     where: { prefix: prefix.toUpperCase(), usedAt: null },
   });
   return result.count;
+}
+
+/** Delete an unused code by id. A used code stays as the record of the account. */
+export async function revokeInviteById(id: string): Promise<boolean> {
+  const result = await prisma.inviteCode.deleteMany({ where: { id, usedAt: null } });
+  return result.count === 1;
 }
