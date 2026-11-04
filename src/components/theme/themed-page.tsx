@@ -12,6 +12,7 @@ import { ScrollHeader } from "@/components/theme/scroll-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { homeDCss } from "@/components/home/home-d-css";
 import { homeBCss } from "@/components/home/home-b-css";
+import { kinjoCss } from "@/components/theme/kinjo-css";
 import { redesignCss } from "@/components/theme/redesign-css";
 import { ShellInteractions } from "@/components/theme/shell-interactions";
 import { polishCss } from "@/components/theme/polish-css";
@@ -174,7 +175,7 @@ export async function ThemedPage({
     kinds: annCopy.kinds,
   };
 
-  const css = (theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss) + polishCss + redesignCss;
+  const css = (theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss) + polishCss + redesignCss + kinjoCss;
   const wrap = theme === "light" ? "tw-d" : "tw-b";
 
   return (
@@ -188,8 +189,8 @@ export async function ThemedPage({
       <ScrollHeader>
         <header className="site-nav">
           <Link className="site-brand" href="/" aria-label={copy.home}>
-            <span className="brand-symbol" aria-hidden="true">豊</span>
-            <span>TOYOOKA<span className="brand-sub">{t(locale).commons.brand}</span></span>
+            <span className="brand-symbol" aria-hidden="true">近</span>
+            <span className="kinjo-wordmark">kinjo<span className="brand-sub">{t(locale).commons.brand}</span></span>
           </Link>
           <form className="nav-search" action="/" method="get" role="search">
             {searchIcon}
@@ -217,8 +218,9 @@ export async function ThemedPage({
 
       {children}
       <footer className="commons-footer">
-        <div><strong>TOYOOKA BBS</strong><p>{t(locale).footer.disclaimer}</p></div>
+        <div><strong>Kinjo · 近所</strong><p>{t(locale).footer.disclaimer}</p></div>
         <nav aria-label={t(locale).footer.policies}>
+          <Link href="/about">{t(locale).kinjo.about}</Link>
           <Link href="/terms">{t(locale).footer.terms}</Link>
           <Link href="/rules">{t(locale).footer.rules}</Link>
           <Link href="/privacy">{t(locale).footer.privacy}</Link>

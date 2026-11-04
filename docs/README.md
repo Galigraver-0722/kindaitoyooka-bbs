@@ -29,3 +29,5 @@ Read in this order when you are new to the project.
   administration decide what applies.
 
 - [11 · Interface design](11-interface-design.md)
+
+- [12 · Kinjo identity](12-kinjo-identity.md)

@@ -8,7 +8,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
     <footer className="site-footer mt-24 border-t border-line">
       <div className="shell grid gap-10 py-12 md:grid-cols-12">
         <div className="md:col-span-6">
-          <p className="eyebrow">Toyooka BBS</p>
+          <p className="eyebrow">Kinjo · 近所</p>
           <p className="mt-4 max-w-[52ch] text-[13px] leading-[1.8] text-muted">{m.disclaimer}</p>
         </div>
 

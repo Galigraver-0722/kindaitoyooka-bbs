@@ -9,11 +9,35 @@ export function isLocale(value: string | null | undefined): value is Locale {
 }
 
 const en = {
+  kinjo: {
+    "about": "About Kinjo",
+    "around": "Around the neighborhood",
+    "activity": "Conversations taking shape",
+    "activityHint": "Posts and replies · Japan Standard Time",
+    "days7": "7 days",
+    "days14": "14 days",
+    "posts": "posts",
+    "boards": "Places to wander",
+    "boardsHint": "Threads in our busiest boards",
+    "noBoards": "The neighborhood is waiting for its first conversation.",
+    "chartEmpty": "A quiet moment. Your next conversation can start here.",
+    "greeting": "A place to belong.",
+    "street": "EVERY CONVERSATION OPENS A DOOR",
+    "storyLabel": "OUR LITTLE CORNER",
+    "storyTitle": "Simply another place to be.",
+    "storyBody": "We share hallways, but not always conversations. Kinjo is a place to discover the people, questions, and ideas just beyond your usual circle.",
+    "storyCta": "The story behind Kinjo",
+    "nameHeading": "The meaning behind the name",
+    "nameBody": "近所 (kinjo) means neighborhood: a familiar place where people who might remain strangers can naturally connect. The character 近 also quietly nods to Kindai, the university our school is affiliated with.",
+    "philosophyHeading": "A neighborhood made by its people",
+    "philosophyBody": "Kinjo is an independent, student-run community. It is not intended to replace school communication or become essential to school life. Some people come for help, others to share an idea or see what is happening. Useful conversations stay here for the next person to discover.",
+    "closing": "A neighborhood is not built by giving it a name. It is built by the people who make it their own."
+},
   commons: {
-    skip: "Skip to content", brand: "THE COMMUNITY BOARD", eyebrow: "YOUR CAMPUS. YOUR CONVERSATION.",
-    lead: "Small questions.", accent: "Big connections.",
-    description: "Study questions, club plans, and everything in between. A shared space for life at Toyooka.",
-    browse: "Explore discussions",
+    skip: "Skip to content", brand: "A LITTLE SCHOOL NEIGHBORHOOD", eyebrow: "KINJO · 近所 · NEIGHBORHOOD",
+    lead: "Close by.", accent: "Closer together.",
+    description: "A little neighborhood within our school. Ask a question, share an idea, or discover a conversation beyond your usual circle.",
+    browse: "Meet the neighborhood",
   },
   notifications: {
     title: "Notifications",
@@ -33,9 +57,9 @@ const en = {
   },
 
   meta: {
-    title: "Toyooka BBS",
+    title: "Kinjo · 近所",
     description:
-      "A community bulletin board for Kindai University Toyooka Junior & Senior High School.",
+      "Kinjo: a little neighborhood within our school. Questions, ideas, and connections beyond your usual circle.",
   },
   nav: {
     boards: "Boards",
@@ -649,11 +673,35 @@ const en = {
 };
 
 const ja: typeof en = {
+  kinjo: {
+    "about": "Kinjoについて",
+    "around": "近所のようす",
+    "activity": "少しずつ、広がる会話",
+    "activityHint": "投稿と返信 · 日本標準時",
+    "days7": "7日間",
+    "days14": "14日間",
+    "posts": "件の投稿",
+    "boards": "ちょっと寄り道",
+    "boardsHint": "スレッドが集まるボード",
+    "noBoards": "最初の会話を待っている、小さな近所です。",
+    "chartEmpty": "今は静かなひととき。次の会話を、ここから。",
+    "greeting": "ここに、居場所がある。",
+    "street": "会話の数だけ、新しい扉がひらく",
+    "storyLabel": "学校の中の、小さな近所",
+    "storyTitle": "もうひとつの、居場所。",
+    "storyBody": "同じ廊下を歩いていても、まだ話したことのない人がいる。Kinjoは、いつもの輪の少し先にある人や疑問、アイデアに出会う場所です。",
+    "storyCta": "Kinjoという名前に込めたこと",
+    "nameHeading": "名前に込めた、ふたつの意味",
+    "nameBody": "近所とは、身近で気軽に立ち寄れる場所。まだ知らない人とも自然につながれる、そんな場所を目指しています。「近」の字には、私たちの学校が附属する近畿大学への、さりげないつながりも込めています。",
+    "philosophyHeading": "みんなで育てる、小さな近所",
+    "philosophyBody": "Kinjoは、生徒が運営する独立したコミュニティです。学校の連絡手段を置き換えたり、欠かせない仕組みになったりすることが目的ではありません。相談したい人、アイデアを残したい人、ただのぞいてみたい人。役立つ会話は、次に訪れる誰かのためにここに残ります。",
+    "closing": "名前をつけるだけでは、近所は生まれない。ここを自分たちの場所にしていく、一人ひとりがつくっていく。"
+},
   commons: {
-    skip: "本文へ移動", brand: "みんなの掲示板", eyebrow: "ここから、つながる。",
-    lead: "ひとつの疑問から、", accent: "広がる毎日。",
-    description: "勉強のこと、部活のこと、ちょっと気になること。みんなの声が集まる、豊岡の掲示板。",
-    browse: "みんなの投稿を見る",
+    skip: "本文へ移動", brand: "学校の中の、小さな近所", eyebrow: "KINJO · 近所 · NEIGHBORHOOD",
+    lead: "すぐそばから、", accent: "つながっていく。",
+    description: "学校の中にある、小さな近所。気になることを聞いたり、アイデアを残したり。いつもの輪を少しだけ広げてみよう。",
+    browse: "近所をのぞいてみる",
   },
   notifications: {
     title: "通知",
@@ -673,8 +721,8 @@ const ja: typeof en = {
   },
 
   meta: {
-    title: "Toyooka BBS",
-    description: "近畿大学附属豊岡中学校・高等学校の生徒が使う、学校コミュニティの掲示板です。",
+    title: "Kinjo · 近所",
+    description: "Kinjo（近所）は、学校の中の小さな近所。疑問やアイデアをきっかけに、いつもの輪を少し広げる生徒のコミュニティです。",
   },
   nav: {
     boards: "ボード",

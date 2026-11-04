@@ -118,11 +118,11 @@ export const SEED_ANNOUNCEMENTS: Announcement[] = [
     },
     body: {
       ja:
-        "Toyooka BBS のベータ版です。授業や部活の連絡、勉強の質問、落とし物の連絡に使ってください。\n" +
+        "Kinjo のベータ版です。授業や部活の連絡、勉強の質問、落とし物の連絡に使ってください。\n" +
         "投稿を削除すると、その場所はプレースホルダーに変わり、本文は記録として残ります。消したい投稿があるときは、その投稿の削除ボタンを使ってください。\n" +
         "ルールは /rules、通報がどう扱われるかは /moderation-policy にまとめてあります。",
       en:
-        "This is the beta of Toyooka BBS. Use it for class and club notices, study questions, and lost-and-found.\n" +
+        "This is the beta of Kinjo. Use it for class and club notices, study questions, and lost-and-found.\n" +
         "When you delete a post, its place becomes a placeholder and the text stays on record. Use the delete button on the post if you want it gone.\n" +
         "The rules are at /rules, and how reports are handled is at /moderation-policy.",
     },

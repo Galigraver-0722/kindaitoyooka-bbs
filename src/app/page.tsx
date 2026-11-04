@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ActivityChart } from "@/components/theme/activity-chart";
+import { neighborhoodActivity } from "@/lib/neighborhood-activity";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import {
@@ -83,7 +85,18 @@ export default async function HomePage({
   }));
   const totalThreads = summaries.reduce((sum, board) => sum + board.count, 0);
 
-  const totalPosts = await prisma.post.count({ where: { isDeleted: false } });
+  const now = new Date();
+  const [totalPosts, recentPosts] = await Promise.all([
+    prisma.post.count({ where: { isDeleted: false, thread: { isDeleted: false } } }),
+    prisma.post.findMany({
+      where: { isDeleted: false, thread: { isDeleted: false }, createdAt: { gte: new Date(now.getTime() - 14 * 86400000), lte: now } },
+      select: { createdAt: true },
+    }),
+  ]);
+  const activity = neighborhoodActivity(recentPosts.map((post) => post.createdAt), now);
+  const neighborhood = t(locale).kinjo;
+  const chartBoards = [...summaries].sort((a, b) => b.count - a.count).slice(0, 4);
+  const maxBoard = Math.max(1, ...chartBoards.map((board) => board.count));
 
 
   let rows: FeedRow[] = [];
@@ -246,14 +259,32 @@ export default async function HomePage({
               <Link className="btn btn-p" href="/new">{copy.newThread}<span aria-hidden="true">↗</span></Link>
               <a className="hero-browse" href="#discussions">{commons.browse}<span aria-hidden="true">↓</span></a>
             </div>
-            <div className="hero-stats"><span>{copy.threadCount(totalThreads)}</span><span>{copy.boardCount(summaries.length)}</span><span>{copy.replyCount(totalPosts)}</span></div>
+            <div className="hero-stats"><span>{copy.threadCount(totalThreads)}</span><span>{copy.boardCount(summaries.length)}</span><span>{new Intl.NumberFormat(locale).format(totalPosts)} {neighborhood.posts}</span></div>
           </div>
-          <div className="community-art" aria-hidden="true">
-            <div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" />
-            <div className="art-note note-back"><span>TOYOOKA / BBS</span><b>つながる。</b><i /></div>
-            <div className="art-note note-front"><span>HELLO, COMMUNITY</span><b>話そう<span className="art-dot">●</span></b><div className="art-lines"><i/><i/><i/></div><div className="art-avatars"><i>豊</i><i>岡</i><i>＋</i></div></div>
-            <span className="art-star">✳</span><span className="art-label">A PLACE FOR YOUR IDEAS</span>
+          <div className="kinjo-village" aria-hidden="true">
+            <div className="village-sun" /><div className="village-ring" />
+            <svg className="village-path" viewBox="0 0 360 280"><path d="M20 210 Q90 260 160 180 T340 190" /></svg>
+            <div className="village-house house-one"><div className="house-roof"/><div className="house-windows"><i/><i/><i/><i/></div><div className="house-door"/></div>
+            <div className="village-house house-two"><div className="house-roof"/><div className="house-windows"><i/><i/></div><div className="house-door"/></div>
+            <div className="village-house house-three"><div className="house-roof"/><div className="house-windows"><i/><i/></div><div className="house-door"/></div>
+            <div className="village-message">{neighborhood.greeting}<span>♡</span></div>
+            <span className="village-tree tree-one">✳</span><span className="village-tree tree-two">✳</span>
+            <span className="village-caption">{neighborhood.street}</span>
           </div>
+        </section>
+
+        <section className="neighborhood-dashboard" aria-label={neighborhood.around}>
+          <ActivityChart days={activity} labels={{ title: neighborhood.activity, hint: neighborhood.activityHint, days7: neighborhood.days7, days14: neighborhood.days14, posts: neighborhood.posts, empty: neighborhood.chartEmpty }} />
+          <section className="neighborhood-panel board-chart" aria-label={neighborhood.boards}>
+            <div className="neighborhood-panel-head"><h3>{neighborhood.boards}</h3><span aria-hidden="true">↗</span></div>
+            <p className="chart-caption">{neighborhood.boardsHint}</p>
+            <div className="board-chart-list">
+              {chartBoards.length ? chartBoards.map((board) => <Link key={board.slug} href={`/b/${board.slug}`} className="board-chart-row">
+                <span>{board.name}</span><b>{board.count}</b>
+                <div className="board-chart-track"><i style={{ width: `${board.count / maxBoard * 100}%` }} /></div>
+              </Link>) : <p className="chart-caption">{neighborhood.noBoards}</p>}
+            </div>
+          </section>
         </section>
 
         <div className="feed-cols" id="discussions">
@@ -309,6 +340,10 @@ export default async function HomePage({
             ) : null}
           </div>
         </div>
+        <section className="kinjo-story">
+          <span className="story-symbol" aria-hidden="true">近</span>
+          <div><p className="hero-eyebrow">{neighborhood.storyLabel}</p><h2>{neighborhood.storyTitle}</h2><p>{neighborhood.storyBody}</p><Link href="/about">{neighborhood.storyCta} <span aria-hidden="true">↗</span></Link></div>
+        </section>
       </main>
     </ThemedPage>
   );
