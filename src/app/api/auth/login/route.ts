@@ -2,7 +2,7 @@ import { createSession, SESSION_COOKIE, sessionCookieOptions, verifyPassword } f
 import { prisma } from "@/lib/db";
 import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 import { checkRateLimit, pruneRateLimits, RATE_LIMITS, requestIp, resetRateLimit } from "@/lib/rate-limit";
-import { normalizeUsername, safeNextPath } from "@/lib/validation";
+import { LIMITS, normalizeUsername, safeNextPath, validateUsername } from "@/lib/validation";
 
 function failure(request: Request, next: string, code = "invalid-credentials") {
   const params = new URLSearchParams({ error: code });
@@ -22,17 +22,41 @@ export async function POST(request: Request) {
   }
 
   const data = await request.formData();
-  const username = normalizeUsername(formText(data, "username"));
+  const rawUsername = formText(data, "username");
+  // Reject oversized fields before NFKC or a database key is built. A 20 KB
+  // username used to become a permanent 20 KB RateLimit row.
+  if (rawUsername.length > LIMITS.usernameMax * 2) {
+    return failure(request, safeNextPath(formText(data, "next"), "/"));
+  }
+  const username = normalizeUsername(rawUsername);
   const passwordValue = data.get("password");
   const password = typeof passwordValue === "string" ? passwordValue : "";
   const next = safeNextPath(formText(data, "next"), "/");
 
-  if (!username || !password) {
+  if (!username || !validateUsername(username) || password.length > LIMITS.passwordMax || !password) {
     return failure(request, next);
   }
 
   await pruneRateLimits();
-  const loginKey = `login:${requestIp(request) ?? "shared"}:${username}`;
+  const ip = requestIp(request);
+  // Aggregate bucket: rotating usernames used to buy a fresh bucket per name.
+  // `shared` is deliberately conservative; deployments behind a proxy must set
+  // TRUST_PROXY=1 so this is a real client bucket, not everyone at once.
+  const ipKey = `login-ip:${ip ?? "shared"}`;
+  const ipLimit = await checkRateLimit(ipKey, RATE_LIMITS.loginIp.limit, RATE_LIMITS.loginIp.windowMs);
+  if (!ipLimit.allowed) {
+    return failure(request, next, "rate-limited");
+  }
+  const accountKey = `login-account:${username}`;
+  const accountLimit = await checkRateLimit(
+    accountKey,
+    RATE_LIMITS.loginAccount.limit,
+    RATE_LIMITS.loginAccount.windowMs,
+  );
+  if (!accountLimit.allowed) {
+    return failure(request, next, "rate-limited");
+  }
+  const loginKey = `login:${ip ?? "shared"}:${username}`;
   const limit = await checkRateLimit(loginKey, RATE_LIMITS.login.limit, RATE_LIMITS.login.windowMs);
   if (!limit.allowed) {
     return failure(request, next, "rate-limited");

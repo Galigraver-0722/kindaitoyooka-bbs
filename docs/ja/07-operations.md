@@ -227,7 +227,7 @@ sudo -u bbs crontab -e
 
 ```bash
 # 上の行のあとに追加する例:
-# rclone copy /srv/backups/ remote:bbs-backups/ --include 'bbs-*.db'
+# rclone sync --delete /srv/backups/ remote:bbs-backups/ --include 'bbs-*.db'
 ```
 
 ### 復旧演習（毎月行う）

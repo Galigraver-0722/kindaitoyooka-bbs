@@ -24,7 +24,7 @@ const PER_PAGE = 20;
 const REPORTS_PER_PAGE = 10;
 const ROLES = ["STUDENT", "MODERATOR", "ADMIN"] as const;
 
-type Tab = "reports" | "users" | "content" | "blocked" | "announcements" | "boards" | "invites" | "audit";
+type Tab = "reports" | "users" | "content" | "blocked" | "flags" | "announcements" | "boards" | "invites" | "audit";
 
 export default async function ConsolePage({
   searchParams,
@@ -62,6 +62,7 @@ export default async function ConsolePage({
     params.tab === "users" ||
     params.tab === "content" ||
     params.tab === "blocked" ||
+    params.tab === "flags" ||
     params.tab === "announcements" ||
     params.tab === "boards" ||
     params.tab === "invites" ||
@@ -124,6 +125,7 @@ export default async function ConsolePage({
               ["users", copy.tabs.users],
               ["content", copy.tabs.content],
               ["blocked", copy.tabs.blocked],
+              ["flags", copy.tabs.flags],
               ["audit", copy.tabs.audit],
               ...(admin
                 ? ([
@@ -165,6 +167,8 @@ export default async function ConsolePage({
         ) : null}
 
         {tab === "blocked" ? <BlockedTab locale={locale} /> : null}
+
+        {tab === "flags" ? <FlagsTab locale={locale} /> : null}
 
         {tab === "announcements" && admin ? (
           <AnnouncementsTab copy={copy.announcements} locale={locale} editId={params.edit} />
@@ -462,6 +466,7 @@ async function ContentTab({
         title: true,
         isDeleted: true,
         isLocked: true,
+        safetyHoldUntil: true,
         lastPostAt: true,
         author: { select: { username: true } },
         board: { select: { name: true } },
@@ -478,6 +483,7 @@ async function ContentTab({
         body: true,
         isDeleted: true,
         createdAt: true,
+        safetyHoldUntil: true,
         author: { select: { username: true } },
         thread: { select: { id: true, title: true, isDeleted: true } },
       },
@@ -526,6 +532,11 @@ async function ContentTab({
                 <form action={`/api/admin/threads/${thread.id}/lock`} method="post">
                   <button type="submit" className="btn ghost">{thread.isLocked ? copy.unlock : copy.lock}</button>
                 </form>
+                <form action={`/api/admin/threads/${thread.id}/hold`} method="post">
+                  <button type="submit" className="btn ghost">
+                    {thread.safetyHoldUntil && thread.safetyHoldUntil > new Date() ? copy.releaseHold : copy.hold}
+                  </button>
+                </form>
                 {thread.isDeleted ? null : (
                   <form action={`/api/admin/threads/${thread.id}/remove`} method="post">
                     <button type="submit" className="btn danger">{copy.remove}</button>
@@ -558,6 +569,11 @@ async function ContentTab({
                 {post.thread.isDeleted ? <span className="pill">{copy.removed}</span> : null}
               </div>
               <div className="adm-acts">
+                <form action={`/api/admin/posts/${post.id}/hold`} method="post">
+                  <button type="submit" className="btn ghost">
+                    {post.safetyHoldUntil && post.safetyHoldUntil > new Date() ? copy.releaseHold : copy.hold}
+                  </button>
+                </form>
                 {post.isDeleted ? null : (
                   <form action={`/api/admin/posts/${post.id}/remove`} method="post">
                     <button type="submit" className="btn danger">{copy.remove}</button>
@@ -861,5 +877,85 @@ async function InvitesTab({
         )}
       </div>
     </>
+  );
+}
+
+async function FlagsTab({ locale }: { locale: Locale }) {
+  const copy = t(locale).admin.flags;
+  const flags = await prisma.moderationFlag.findMany({
+    where: { status: "OPEN" },
+    orderBy: { createdAt: "asc" },
+    take: 50,
+  });
+  const profileIds = flags.filter((flag) => flag.targetType === "PROFILE").map((flag) => flag.targetId);
+  const boardIds = flags.filter((flag) => flag.targetType === "BOARD").map((flag) => flag.targetId);
+  const [profiles, boards] = await Promise.all([
+    prisma.user.findMany({
+      where: { id: { in: profileIds } },
+      select: { id: true, username: true },
+    }),
+    prisma.board.findMany({
+      where: { id: { in: boardIds } },
+      select: { id: true, slug: true, name: true },
+    }),
+  ]);
+  const profileById = new Map(profiles.map((row) => [row.id, row]));
+  const boardById = new Map(boards.map((row) => [row.id, row]));
+
+  return (
+    <section className="mod-sec">
+      <h2 className="sec-head"><span className="tick" />{t(locale).admin.tabs.flags}</h2>
+      <p className="mod-hint">{copy.hint}</p>
+
+      {flags.length === 0 ? (
+        <p className="empty">{copy.empty}</p>
+      ) : (
+        <ul className="adm-list">
+          {flags.map((flag) => {
+            const profile = flag.targetType === "PROFILE" ? profileById.get(flag.targetId) : null;
+            const board = flag.targetType === "BOARD" ? boardById.get(flag.targetId) : null;
+            const href = profile
+              ? `/u/${encodeURIComponent(profile.username)}`
+              : board
+                ? `/b/${board.slug}`
+                : null;
+            const label = profile
+              ? `${copy.profile} · ${profile.username}`
+              : board
+                ? `${copy.board} · ${board.name}`
+                : `${flag.targetType} · ${flag.targetId}`;
+            return (
+              <li key={flag.id} className="adm-row">
+                <div className="adm-who">
+                  {href ? <Link href={href}>{label}</Link> : <span>{label}</span>}
+                  <span className="adm-sub">
+                    {copy.words}: {flag.words || "—"} · {formatDateTime(flag.createdAt, locale)} ·{" "}
+                    {flag.source === "USER" ? copy.reader : copy.scanner} · {flag.field}
+                  </span>
+                  <span className="adm-sub">{flag.excerpt}</span>
+                </div>
+                <div className="adm-acts">
+                  {flag.targetType === "PROFILE" ? (
+                    <form action={`/api/admin/flags/${flag.id}`} method="post">
+                      <input type="hidden" name="action" value="clear" />
+                      <button type="submit" className="btn danger">{copy.clearBio}</button>
+                    </form>
+                  ) : (
+                    <form action={`/api/admin/flags/${flag.id}`} method="post">
+                      <input type="hidden" name="action" value="archive" />
+                      <button type="submit" className="btn danger">{copy.archiveBoard}</button>
+                    </form>
+                  )}
+                  <form action={`/api/admin/flags/${flag.id}`} method="post">
+                    <input type="hidden" name="action" value="resolve" />
+                    <button type="submit" className="btn ghost">{copy.resolve}</button>
+                  </form>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }

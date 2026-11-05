@@ -38,6 +38,11 @@ export async function checkRateLimit(
   windowMs: number,
   now = Date.now(),
 ): Promise<RateLimitResult> {
+  // Defence in depth: callers validate their fields, but a future caller must
+  // not be able to persist an arbitrarily large primary key.
+  if (key.length > 200) {
+    return { allowed: false, remaining: 0, retryAfterSec: 60 };
+  }
   const expiresAt = new Date(now + windowMs);
   const nowDate = new Date(now);
 
@@ -94,6 +99,11 @@ function fromEnv(name: string, fallback: RateLimit): RateLimit {
 
 export const RATE_LIMITS = {
   login: fromEnv("LOGIN", { limit: 10, windowMs: 10 * MINUTE }),
+  // Aggregate IP and account buckets stop username rotation. 900 attempts per
+  // 10 minutes leaves room for a whole class behind one school NAT (600
+  // students plus failures); tune with RATE_LIMIT_LOGIN_IP_LIMIT.
+  loginIp: fromEnv("LOGIN_IP", { limit: 900, windowMs: 10 * MINUTE }),
+  loginAccount: fromEnv("LOGIN_ACCOUNT", { limit: 60, windowMs: 10 * MINUTE }),
   register: fromEnv("REGISTER", { limit: 60, windowMs: 60 * MINUTE }),
   threadCreate: fromEnv("THREAD", { limit: 10, windowMs: 60 * MINUTE }),
   reply: fromEnv("REPLY", { limit: 60, windowMs: 60 * MINUTE }),

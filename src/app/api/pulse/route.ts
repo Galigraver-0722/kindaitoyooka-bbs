@@ -2,6 +2,14 @@ import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+// Every visible page polls this route. With 600 readers that is ~50 req/s even
+// when nothing changes, and SQLite is a single process. A two-second cache cuts
+// it to ~0.5 req/s; AutoRefresh already waits 12 seconds, so the added lag is
+// invisible in practice. A multi-process deployment would replace this with a
+// shared marker row.
+const CACHE_MS = 2_000;
+let cache: { at: number; expiresAt: number } | null = null;
+
 /**
  * Cheap "has anything changed" probe for AutoRefresh. One number from a handful
  * of indexed lookups; the client compares it with the value it saw last time.
@@ -12,6 +20,11 @@ export const dynamic = "force-dynamic";
  * `Thread.updatedAt` are part of the maximum.
  */
 export async function GET() {
+  const now = Date.now();
+  if (cache && cache.expiresAt > now) {
+    return Response.json({ at: cache.at }, { headers: { "cache-control": "no-store" } });
+  }
+
   const [post, thread, threadLike, postLike, bookmark, report] = await Promise.all([
     prisma.post.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
     prisma.thread.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
@@ -32,5 +45,6 @@ export async function GET() {
     report?.createdAt.getTime() ?? 0,
   );
 
+  cache = { at, expiresAt: now + CACHE_MS };
   return Response.json({ at }, { headers: { "cache-control": "no-store" } });
 }

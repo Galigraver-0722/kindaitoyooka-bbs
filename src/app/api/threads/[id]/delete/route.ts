@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.thread.update({ where: { id }, data: { isDeleted: true } });
+    await tx.thread.update({ where: { id }, data: { isDeleted: true, deletedAt: new Date() } });
     await recordAudit(tx, {
       actorId: user.id,
       action: "thread.remove",

@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { scanPost } from "@/lib/content-filter";
 import { recordBlockedAttempt } from "@/lib/content-guard";
+import { recordAdvisoryFlags } from "@/lib/moderation-flags";
 import { prisma } from "@/lib/db";
 import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -80,8 +81,17 @@ export async function POST(request: Request) {
       sortOrder: 100,
       suggestedTags: tags.join(","),
     },
-    select: { slug: true },
+    select: { id: true, slug: true },
   });
+
+  if (scan.flagged.length > 0) {
+    await recordAdvisoryFlags({
+      targetType: "BOARD",
+      targetId: board.id,
+      hits: scan.flagged,
+      texts: [name, description, tags.join(" ")],
+    });
+  }
 
   return seeOther(request, `/b/${board.slug}`);
 }

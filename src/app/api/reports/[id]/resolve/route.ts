@@ -40,7 +40,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   if (action === "remove") {
     await prisma.$transaction(async (tx) => {
-      await tx.post.update({ where: { id: report.postId }, data: { isDeleted: true } });
+      await tx.post.update({
+        where: { id: report.postId },
+        data: { isDeleted: true, deletedAt: new Date() },
+      });
       await tx.report.update({
         where: { id },
         data: { resolvedAt: new Date(), resolvedById: user.id, resolution: "removed" },

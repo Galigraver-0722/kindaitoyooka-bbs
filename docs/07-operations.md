@@ -233,7 +233,7 @@ copy. Copying a live `.db` file with `cp` can capture a half-written page.
 | `pnpm invite new [note]` | Issue a new shared code, retiring the previous one; the value is printed once |
 | `pnpm invite stop` | Stop the current code; nobody can register until a new one is issued |
 | `pnpm delete-account <username>` | Anonymise an account (keeps posts, clears email/password, deletes sessions) |
-| `pnpm purge` | Apply the retention schedule: 7-day excerpts, 90-day deleted bodies, 1-year reports, 3-year audit rows, expired sessions |
+| `pnpm purge` | Apply the retention schedule: 7-day excerpts, 90-day deleted bodies (thread or post), expired rate-limit rows and sessions, 1-year reports, 3-year audit rows; safety holds pause body erasure |
 | `pnpm verify-backup <file>` | Re-check integrity and show counts before trusting a file |
 | `pnpm restore <file> <target> --force` | Copy a verified backup over a target database, then verify it |
 
@@ -256,7 +256,7 @@ failed backup is visible in the log:
 
 ```bash
 # Optional, after the line above:
-# rclone copy /srv/backups/ remote:bbs-backups/ --include 'bbs-*.db'
+# rclone sync --delete /srv/backups/ remote:bbs-backups/ --include 'bbs-*.db'
 ```
 
 ### Restore drill (do this monthly)

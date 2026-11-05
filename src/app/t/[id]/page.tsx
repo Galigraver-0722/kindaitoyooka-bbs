@@ -19,6 +19,9 @@ import { CommentSection, type CommentData, type CommentLabels } from "@/componen
 
 export const dynamic = "force-dynamic";
 
+/** Hard cap on rendered posts; the rest stays exportable but is not hydrated. */
+const MAX_RENDERED_POSTS = 500;
+
 const replyIcon = (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
     <path d="M20 15a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3Z" />
@@ -60,8 +63,10 @@ export default async function ThreadPage({
         board: { select: { slug: true, name: true } },
         author: { select: { username: true } },
         tags: { select: { name: true } },
+        _count: { select: { posts: true } },
         posts: {
           orderBy: { createdAt: "asc" },
+          take: MAX_RENDERED_POSTS,
           include: { author: { select: { username: true, role: true, avatarColor: true, avatarRing: true } } },
         },
       },
@@ -143,6 +148,7 @@ export default async function ThreadPage({
   });
 
   const comments = tree.map(toComment);
+  const omitted = Math.max(0, (thread._count?.posts ?? 0) - thread.posts.length);
 
   return (
     <ThemedPage
@@ -205,6 +211,7 @@ export default async function ThreadPage({
 
         {errorText ? <p className="notice error">{errorText}</p> : null}
         {noticeText ? <p className="notice">{noticeText}</p> : null}
+        {omitted > 0 ? <p className="notice">{pages.longThread(omitted)}</p> : null}
 
         {root ? (
           <article className="root-post" id={`p-${root.id}`}>

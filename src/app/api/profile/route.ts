@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { scanPost } from "@/lib/content-filter";
 import { recordBlockedAttempt } from "@/lib/content-guard";
+import { recordAdvisoryFlags } from "@/lib/moderation-flags";
 import { prisma } from "@/lib/db";
 import { formText, isOversized, isSameOrigin, payloadTooLarge, seeOther } from "@/lib/http";
 
@@ -43,6 +44,15 @@ export async function POST(request: Request) {
     where: { id: user.id },
     data: { bio: bio || null, avatarColor, avatarRing },
   });
+
+  if (scan.flagged.length > 0) {
+    await recordAdvisoryFlags({
+      targetType: "PROFILE",
+      targetId: user.id,
+      hits: scan.flagged,
+      texts: [bio],
+    });
+  }
 
   return seeOther(request, `/u/${user.username}?notice=profile-saved`);
 }
