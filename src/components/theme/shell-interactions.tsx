@@ -7,19 +7,22 @@ import { usePathname } from "next/navigation";
 export function ShellInteractions() {
   const pathname = usePathname();
   useEffect(() => {
-    const menu = document.querySelector<HTMLDetailsElement>(".board-menu");
+    const currentMenu = () => document.querySelector<HTMLDetailsElement>(".bd-drawer");
+    const menu = currentMenu();
     if (menu) menu.open = false;
     const keydown = (event: KeyboardEvent) => {
+      const menu = currentMenu();
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        document.querySelector<HTMLInputElement>(".nav-search input")?.focus();
+        document.querySelector<HTMLInputElement>(".search input, .cmd input")?.focus({ preventScroll: true });
       }
       if (event.key === "Escape" && menu?.open) {
         menu.open = false;
-        menu.querySelector<HTMLElement>("summary")?.focus();
+        menu.querySelector<HTMLElement>("summary")?.focus({ preventScroll: true });
       }
     };
     const pointerdown = (event: PointerEvent) => {
+      const menu = currentMenu();
       if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
     };
     document.addEventListener("keydown", keydown);

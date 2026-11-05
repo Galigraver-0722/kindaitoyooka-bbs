@@ -1,14 +1,15 @@
 # Interface design
 
-The campus commons redesign replaces the earlier separate AQUA POP and SIGNAL layouts with a shared navigation and card system, in day and night palettes. This supersedes the visual treatment in ADR-0018 and the prototype notes under `local/designs/`.
+Kinjo uses the original AQUA POP layout in light mode and the original SIGNAL layout in dark mode, restored from `f7577f2`. The changes to that design are the Kinjo name and its aqua conversation badge with vector lettering for 近.
 
-- A shared header contains search, boards, announcements, account, language, and theme controls. Cmd/Ctrl-K focuses search. The native board menu supports Escape and outside-click dismissal.
-- The home introduction explains the forum and links directly to composing or browsing. Its illustration is decorative HTML/CSS, has no network dependency, and is hidden from assistive technology.
-- Feed, board, and profile thread lists use the same cards in both themes. Existing search, sorting, pagination, and permissions stay in their handlers.
-- Forms, discussions, profiles, policies, moderation surfaces, and error boundaries share the new spacing, borders, and typography. Policy links are available in the themed footer.
-- Entrance animations run once; hover motion is limited to precise pointers. Reduced-motion preferences disable animation and transitions. Keyboard focus remains visible, and a skip link precedes navigation.
-- New copy lives in both dictionaries in `src/lib/locales.ts`. No external font or animation dependency is required.
+The original header, compact introduction, board activity chart, board sidebar, feed filters, card grid, dark thread rows, and circular compose button return with their original spacing and styling. The later neighborhood illustration and dashboard are no longer rendered.
 
-The final theme layer is `src/components/theme/redesign-css.ts`, appended after the existing structural styles. `shell-interactions.tsx` owns the small navigation enhancements; normal links and GET search forms remain usable without JavaScript.
+`src/components/theme/themed-page.tsx` loads `home-d-css.ts` / `home-b-css.ts` and `pages-css.ts`, followed by `logo-css.ts` and `motion-css.ts`. The experimental `redesign-css.ts`, `kinjo-css.ts`, `polish-css.ts`, and `aqua-css.ts` layers remain in the repository but are not applied. The activity chart component remains available for future use.
 
-Validate both themes at desktop and phone widths, with Japanese and English text, reduced motion, keyboard search, board-menu dismissal, and route navigation. Check authenticated screens with a local test account. Never include student data in screenshots committed to the repository.
+Keyboard search, dismissible board menus, and the skip link are retained. Search, authentication, announcements, moderation, posting, reactions, and language/theme controls keep their existing handlers. Post totals exclude deleted posts and deleted threads. No external fonts or image requests are needed.
+
+Validate both languages and themes at desktop and phone widths, keyboard search and board menus, route navigation, reduced motion, and the matching inline/download/tab icons. Keep local screenshots out of the repository.
+
+## Motion and interactions
+
+`motion-css.ts` adds consistent easing and short transitions to the original controls, cards, menus, sheets, and drawers. Like/save feedback animates the icon rather than moving the button. Touch devices avoid sticky hover lifts. The scroll header uses a 28px downward / 14px upward threshold and one update per animation frame; it stays visible while focused or while a menu is open. Notification and announcement panels animate out before unmounting. Theme changes refresh the server components beneath a short reveal instead of reloading the document, preserving browser and form state. Reduced-motion preferences disable these effects.

@@ -1,5 +1,5 @@
 export const pagesDCss = `
-.tw-d{--ink-2:#3A5E6C;--accent:var(--cyan)}
+.tw-d{--ink-2:#3A5E6C;--accent:var(--cyan);--line-soft:#BCD7E1}
 .tw-d .page-head{margin:44px 0 26px}
 .tw-d .crumb{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted)}
 .tw-d .crumb a{color:#06707D;font-weight:600}
@@ -495,6 +495,28 @@ export const pagesDCss = `
 /* Invite code: show the value in full, large enough to read out loud. */
 .invite-current{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:12px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:rgba(90,230,236,.05)}
 .invite-code{font-family:var(--mono);font-size:20px;line-height:1.2;letter-spacing:.16em;font-weight:600;color:var(--cyan);user-select:all}
+
+/* Comments: one clear rule between top-level comments. Nested replies are
+   grouped by the vertical thread line instead of a horizontal rule, so a
+   parent and its answers keep reading as one block. The light palette used to
+   leave --line-soft undefined, which voided the whole border shorthand; it is
+   defined in the .tw-d block at the top of this block. */
+.tw-d .cmt-tree > .cmt{border-top-color:#BCD7E1}
+
+/* Footer, light design. The layout's Tailwind footer is hidden inside themed
+   pages, so each design gets its own footer instead of a generic panel. */
+.tw-d .kfoot{margin-top:72px;border-top:2px solid var(--line);background:rgba(255,255,255,.55)}
+.tw-d .kfoot-in{max-width:1240px;margin:0 auto;padding:30px clamp(16px,3vw,32px) 46px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px 36px;align-items:start}
+.tw-d .kfoot-mark{font-size:20px;font-weight:800;letter-spacing:-.03em}
+.tw-d .kfoot-mark small{font-family:var(--mono);font-size:9px;letter-spacing:.16em;font-weight:500;color:var(--muted);margin-left:7px}
+.tw-d .kfoot-disclaimer{margin-top:10px;max-width:52ch;font-size:12px;line-height:1.8;color:var(--muted)}
+.tw-d .kfoot .kfoot-nav{margin-left:0;display:flex;flex-wrap:wrap;gap:8px 18px}
+.tw-d .kfoot .kfoot-nav a{padding:0 0 1px;border:0;border-bottom:1.5px solid transparent;border-radius:0;box-shadow:none;background:none;font-size:12px;font-weight:700;transition:color .14s,border-color .14s}
+.tw-d .kfoot .kfoot-nav a:hover{border-bottom-color:var(--cyan);background:none;box-shadow:none;transform:none;color:var(--cyan-deep)}
+.tw-d .kfoot-meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 20px;border-top:1.5px solid var(--line-soft);padding-top:14px;font-family:var(--mono);font-size:10px;letter-spacing:.02em;color:var(--muted)}
+.tw-d .kfoot-meta a{color:var(--cyan-deep);font-weight:600;overflow-wrap:anywhere}
+.tw-d .kfoot-meta a:hover{text-decoration:underline;text-underline-offset:3px}
+@media (max-width:720px){.tw-d .kfoot-in{grid-template-columns:1fr}}
 
 `;
 
@@ -995,8 +1017,27 @@ export const pagesBCss = `
 .auth-link{color:var(--cyan);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
 .tw-d .auth-link:hover{color:#0A94A6}
 
-/* Invite code: show the value in full, large enough to read out loud. */
-.invite-current{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:12px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:rgba(90,230,236,.05)}
-.invite-code{font-family:var(--mono);font-size:20px;line-height:1.2;letter-spacing:.16em;font-weight:600;color:var(--cyan);user-select:all}
+/* Comments, dark design: a slightly stronger rule between top-level comments.
+   Nested replies keep only the left thread line. */
+.tw-b .cmt-tree > .cmt{border-top-color:rgba(90,230,236,.28)}
+
+/* Footer, dark design. */
+.tw-b .kfoot{margin-left:54px;margin-top:64px;border-top:1px solid var(--line);background:rgba(4,15,22,.55)}
+.tw-b .kfoot-in{max-width:1320px;margin:0 auto;padding:26px clamp(18px,3.4vw,42px) 48px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px 36px;align-items:start}
+.tw-b .kfoot-mark{font-family:var(--mono);font-size:13px;letter-spacing:.16em;color:var(--text)}
+.tw-b .kfoot-mark small{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--muted);margin-left:8px}
+.tw-b .kfoot-disclaimer{margin-top:10px;max-width:56ch;font-size:11.5px;line-height:1.8;color:var(--muted)}
+.tw-b .kfoot-nav{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;color:var(--muted)}
+.tw-b .kfoot-nav a:hover{color:var(--cyan)}
+.tw-b .kfoot-meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 20px;border-top:1px solid var(--line-soft);padding-top:14px;font-family:var(--mono);font-size:10px;letter-spacing:.02em;color:var(--muted)}
+.tw-b .kfoot-meta a{color:var(--cyan)}
+.tw-b .kfoot-meta a:hover{text-decoration:underline;text-underline-offset:3px}
+@media (max-width:900px){.tw-b .kfoot{margin-left:0}}
+@media (max-width:720px){.tw-b .kfoot-in{grid-template-columns:1fr}}
+
+/* Reply count in the dark list. The light cards pair the number with a speech
+   bubble; the row layout shows a bare number, so the count loses its meaning.
+   Keep the icon inline and inherit the row's muted colour. */
+.tw-b .trow .num svg{vertical-align:-2px;margin-right:4px;color:var(--muted)}
 
 `;

@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { publishCount, subscribeCounts } from "@/components/theme/live-counts";
 
 const ICONS = {
   like: (
@@ -36,11 +37,29 @@ export function ToggleAction({
   large?: boolean;
 }) {
   const router = useRouter();
+  // `useId` is stable across tabs (same tree position), which would make the
+  // second tab mistake another tab's broadcast for its own echo. A random token
+  // per mounted button keeps "ignore my own event" honest across tabs.
+  const [instanceId] = useState(() => `t${Math.random().toString(36).slice(2)}`);
   const [active, setActive] = useState(initialActive);
   const [count, setCount] = useState(initialCount);
   const [busy, setBusy] = useState(false);
   const [pulse, setPulse] = useState(false);
   const [fromServer, setFromServer] = useState({ count: initialCount, active: initialActive });
+
+  // Another button for the same record (this page or another tab) already got
+  // the server's answer; mirror it instead of waiting for a refresh.
+  useEffect(
+    () =>
+      subscribeCounts((update) => {
+        if (update.endpoint !== endpoint || update.source === instanceId) {
+          return;
+        }
+        setCount(Math.max(0, update.count));
+        setActive(update.active);
+      }),
+    [endpoint, instanceId],
+  );
 
   // A server refresh (AutoRefresh) brings new numbers, but React ignores later
   // values of `useState`'s argument. Adopt the server's numbers unless our own
@@ -83,12 +102,14 @@ export function ToggleAction({
       }
 
       const data = (await response.json()) as { active?: boolean; count?: number };
-      if (typeof data.active === "boolean") {
-        setActive(data.active);
-      }
-      if (typeof data.count === "number") {
-        setCount(Math.max(0, data.count));
-      }
+      const nextActive = typeof data.active === "boolean" ? data.active : next;
+      const nextCount =
+        typeof data.count === "number"
+          ? Math.max(0, data.count)
+          : Math.max(0, count + (next ? 1 : -1));
+      setActive(nextActive);
+      setCount(nextCount);
+      publishCount({ endpoint, count: nextCount, active: nextActive, source: instanceId });
       // Store the new numbers in the Router Cache too, so going back to this
       // list does not show the pre-click count.
       router.refresh();

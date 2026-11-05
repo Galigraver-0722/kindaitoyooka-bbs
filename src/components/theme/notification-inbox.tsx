@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { usePanelMotion } from "@/components/theme/use-panel-motion";
 
 export type InboxItem = {
   id: string;
@@ -43,13 +44,9 @@ export function NotificationInbox({
   themeClass: "tw-d" | "tw-b";
   labels: { title: string; empty: string; markSeen: string; open: string; close: string; unreadWord: string };
 }) {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, root, panel, close } = usePanelMotion();
   const [count, setCount] = useState(unseen);
   const [panelBox, setPanelBox] = useState<{ top: number; right: number; sheet: boolean } | null>(null);
-  const root = useRef<HTMLDivElement>(null);
-  const panel = useRef<HTMLDivElement>(null);
-
-  const close = useCallback(() => setOpen(false), []);
 
   /**
    * The header carries `backdrop-filter`, which makes it the containing block
@@ -67,7 +64,7 @@ export function NotificationInbox({
       top: Math.round(rect.bottom + 10),
       right: Math.max(8, Math.round(window.innerWidth - rect.right)),
     });
-  }, []);
+  }, [root]);
 
   useEffect(() => {
     if (open) place();
@@ -95,7 +92,7 @@ export function NotificationInbox({
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onClick);
     };
-  }, [open, close]);
+  }, [open, close, panel, root]);
 
   /**
    * Clicking a notification that points at the page you are already on must
@@ -115,8 +112,9 @@ export function NotificationInbox({
     event.preventDefault();
     if (target.search) window.history.replaceState(null, "", `${target.pathname}${target.search}${target.hash}`);
 
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
     if (!target.hash) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior });
       return;
     }
 
@@ -124,7 +122,7 @@ export function NotificationInbox({
     const id = target.hash.slice(1);
     const node = id ? document.getElementById(id) : null;
     if (!node) return;
-    node.scrollIntoView({ block: "start", behavior: "smooth" });
+    node.scrollIntoView({ block: "start", behavior });
     node.classList.remove("flash");
     void (node as HTMLElement).offsetWidth;
     node.classList.add("flash");
@@ -132,9 +130,13 @@ export function NotificationInbox({
   }
 
   function toggle() {
-    const next = !open;
-    setOpen(next);
-    if (next && count > 0) {
+    if (open) {
+      close();
+      return;
+    }
+    place();
+    setOpen(true);
+    if (count > 0) {
       setCount(0);
       void fetch("/api/notifications/seen", {
         method: "POST",

@@ -1,5 +1,7 @@
 # Kinjo (近所): a little neighborhood within our school
 
+> The Kinjo name and philosophy below remain current. The neighborhood visual design and dashboard described here are historical; the original AQUA POP / SIGNAL layout is restored. See [Interface design](11-interface-design.md) and [Aqua conversation badge](13-kanji-identity.md).
+
 The public name is **Kinjo**, meaning neighborhood. People can share hallways without knowing one another; Kinjo makes room for conversations beyond their usual circles. The character 近 also quietly connects the name to Kindai. The project is independent and student-run, rather than an official school channel.
 
 Kinjo is simply another place to be. Questions, ideas, and useful information remain discoverable beyond fast-moving chat histories. The community gives the neighborhood its character. The bilingual `/about` page presents this philosophy to readers.
