@@ -30,8 +30,8 @@ export default function ErrorPage({
         display: "grid",
         placeItems: "center",
         padding: "32px 20px",
-        background: "#F0FBFE",
-        backgroundImage: "radial-gradient(rgba(6,35,48,.13) 1.1px, transparent 1.1px)",
+        background: "#f5f7f8",
+        backgroundImage: "radial-gradient(ellipse at top, #e4f4ef, transparent)",
         backgroundSize: "22px 22px",
         color: "#062330",
         fontFamily:
@@ -42,9 +42,9 @@ export default function ErrorPage({
         style={{
           width: "min(520px, 100%)",
           background: "#FFFFFF",
-          border: "2px solid #062330",
+          border: "1px solid #d6e2e6",
           borderRadius: 18,
-          boxShadow: "6px 6px 0 #062330",
+          boxShadow: "0 20px 60px -30px #23485440",
           padding: "26px 26px 22px",
         }}
       >
@@ -76,10 +76,10 @@ export default function ErrorPage({
             onClick={reset}
             style={{
               padding: "11px 20px",
-              border: "2px solid #062330",
+              border: "1px solid #d6e2e6",
               borderRadius: 12,
-              background: "#12BFD1",
-              boxShadow: "4px 4px 0 #062330",
+              background: "#76e0cb",
+              boxShadow: "none",
               fontSize: 14,
               fontWeight: 800,
               cursor: "pointer",
@@ -92,10 +92,10 @@ export default function ErrorPage({
             href="/"
             style={{
               padding: "11px 20px",
-              border: "2px solid #062330",
+              border: "1px solid #d6e2e6",
               borderRadius: 12,
               background: "#FFFFFF",
-              boxShadow: "4px 4px 0 #062330",
+              boxShadow: "none",
               fontSize: 14,
               fontWeight: 800,
               color: "#062330",

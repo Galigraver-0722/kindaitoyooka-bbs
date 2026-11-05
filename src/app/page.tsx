@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import {
   BoardNav,
   ThemedPage,
@@ -20,6 +20,7 @@ import { sortByHot } from "@/lib/hot";
 import { sortByRising } from "@/lib/rising";
 import { getLocale, t } from "@/lib/i18n";
 import { getTheme } from "@/lib/theme";
+import { parsePage, THREADS_PER_PAGE, totalPages } from "@/lib/pagination";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -28,10 +29,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const dynamic = "force-dynamic";
 
-const FEED_LIMIT = 30;
-const SEARCH_PAGE_SIZE = 20;
 /** Upper bound on rows pulled for in-app ranking; ~50x the seeded corpus. */
-const SEARCH_CANDIDATES = 500;
+const SEARCH_CANDIDATES = 200;
+/** Hot and rising read the newest 100 threads; farther back is archive material. */
+const RANKED_CANDIDATES = 100;
 
 const FEED_INCLUDE = {
   board: { select: { slug: true, name: true } },
@@ -85,11 +86,14 @@ export default async function HomePage({
   const totalThreads = summaries.reduce((sum, board) => sum + board.count, 0);
 
   const [totalPosts, saved] = await Promise.all([
-    prisma.post.count({ where: { isDeleted: false } }),
+    prisma.post.count({ where: { isDeleted: false, thread: { isDeleted: false } } }),
     user ? prisma.threadBookmark.count({ where: { userId: user.id } }) : Promise.resolve(0),
   ]);
 
   let rows: FeedRow[] = [];
+  let totalMatches = 0;
+  let currentPage = 1;
+  let pageCount = 1;
 
   if (!needsLogin) {
     const where: Prisma.ThreadWhereInput = { isDeleted: false };
@@ -112,58 +116,76 @@ export default async function HomePage({
       ];
     }
 
-    // With a search term the candidate set is every match, not the newest 30:
-    // a question from last term must still be findable. Ranking happens below.
-    rows = await prisma.thread.findMany({
-      where,
-      orderBy: { lastPostAt: "desc" },
-      take: query ? SEARCH_CANDIDATES : order === "latest" ? 30 : 100,
-      include: FEED_INCLUDE,
-    });
-  }
+    if (!query && order === "latest") {
+      // The plain feed is the one view the database can page directly: count
+      // the matches, then read only the window the reader asked for.
+      totalMatches = await prisma.thread.count({ where });
+      pageCount = totalPages(totalMatches);
+      currentPage = Math.min(parsePage(page), pageCount);
+      rows = await prisma.thread.findMany({
+        where,
+        orderBy: { lastPostAt: "desc" },
+        skip: (currentPage - 1) * THREADS_PER_PAGE,
+        take: THREADS_PER_PAGE,
+        include: FEED_INCLUDE,
+      });
+    } else {
+      // Search and the ranked views need the candidate set in memory, so they
+      // page over the ranked array instead of over the table.
+      const candidates = await prisma.thread.findMany({
+        where,
+        orderBy: { lastPostAt: "desc" },
+        take: query ? SEARCH_CANDIDATES : RANKED_CANDIDATES,
+        include: FEED_INCLUDE,
+      });
+      const withReplies = candidates.map((row) => ({
+        ...row,
+        replyCount: Math.max(0, row._count.posts - 1),
+      }));
 
-  const withReplies = rows.map((row) => ({
-    ...row,
-    replyCount: Math.max(0, row._count.posts - 1),
-  }));
+      if (query) {
+        // Keep at most eight bodies per thread for ranking. A single SQL
+        // window keeps this bounded; reading every body of every candidate
+        // grew linearly with the archive.
+        const ids = withReplies.map((row) => row.id);
+        const bodies = ids.length === 0 ? [] : await prisma.$queryRaw<
+          Array<{ threadId: string; body: string }>
+        >(Prisma.sql`
+          SELECT "threadId", "body" FROM (
+            SELECT "threadId", "body",
+              ROW_NUMBER() OVER (PARTITION BY "threadId" ORDER BY "createdAt") AS rn
+            FROM "Post"
+            WHERE "threadId" IN (${Prisma.join(ids)}) AND "isDeleted" = 0
+          ) WHERE rn <= 8
+        `);
+        const bodiesByThread = new Map<string, string[]>();
+        for (const post of bodies) {
+          const list = bodiesByThread.get(post.threadId) ?? [];
+          if (list.length < 8) list.push(post.body);
+          bodiesByThread.set(post.threadId, list);
+        }
 
-  if (query) {
-    // Bodies are only fetched for search: the plain feed does not need them, and
-    // a candidate set of a few hundred threads would otherwise carry megabytes.
-    const bodies = await prisma.post.findMany({
-      where: { threadId: { in: withReplies.map((row) => row.id) }, isDeleted: false },
-      orderBy: { createdAt: "asc" },
-      select: { threadId: true, body: true },
-    });
-    const bodiesByThread = new Map<string, string[]>();
-    for (const post of bodies) {
-      const list = bodiesByThread.get(post.threadId) ?? [];
-      if (list.length < 8) list.push(post.body);
-      bodiesByThread.set(post.threadId, list);
+        const rankable = withReplies.map((row) => ({
+          ...row,
+          tagNames: row.tags.map((tag) => tag.name),
+          bodies: bodiesByThread.get(row.id) ?? [],
+        }));
+
+        const ranked = sortByRelevance(query, rankable);
+        rows =
+          order === "hot" ? sortByHot(ranked) : order === "rising" ? sortByRising(ranked) : ranked;
+      } else {
+        rows = order === "hot" ? sortByHot(withReplies) : sortByRising(withReplies);
+      }
+
+      totalMatches = rows.length;
+      pageCount = totalPages(totalMatches);
+      currentPage = Math.min(parsePage(page), pageCount);
+      rows = rows.slice(
+        (currentPage - 1) * THREADS_PER_PAGE,
+        currentPage * THREADS_PER_PAGE,
+      );
     }
-
-    const rankable = withReplies.map((row) => ({
-      ...row,
-      tagNames: row.tags.map((tag) => tag.name),
-      bodies: bodiesByThread.get(row.id) ?? [],
-    }));
-
-    const ranked = sortByRelevance(query, rankable);
-    rows =
-      order === "hot" ? sortByHot(ranked) : order === "rising" ? sortByRising(ranked) : ranked;
-  } else if (order !== "latest") {
-    rows = (order === "hot" ? sortByHot(withReplies) : sortByRising(withReplies)).slice(0, 30);
-  } else {
-    rows = withReplies;
-  }
-
-  // Search results paginate; the plain feed stays one reading surface.
-  const totalMatches = rows.length;
-  const pageSize = query ? SEARCH_PAGE_SIZE : FEED_LIMIT;
-  const pageCount = Math.max(1, Math.ceil(totalMatches / pageSize));
-  const currentPage = Math.min(Math.max(1, Number.parseInt(page ?? "1", 10) || 1), pageCount);
-  if (pageCount > 1) {
-    rows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   }
 
   const ids = rows.map((row) => row.id);
@@ -200,7 +222,7 @@ export default async function HomePage({
     return qs ? `/?${qs}` : "/";
   };
 
-  const searchPageHref = (target: number) => {
+  const feedPageHref = (target: number) => {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
     if (view !== "all") params.set("filter", view);
@@ -331,14 +353,14 @@ export default async function HomePage({
               <ThreadRows threads={list} locale={locale} query={query || undefined} />
             )}
 
-            {query && pageCount > 1 ? (
+            {pageCount > 1 ? (
               <nav className="pager" aria-label={t(locale).pages.pager.prev}>
                 {currentPage > 1 ? (
-                  <Link href={searchPageHref(currentPage - 1)}>← {t(locale).pages.pager.prev}</Link>
+                  <Link href={feedPageHref(currentPage - 1)}>← {t(locale).pages.pager.prev}</Link>
                 ) : null}
                 <span>{currentPage} / {pageCount}</span>
                 {currentPage < pageCount ? (
-                  <Link href={searchPageHref(currentPage + 1)}>{t(locale).pages.pager.next} →</Link>
+                  <Link href={feedPageHref(currentPage + 1)}>{t(locale).pages.pager.next} →</Link>
                 ) : null}
               </nav>
             ) : null}

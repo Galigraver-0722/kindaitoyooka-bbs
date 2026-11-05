@@ -101,7 +101,7 @@ removing too little creates harm.
 flowchart TD
     A[Student submits report] --> B[Open report in /moderation]
     B --> C{Type of harm}
-    C -->|PII, threat, sexual content, self-harm| D[Remove immediately + escalate to teacher advisor]
+    C -->|PII, threat, sexual content, self-harm| D[Hide immediately + preserve + escalate to teacher advisor]
     C -->|Harassment, spam, minor rule break| E[Review context]
     E --> F{Remove?}
     F -->|Yes| G[Soft-delete + resolve as removed]
@@ -118,7 +118,7 @@ flowchart TD
 
 | Severity | Examples | Target |
 | --- | --- | --- |
-| Critical | Threat of violence, sexual content involving a minor, active doxxing | Immediate removal; advisor notified within 30 minutes during school hours |
+| Critical | Threat of violence, sexual content involving a minor, active doxxing | Immediate public hide; advisor notified within 30 minutes during school hours |
 | High | Personal information, targeted harassment, self-harm content | Same school day |
 | Normal | Spam, rudeness, off-topic | Within 2 school days |
 | Low | Disagreement about rules, feature requests | Weekly review |
@@ -210,16 +210,33 @@ channel, and let the record stand.
 If content suggests **imminent danger** to someone (suicide, self-harm, violence, abuse):
 
 1. Do not try to counsel the person through the forum.
-2. Notify the teacher advisor immediately by phone or in person, not only by email.
-3. If the person is in immediate danger and the advisor cannot be reached, call emergency
+2. Hide the content from public view immediately (soft-delete / placeholder). This is a
+   visibility action, not a hard delete: the body and metadata stay in the database.
+3. Notify the teacher advisor immediately by phone or in person, not only by email.
+4. If the person is in immediate danger and the advisor cannot be reached, call emergency
    services (110 for police, 119 for ambulance/fire in Japan).
-4. Preserve the content and metadata; do not delete it until the advisor says so.
-5. Do not promise confidentiality. Say: "I am worried about you. I am going to tell a teacher
+5. Preserve the content and metadata. Put a safety hold on the post or thread if the case may
+   need review beyond the normal 90-day deletion window. Do not hard-delete or anonymise the
+   body until the advisor or the school's process says so.
+6. Do not promise confidentiality. Say: "I am worried about you. I am going to tell a teacher
    who can help."
-6. Record what happened, when, and to whom it was escalated.
+7. Record what happened, when, and to whom it was escalated.
 
 A forum post is not a crisis line. Publish links to local support services on the rules page and
 keep them current.
+
+### Visibility, retention, and response
+
+These are three separate decisions. Do not collapse them into "remove".
+
+| Decision | What changes | Who decides |
+| --- | --- | --- |
+| Public visibility | The thread/post shows a placeholder; readers cannot see the body | Any moderator, immediately, for imminent danger |
+| Evidence retention | The row and metadata stay; a safety hold pauses the 90-day purge | Moderator records; advisor reviews |
+| Hard deletion | The body is erased; only the audit trail remains | Advisor / school process, after review |
+
+A scanner flag alone does not hide anything. A human decides whether the flag describes imminent
+danger; if it does, use the visibility action above and preserve the record.
 
 ## 9. Legal context in Japan (summary, not advice)
 

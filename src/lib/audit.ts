@@ -14,7 +14,11 @@ export type AuditAction =
   | "announcement.update"
   | "announcement.delete"
   | "invite.create"
-  | "invite.revoke";
+  | "invite.revoke"
+  | "safety.hold"
+  | "safety.release"
+  | "profile.bio.clear"
+  | "board.archive";
 
 export type AuditInput = {
   actorId: string;

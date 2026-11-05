@@ -31,25 +31,25 @@ enum ReportSource {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  username        String           @unique
-  email           String?          @unique
-  passwordHash    String
-  role            Role             @default(STUDENT)
-  avatarColor     String?
-  avatarRing      String?
-  bio             String?
+  id                  String           @id @default(cuid())
+  username            String           @unique
+  email               String?          @unique
+  passwordHash        String
+  role                Role             @default(STUDENT)
+  avatarColor         String?
+  avatarRing          String?
+  bio                 String?
   // Suspension is reversible and keeps every row: a suspended account cannot
   // sign in and every session is deleted, but its posts stay for the record.
-  isSuspended     Boolean          @default(false)
-  suspendedAt     DateTime?
-  suspendedReason String?
+  isSuspended         Boolean          @default(false)
+  suspendedAt         DateTime?
+  suspendedReason     String?
   // Last time the reader opened the notification inbox. Anything newer is
   // counted as unseen; the events themselves are derived from existing rows.
   notificationsSeenAt DateTime?
   // Versions of the four documents accepted at registration, e.g.
   // "terms:2026-10-27;rules:2026-10-27;privacy:2026-10-27;moderation:2026-10-27".
-  acceptedPolicies String?
+  acceptedPolicies    String?
   // Last time the reader opened the announcements panel. The entries live in
   // their own table, so only the moment is stored on the reader.
   announcementsSeenAt DateTime?
@@ -57,26 +57,27 @@ model User {
   // Registration requires accepting the terms. The timestamp and the version
   // accepted are the evidence; accounts created before the requirement existed
   // carry null and are not re-prompted.
-  termsAcceptedAt DateTime?
-  termsVersion    String?
+  termsAcceptedAt     DateTime?
+  termsVersion        String?
   // Account deletion is manual and anonymises in place: the row stays so that
   // posts keep their author, but the name is replaced and sign-in is disabled.
-  deletedAt       DateTime?
-  createdAt       DateTime         @default(now())
-  sessions        Session[]
-  threads         Thread[]
-  posts           Post[]
-  reports         Report[]         @relation("ReportAuthor")
-  resolvedReports Report[]         @relation("ReportResolver")
-  postLikes       PostLike[]
-  threadBookmarks ThreadBookmark[]
-  threadReads     ThreadRead[]
-  threadLikes     ThreadLike[]
-  ownedBoards     Board[]       @relation("BoardOwner")
-  auditLogs       AuditLog[]       @relation("AuditActor")
-  blockedAttempts BlockedAttempt[]
-  announcements   Announcement[]   @relation("AnnouncementAuthor")
-  drafts          Draft[]
+  deletedAt           DateTime?
+  createdAt           DateTime         @default(now())
+  sessions            Session[]
+  threads             Thread[]
+  posts               Post[]
+  reports             Report[]         @relation("ReportAuthor")
+  resolvedReports     Report[]         @relation("ReportResolver")
+  resolvedFlags       ModerationFlag[] @relation("FlagResolver")
+  postLikes           PostLike[]
+  threadBookmarks     ThreadBookmark[]
+  threadReads         ThreadRead[]
+  threadLikes         ThreadLike[]
+  ownedBoards         Board[]          @relation("BoardOwner")
+  auditLogs           AuditLog[]       @relation("AuditActor")
+  blockedAttempts     BlockedAttempt[]
+  announcements       Announcement[]   @relation("AnnouncementAuthor")
+  drafts              Draft[]
 }
 
 model Session {
@@ -91,67 +92,79 @@ model Session {
 }
 
 model Board {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  name        String
-  description String
-  kind        BoardKind @default(OFFICIAL)
-  ownerId     String?
-  owner       User?     @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  sortOrder     Int      @default(0)
-  isArchived    Boolean  @default(false)
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  name          String
+  description   String
+  kind          BoardKind @default(OFFICIAL)
+  ownerId       String?
+  owner         User?     @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  sortOrder     Int       @default(0)
+  isArchived    Boolean   @default(false)
   // Comma-separated tag hints for the compose form, e.g. "質問,試験,宿題".
-  suggestedTags String   @default("")
-  createdAt     DateTime @default(now())
+  suggestedTags String    @default("")
+  createdAt     DateTime  @default(now())
   threads       Thread[]
   drafts        Draft[]
 }
 
 model Thread {
-  id            String           @id @default(cuid())
-  boardId       String
-  board         Board            @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  authorId      String
-  author        User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  title         String
-  isPinned      Boolean          @default(false)
-  isLocked      Boolean          @default(false)
-  isDeleted     Boolean          @default(false)
-  likeCount     Int              @default(0)
-  bookmarkCount Int              @default(0)
-  createdAt     DateTime         @default(now())
-  lastPostAt    DateTime         @default(now())
-  editedAt      DateTime?
-  updatedAt     DateTime         @updatedAt
-  posts         Post[]
-  tags          Tag[]
-  bookmarks     ThreadBookmark[]
-  reads         ThreadRead[]
-  likes         ThreadLike[]
+  id              String           @id @default(cuid())
+  boardId         String
+  board           Board            @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  authorId        String
+  author          User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title           String
+  isPinned        Boolean          @default(false)
+  isLocked        Boolean          @default(false)
+  isDeleted       Boolean          @default(false)
+  likeCount       Int              @default(0)
+  bookmarkCount   Int              @default(0)
+  createdAt       DateTime         @default(now())
+  lastPostAt      DateTime         @default(now())
+  editedAt        DateTime?
+  // Set when the thread is soft-deleted. `updatedAt` changes on edits, so the
+  // purge job cannot use it as a deletion timestamp.
+  deletedAt       DateTime?
+  // A safety case pauses body erasure until this moment; the advisor releases
+  // it explicitly from the console.
+  safetyHoldUntil DateTime?
+  updatedAt       DateTime         @updatedAt
+  posts           Post[]
+  tags            Tag[]
+  bookmarks       ThreadBookmark[]
+  reads           ThreadRead[]
+  likes           ThreadLike[]
 
   @@index([boardId, lastPostAt])
   @@index([likeCount])
+  @@index([updatedAt])
 }
 
 model Post {
-  id        String     @id @default(cuid())
-  threadId  String
-  thread    Thread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  parentId  String?
-  parent    Post?      @relation("PostReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   Post[]     @relation("PostReplies")
-  authorId  String
-  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  body      String
-  isDeleted Boolean    @default(false)
-  likeCount Int        @default(0)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  reports   Report[]
-  likes     PostLike[]
+  id              String     @id @default(cuid())
+  threadId        String
+  thread          Thread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  parentId        String?
+  parent          Post?      @relation("PostReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies         Post[]     @relation("PostReplies")
+  authorId        String
+  author          User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body            String
+  isDeleted       Boolean    @default(false)
+  likeCount       Int        @default(0)
+  createdAt       DateTime   @default(now())
+  // Deletion timestamp for the retention job; see Thread.deletedAt.
+  deletedAt       DateTime?
+  // A safety case pauses body erasure until this moment.
+  safetyHoldUntil DateTime?
+  updatedAt       DateTime   @updatedAt
+  reports         Report[]
+  likes           PostLike[]
 
   @@index([threadId, createdAt])
   @@index([parentId])
+  @@index([updatedAt])
 }
 
 model Tag {
@@ -164,12 +177,13 @@ model Tag {
 model ThreadLike {
   userId    String
   threadId  String
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  thread    Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@id([userId, threadId])
   @@index([threadId])
+  @@index([createdAt])
 }
 
 model PostLike {
@@ -181,6 +195,7 @@ model PostLike {
 
   @@id([userId, postId])
   @@index([postId])
+  @@index([createdAt])
 }
 
 model ThreadBookmark {
@@ -192,6 +207,7 @@ model ThreadBookmark {
 
   @@id([userId, threadId])
   @@index([threadId])
+  @@index([createdAt])
 }
 
 model ThreadRead {
@@ -206,21 +222,22 @@ model ThreadRead {
 }
 
 model Report {
-  id           String    @id @default(cuid())
+  id           String       @id @default(cuid())
   reporterId   String?
-  reporter     User?     @relation("ReportAuthor", fields: [reporterId], references: [id], onDelete: SetNull)
+  reporter     User?        @relation("ReportAuthor", fields: [reporterId], references: [id], onDelete: SetNull)
   postId       String
-  post         Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post         Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
   reason       String
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime     @default(now())
   resolvedAt   DateTime?
   resolvedById String?
-  resolvedBy   User?     @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedBy   User?        @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
   resolution   String?
-  source      ReportSource @default(USER)
+  source       ReportSource @default(USER)
 
   @@index([resolvedAt])
   @@index([reporterId, postId])
+  @@index([createdAt])
 }
 
 // Fixed-window counters that survive a restart. One row per bucket.
@@ -229,6 +246,35 @@ model RateLimit {
   count     Int      @default(0)
   resetAt   DateTime
   updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
+/// Advisory content that was accepted but needs a human decision: profile bios
+/// and community-board names/descriptions have no Post row to attach a Report
+/// to. Scanner hits and user reports share this queue.
+model ModerationFlag {
+  id           String    @id @default(cuid())
+  /// PROFILE | BOARD
+  targetType   String
+  targetId     String
+  /// bio | board-name | board-description | report
+  field        String
+  /// Comma-joined matched terms (scanner) or the user's report reason.
+  words        String
+  /// First 40 characters of the text/report, so the moderator has context.
+  excerpt      String
+  /// SCANNER | USER
+  source       String    @default("SCANNER")
+  /// OPEN | RESOLVED
+  status       String    @default("OPEN")
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+  resolvedById String?
+  resolvedBy   User?     @relation("FlagResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
 }
 
 /// A write that the word filter refused. Kept so moderators can see attempts

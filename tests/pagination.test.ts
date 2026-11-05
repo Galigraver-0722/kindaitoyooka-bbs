@@ -26,4 +26,8 @@ test("page links keep the sort order and drop a redundant page one", () => {
     boardPageHref("general", { page: 3, sort: "hot" }),
     "/b/general?sort=hot&page=3",
   );
+  assert.equal(
+    boardPageHref("general", { page: 2, sort: "rising" }),
+    "/b/general?sort=rising&page=2",
+  );
 });

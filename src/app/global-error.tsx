@@ -15,7 +15,7 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
           display: "grid",
           placeItems: "center",
           padding: "32px 20px",
-          background: "#F0FBFE",
+          background: "#f5f7f8",
           color: "#062330",
           fontFamily:
             '"Helvetica Neue", "Hiragino Sans", "Yu Gothic", Meiryo, "Noto Sans JP", sans-serif',
@@ -25,9 +25,9 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
           style={{
             width: "min(520px, 100%)",
             background: "#FFFFFF",
-            border: "2px solid #062330",
+            border: "1px solid #d6e2e6",
             borderRadius: 18,
-            boxShadow: "6px 6px 0 #062330",
+            boxShadow: "0 20px 60px -30px #23485440",
             padding: "26px",
           }}
         >

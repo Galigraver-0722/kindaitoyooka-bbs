@@ -9,6 +9,36 @@ export function isLocale(value: string | null | undefined): value is Locale {
 }
 
 const en = {
+  kinjo: {
+    "about": "About Kinjo",
+    "around": "Around the neighborhood",
+    "activity": "Recent activity",
+    "activityHint": "Posts and replies · Japan Standard Time",
+    "days7": "7 days",
+    "days14": "14 days",
+    "posts": "posts",
+    "boards": "Around the boards",
+    "boardsHint": "Threads in our busiest boards",
+    "noBoards": "No threads yet.",
+    "chartEmpty": "No posts in this period.",
+    "greeting": "A place to belong.",
+    "street": "EVERY CONVERSATION OPENS A DOOR",
+    "storyLabel": "OUR LITTLE CORNER",
+    "storyTitle": "Simply another place to be.",
+    "storyBody": "We share hallways, but not always conversations. Kinjo is a place to discover the people, questions, and ideas just beyond your usual circle.",
+    "storyCta": "The story behind Kinjo",
+    "nameHeading": "The meaning behind the name",
+    "nameBody": "近所 (kinjo) means neighborhood: a familiar place where people who might remain strangers can naturally connect. The character 近 also quietly nods to Kindai, the university our school is affiliated with.",
+    "philosophyHeading": "A neighborhood made by its people",
+    "philosophyBody": "Kinjo is an independent, student-run community. It is not intended to replace school communication or become essential to school life. Some people come for help, others to share an idea or see what is happening. Useful conversations stay here for the next person to discover.",
+    "closing": "A neighborhood is not built by giving it a name. It is built by the people who make it their own."
+},
+  commons: {
+    skip: "Skip to content", brand: "A school neighborhood", eyebrow: "Welcome to Kinjo",
+    lead: "A little neighborhood", accent: "within our school.",
+    description: "Ask about homework, share a club update, or talk about something that caught your attention. There’s room for it here.",
+    browse: "Browse discussions",
+  },
   notifications: {
     title: "Notifications",
     empty: "Nothing yet. Replies, comments, likes and saves land here.",
@@ -27,9 +57,9 @@ const en = {
   },
 
   meta: {
-    title: "Toyooka BBS",
+    title: "Kinjo · 近所",
     description:
-      "A community bulletin board for Kindai University Toyooka Junior & Senior High School.",
+      "Kinjo: a little neighborhood within our school. Questions, ideas, and connections beyond your usual circle.",
   },
   nav: {
     boards: "Boards",
@@ -137,6 +167,8 @@ const en = {
       cancel: "Cancel",
     },
     pager: { prev: "Prev", next: "Next" },
+    longThread: (omitted: number) =>
+      `This thread is long. Showing the first 500 posts; ${omitted} more are not displayed.`,
     account: "Account",
     home: "Home",
     sendError: "Could not post. Try again.",
@@ -375,6 +407,7 @@ const en = {
     created: "Created",
     tags: "Tags",
     removed: "Removed by a moderator.",
+    tooLarge: "This thread is too large to export. Ask a moderator if you need an archive.",
     separator: "----------------------------------------",
   },
   newThread: {
@@ -477,10 +510,23 @@ const en = {
       users: "Accounts",
       content: "Posts",
       blocked: "Blocked",
+      flags: "Metadata flags",
       announcements: "Announcements",
       invites: "Invites",
       boards: "Boards",
       audit: "Audit",
+    },
+    flags: {
+      hint: "Advisory matches and reader reports for bios and board descriptions. These are accepted, not hard-blocked; clear the text or archive the board.",
+      empty: "No open metadata flags.",
+      profile: "Profile",
+      board: "Board",
+      scanner: "Scanner",
+      reader: "Reader",
+      clearBio: "Clear bio",
+      archiveBoard: "Archive board",
+      resolve: "Resolve",
+      words: "Matched",
     },
     announcements: {
       hint: "Posts appear in the header panel for everyone as soon as they are published. Dates are shown, not scheduled; a draft stays hidden.",
@@ -585,6 +631,8 @@ const en = {
       locked: "locked",
       lock: "Lock",
       unlock: "Unlock",
+      hold: "Safety hold",
+      releaseHold: "Release hold",
       remove: "Remove",
       open: "Open",
       empty: "Nothing matches.",
@@ -636,6 +684,12 @@ const en = {
     privacy: "Privacy notice",
     moderation: "Moderation policy",
     terms: "Terms of use",
+    about: "About this site",
+    contact: "Contact",
+    source: "Source code",
+    issues: "Report an issue",
+    version: "Version",
+    copyright: "© 2026 Kinjo · student-run",
     disclaimer:
       "A community-run student project. Not an official communication channel of Kindai University Toyooka Junior & Senior High School.",
     license: "Built with Next.js and Prisma. Licensed under MIT.",
@@ -643,6 +697,36 @@ const en = {
 };
 
 const ja: typeof en = {
+  kinjo: {
+    "about": "Kinjoについて",
+    "around": "近所のようす",
+    "activity": "最近の投稿",
+    "activityHint": "投稿と返信 · 日本標準時",
+    "days7": "7日間",
+    "days14": "14日間",
+    "posts": "件の投稿",
+    "boards": "ボードのようす",
+    "boardsHint": "スレッドが集まるボード",
+    "noBoards": "まだスレッドはありません。",
+    "chartEmpty": "この期間の投稿はありません。",
+    "greeting": "ここに、居場所がある。",
+    "street": "会話の数だけ、新しい扉がひらく",
+    "storyLabel": "学校の中の、小さな近所",
+    "storyTitle": "もうひとつの、居場所。",
+    "storyBody": "同じ廊下を歩いていても、まだ話したことのない人がいる。Kinjoは、いつもの輪の少し先にある人や疑問、アイデアに出会う場所です。",
+    "storyCta": "Kinjoという名前に込めたこと",
+    "nameHeading": "名前に込めた、ふたつの意味",
+    "nameBody": "近所とは、身近で気軽に立ち寄れる場所。まだ知らない人とも自然につながれる、そんな場所を目指しています。「近」の字には、私たちの学校が附属する近畿大学への、さりげないつながりも込めています。",
+    "philosophyHeading": "みんなで育てる、小さな近所",
+    "philosophyBody": "Kinjoは、生徒が運営する独立したコミュニティです。学校の連絡手段を置き換えたり、欠かせない仕組みになったりすることが目的ではありません。相談したい人、アイデアを残したい人、ただのぞいてみたい人。役立つ会話は、次に訪れる誰かのためにここに残ります。",
+    "closing": "名前をつけるだけでは、近所は生まれない。ここを自分たちの場所にしていく、一人ひとりがつくっていく。"
+},
+  commons: {
+    skip: "本文へ移動", brand: "学校の中の、小さな近所", eyebrow: "Kinjoへようこそ",
+    lead: "学校の中の、", accent: "小さな近所。",
+    description: "宿題の相談、部活のお知らせ、ちょっと気になったこと。いつもの輪の外にも、話せる相手がいるかもしれません。",
+    browse: "みんなの投稿を見る",
+  },
   notifications: {
     title: "通知",
     empty: "まだ通知はありません。返信・コメント・いいね・保存がここに届きます。",
@@ -661,8 +745,8 @@ const ja: typeof en = {
   },
 
   meta: {
-    title: "Toyooka BBS",
-    description: "近畿大学附属豊岡中学校・高等学校の生徒が使う、学校コミュニティの掲示板です。",
+    title: "Kinjo · 近所",
+    description: "Kinjo（近所）は、学校の中の小さな近所。疑問やアイデアをきっかけに、いつもの輪を少し広げる生徒のコミュニティです。",
   },
   nav: {
     boards: "ボード",
@@ -770,6 +854,8 @@ const ja: typeof en = {
       cancel: "やめる",
     },
     pager: { prev: "前へ", next: "次へ" },
+    longThread: (omitted: number) =>
+      `このスレッドは長いため、先頭 500 件まで表示しています。残り ${omitted} 件は表示されていません。`,
     account: "アカウント",
     home: "ホーム",
     sendError: "送信できませんでした。もう一度お試しください。",
@@ -1005,6 +1091,7 @@ const ja: typeof en = {
     created: "作成日時",
     tags: "タグ",
     removed: "モデレーターが削除しました。",
+    tooLarge: "このスレッドは大きすぎるため書き出せません。必要ならモデレーターに相談してください。",
     separator: "----------------------------------------",
   },
   newThread: {
@@ -1107,10 +1194,23 @@ const ja: typeof en = {
       users: "アカウント",
       content: "投稿",
       blocked: "遮断",
+      flags: "メタデータ警告",
       announcements: "お知らせ",
       invites: "招待",
       boards: "ボード",
       audit: "監査ログ",
+    },
+    flags: {
+      hint: "プロフィールの自己紹介とコミュニティ板の説明に、自動検査の助言ヒットまたは通報があったものです。公開はされていますが、人間の確認が必要です。文面を消すか板をアーカイブしてください。",
+      empty: "未処理のメタデータ警告はありません。",
+      profile: "プロフィール",
+      board: "板",
+      scanner: "自動検査",
+      reader: "通報",
+      clearBio: "自己紹介を消す",
+      archiveBoard: "板をアーカイブ",
+      resolve: "処理済みにする",
+      words: "一致",
     },
     announcements: {
       hint: "公開したお知らせは、すぐに全員のヘッダーにあるお知らせパネルに表示されます。日付は表示用で、予約投稿はできません。下書きは誰にも表示されません。",
@@ -1215,6 +1315,8 @@ const ja: typeof en = {
       locked: "ロック中",
       lock: "ロック",
       unlock: "ロック解除",
+      hold: "安全保留",
+      releaseHold: "保留を解除",
       remove: "削除",
       open: "開く",
       empty: "条件に合うものはありません。",
@@ -1265,6 +1367,12 @@ const ja: typeof en = {
     privacy: "プライバシー通知",
     moderation: "モデレーション方針",
     terms: "利用規約",
+    about: "このサイトについて",
+    contact: "お問い合わせ",
+    source: "ソースコード",
+    issues: "問題を報告",
+    version: "バージョン",
+    copyright: "© 2026 近所 · 生徒運営",
     disclaimer:
       "生徒が運営する非公式のプロジェクトです。近畿大学附属豊岡中学校・高等学校の公式な連絡手段ではありません。",
     license: "Next.js と Prisma で構築。MIT ライセンスで公開しています。",

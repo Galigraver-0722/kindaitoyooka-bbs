@@ -1,0 +1,12 @@
+[Unit]
+Description=Kinjo BBS retention purge
+After=toyooka-bbs.service
+
+[Service]
+Type=oneshot
+User=bbs
+Group=bbs
+WorkingDirectory=/srv/bbs/app
+EnvironmentFile=/srv/bbs/app/.env
+ExecStart=/usr/local/bin/pnpm purge
+Nice=10

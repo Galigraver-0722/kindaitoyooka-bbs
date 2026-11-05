@@ -16,11 +16,11 @@ export function totalPages(count: number, perPage = THREADS_PER_PAGE): number {
  */
 export function boardPageHref(
   slug: string,
-  options: { page: number; sort?: "latest" | "hot" },
+  options: { page: number; sort?: "latest" | "hot" | "rising" },
 ): string {
   const params = new URLSearchParams();
-  if (options.sort === "hot") {
-    params.set("sort", "hot");
+  if (options.sort && options.sort !== "latest") {
+    params.set("sort", options.sort);
   }
   if (options.page > 1) {
     params.set("page", String(options.page));

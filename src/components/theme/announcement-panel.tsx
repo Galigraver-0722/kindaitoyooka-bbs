@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { usePanelMotion } from "@/components/theme/use-panel-motion";
 import type { AnnouncementKind } from "@/lib/announcements";
 
 export type AnnouncementItem = {
@@ -41,15 +42,11 @@ export function AnnouncementPanel({
   themeClass: "tw-d" | "tw-b";
   signedIn: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, root, panel, close } = usePanelMotion();
   const [count, setCount] = useState(unseen);
   const [box, setBox] = useState<{ top: number; right: number; sheet: boolean; maxHeight: number } | null>(
     null,
   );
-  const root = useRef<HTMLDivElement>(null);
-  const panel = useRef<HTMLDivElement>(null);
-
-  const close = useCallback(() => setOpen(false), []);
 
   // Same placement rule as the inbox: measure the trigger, drop below it, and
   // turn into a bottom sheet on narrow screens.
@@ -68,7 +65,7 @@ export function AnnouncementPanel({
       // space that is actually left.
       maxHeight: Math.max(240, window.innerHeight - top - 16),
     });
-  }, []);
+  }, [root]);
 
   useEffect(() => {
     if (open) place();
@@ -96,12 +93,16 @@ export function AnnouncementPanel({
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onClick);
     };
-  }, [open, close]);
+  }, [open, close, panel, root]);
 
   function toggle() {
-    const next = !open;
-    setOpen(next);
-    if (next && signedIn && count > 0) {
+    if (open) {
+      close();
+      return;
+    }
+    place();
+    setOpen(true);
+    if (signedIn && count > 0) {
       setCount(0);
       void fetch("/api/announcements/seen", {
         method: "POST",

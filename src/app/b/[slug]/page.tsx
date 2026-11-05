@@ -63,7 +63,7 @@ export default async function BoardPage({
     getCurrentUser(),
   ]);
 
-  if (!board) notFound();
+  if (!board || board.isArchived) notFound();
 
   const boards = await prisma.board.findMany({
     where: { isArchived: false },
@@ -131,11 +131,17 @@ export default async function BoardPage({
       ...thread,
       replyCount: Math.max(thread._count.posts - 1, 0),
     }));
-    const sorted =
-      order === "hot"
-        ? sortByHot(ranked).slice(0, THREADS_PER_PAGE)
-        : sortByRising(ranked).slice(0, THREADS_PER_PAGE);
-    threads = sorted.sort((a, b) => Number(b.isPinned) - Number(a.isPinned));
+    // Hot and rising rank at most the newest 100 threads, so page over that
+    // ranked window. Pinned threads stay on the first page.
+    const sorted = [
+      ...(order === "hot" ? sortByHot(ranked) : sortByRising(ranked)),
+    ].sort((a, b) => Number(b.isPinned) - Number(a.isPinned));
+    pageCount = totalPages(sorted.length);
+    currentPage = Math.min(requestedPage, pageCount);
+    threads = sorted.slice(
+      (currentPage - 1) * THREADS_PER_PAGE,
+      currentPage * THREADS_PER_PAGE,
+    );
   }
 
   const ids = threads.map((thread) => thread.id);
@@ -241,7 +247,7 @@ export default async function BoardPage({
               <ThreadRows threads={list} locale={locale} />
             )}
 
-            {order === "latest" && pageCount > 1 ? (
+            {pageCount > 1 ? (
               <nav className="pager">
                 {currentPage > 1 ? (
                   <Link href={boardPageHref(board.slug, { page: currentPage - 1, sort: order })}>← {pages.pager.prev}</Link>

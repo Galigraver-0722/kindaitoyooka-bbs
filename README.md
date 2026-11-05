@@ -1,9 +1,11 @@
-# Toyooka BBS
+# Kinjo (近所)
 
 [![CI](https://github.com/Galigraver-0722/kindaitoyooka-bbs/actions/workflows/ci.yml/badge.svg)](https://github.com/Galigraver-0722/kindaitoyooka-bbs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A school-run bulletin board for **Kindai University Toyooka Junior & Senior High School**.
+**A little neighborhood within our school.** An independent, student-run community rooted in Kindai University Toyooka Junior & Senior High School.
+
+Kinjo means *neighborhood*: a place to discover people, questions, and ideas beyond your usual circle. Read [the Kinjo identity](docs/12-kinjo-identity.md) for the name and design direction.
 
 The project is a persistent, topic-organized alternative to class group chats: a place where a
 question can be found and answered a month later, where clubs can post one canonical event

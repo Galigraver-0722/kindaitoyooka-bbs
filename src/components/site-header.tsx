@@ -16,7 +16,7 @@ export function SiteHeader({ user, locale }: { user: SessionUser | null; locale:
       <div className="shell flex flex-wrap items-center gap-x-4 gap-y-2 py-2.5">
         <Link href="/" className="flex items-baseline gap-1.5">
           <span className="text-[16px] font-semibold tracking-[-0.03em] text-ink">
-            Toyooka <span className="text-accent">BBS</span>
+            Kinjo <span className="text-accent">近所</span>
           </span>
         </Link>
 

@@ -110,6 +110,8 @@ suspension fields, so nothing about the account has to be reconstructed.
 | `createdAt` | datetime | Also the start of the 15-minute edit window |
 | `lastPostAt` | datetime | Updated on each reply; drives ordering |
 | `editedAt` | datetime? | Set when the author saves an edit; rendered as an "edited" marker |
+| `deletedAt` | datetime? | Set with `isDeleted`; the purge job uses this, not `updatedAt` |
+| `safetyHoldUntil` | datetime? | A safety case pauses body erasure until this moment |
 
 ### Post
 
@@ -123,6 +125,8 @@ suspension fields, so nothing about the account has to be reconstructed.
 | `isDeleted` | boolean | Soft delete; rendered as a placeholder |
 | `likeCount` | int | Likes on this post; denormalized |
 | `createdAt` | datetime | Chronological order |
+| `deletedAt` | datetime? | Set with `isDeleted`; the purge job uses this timestamp |
+| `safetyHoldUntil` | datetime? | A safety case pauses body erasure until this moment |
 
 The opening post is also a `Post` row. There is no separate `Thread.body`. This keeps rendering,
 reporting, and moderation uniform: every piece of user text is one row with the same rules.
@@ -148,6 +152,28 @@ Automatic flags use the same table with `source = AUTO`, no reporter, and the ma
 A partial unique index, `Report_one_open_per_reporter_post`, covers `(reporterId, postId)` where
 `resolvedAt IS NULL`: one reader holds at most one open report per post, so repeated clicks do
 not stack duplicates in the queue. Automatic flags have no reporter and are exempt.
+
+### ModerationFlag
+
+Profile bios and community-board names/descriptions have no `Post` row, so they cannot use
+`Report`. Advisory scanner hits and reader reports share this queue instead.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | string (cuid) | |
+| `targetType` | string | `PROFILE` or `BOARD` |
+| `targetId` | string | User id or board id; not a foreign key because the target may be removed |
+| `field` | string | `bio`, `board-name`, `board-description`, or `report` |
+| `words` | string | Comma-joined matched terms, or the reader's reason |
+| `excerpt` | string | First 40 characters of the text/report |
+| `source` | string | `SCANNER` or `USER` |
+| `status` | string | `OPEN` or `RESOLVED` |
+| `createdAt` | datetime | |
+| `resolvedAt` | datetime? | `NULL` means open |
+| `resolvedById` | string? | FK → User, set on resolution |
+
+Clearing the bio, archiving the board, or dismissing the flag all set `status = RESOLVED` and
+write an audit row.
 
 ### AuditLog
 
@@ -272,7 +298,8 @@ post removes its notifications with it, because nothing was copied.
 
 Fixed-window counters for login, registration, posting, reporting, and reactions. Keeping them
 in the database means a restart does not reset an attacker's allowance and two processes on one
-database share the same windows; expired rows are deleted on each login attempt.
+database share the same windows. Expired rows are deleted by `pnpm purge` (and opportunistically
+on login); the `resetAt` index keeps that cleanup cheap.
 
 ## 3. Invariants
 
@@ -281,8 +308,9 @@ database share the same windows; expired rows are deleted on each login attempt.
    thread.
 2. `Thread.lastPostAt` is updated in the same transaction as a new reply. Ordering never
    depends on the latest post's `createdAt` at read time.
-3. Removed content is never hard-deleted by the application. There is no purge command in
-   v0.1; any retention purge must be added deliberately with a backup.
+3. Removed content is never hard-deleted by the application immediately. `pnpm purge` erases
+   the body 90 days after `deletedAt`; a `safetyHoldUntil` pauses that erasure. The row and audit
+   trail remain.
 4. `Session.id` is always a hash. No code path stores a raw token.
 5. Usernames are normalized to lowercase before validation and storage, so `Alice` and `alice`
    cannot both exist.
@@ -358,12 +386,12 @@ database share the same windows; expired rows are deleted on each login attempt.
 
 ## 8. Data retention proposal
 
-Not yet enforced in code; agree on this before launch.
+Enforced by `pnpm purge` (scheduled by `toyooka-bbs-purge.timer`); the public privacy notice is the source of truth.
 
 | Data | Retention | Rationale |
 | --- | --- | --- |
 | Active posts | Indefinite | The forum's value is persistence |
-| Soft-deleted posts | 180 days, then purge body | Keeps moderation auditable without hoarding harmful text |
+| Soft-deleted posts | 90 days, then purge body | Keeps moderation auditable without hoarding harmful text |
 | Session rows | 30 days after expiry | Limit the blast radius of a database leak |
 | Reports | 1 year after resolution | Pattern detection and appeals |
 | AuditLog | 1 year | Accountability and incident review |

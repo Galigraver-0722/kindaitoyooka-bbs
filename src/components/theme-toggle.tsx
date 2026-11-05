@@ -1,76 +1,74 @@
 "use client";
 
-import { useLayoutEffect, useRef, type MouseEvent } from "react";
-
-const SCROLL_KEY = "theme-scroll";
+import { useRouter } from "next/navigation";
+import { startTransition, useLayoutEffect, useRef, type MouseEvent } from "react";
 
 export function ThemeToggle({ theme, labels }: { theme: "light" | "dark"; labels: { dark: string; light: string } }) {
+  const router = useRouter();
   const busy = useRef(false);
+  const button = useRef<HTMLButtonElement>(null);
   const isDark = theme === "dark";
 
-  // The switch is a full reload (two independent designs), so put the reader
-  // back where they were. A layout effect restores before the first paint.
+  // The light and dark headers mount separate buttons. Keep the overlay on
+  // body so the new button can reveal the refreshed page without a reload.
   useLayoutEffect(() => {
-    let y: string | null = null;
-    try {
-      y = sessionStorage.getItem(SCROLL_KEY);
-      if (y !== null) sessionStorage.removeItem(SCROLL_KEY);
-    } catch {}
-    if (y !== null && Number(y) > 0) {
-      window.scrollTo(0, Number(y));
+    busy.current = false;
+    if (document.body.dataset.themeSwitching === theme) {
+      delete document.body.dataset.themeSwitching;
+      button.current?.focus({ preventScroll: true });
     }
-  }, []);
+    const wipe = document.querySelector<HTMLElement>("[data-theme-wipe]");
+    if (!wipe || wipe.dataset.themeWipe !== theme) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      wipe.remove();
+      return;
+    }
+    const reveal = wipe.animate([{ opacity: 1 }, { opacity: 0 }], {
+      duration: 180, easing: "ease-out", fill: "forwards",
+    });
+    void reveal.finished.then(() => wipe.remove()).catch(() => wipe.remove());
+  }, [theme]);
 
   function flip(event: MouseEvent<HTMLButtonElement>) {
     if (busy.current) return;
     busy.current = true;
-
     const next = isDark ? "light" : "dark";
     document.cookie = `theme=${next}; path=/; max-age=31536000; samesite=lax`;
-
-    try {
-      sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
-    } catch {}
-
-    // The header has backdrop-filter, which makes it a containing block for
-    // fixed children, so the wipe is created on <body> instead of in the JSX.
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      window.location.reload();
+    document.body.dataset.themeSwitching = next;
+    const refresh = () => startTransition(() => router.refresh());
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      refresh();
       return;
     }
-
-    const wipe = document.createElement("div");
-    wipe.setAttribute("aria-hidden", "true");
-    Object.assign(wipe.style, {
-      position: "fixed",
-      inset: "0",
-      zIndex: "400",
-      pointerEvents: "none",
-      opacity: "1",
-      background: next === "dark" ? "#040F16" : "#F0FBFE",
-    });
-    document.body.appendChild(wipe);
 
     const rect = event.currentTarget.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
-    wipe.style.clipPath = `circle(0px at ${x}px ${y}px)`;
-
-    const grow = wipe.animate(
-      [
-        { clipPath: `circle(0px at ${x}px ${y}px)` },
-        { clipPath: `circle(150vmax at ${x}px ${y}px)` },
-      ],
-      { duration: 300, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" },
-    );
-    grow.onfinish = () => window.location.reload();
+    const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    const wipe = document.createElement("div");
+    wipe.setAttribute("aria-hidden", "true");
+    wipe.dataset.themeWipe = next;
+    Object.assign(wipe.style, {
+      position: "fixed", inset: "0", zIndex: "400", pointerEvents: "auto",
+      background: next === "dark" ? "#040F16" : "#F0FBFE",
+      clipPath: `circle(0px at ${x}px ${y}px)`,
+    });
+    document.body.appendChild(wipe);
+    const grow = wipe.animate([
+      { clipPath: `circle(0px at ${x}px ${y}px)` },
+      { clipPath: `circle(${radius}px at ${x}px ${y}px)` },
+    ], { duration: 260, easing: "cubic-bezier(.22,1,.36,1)", fill: "forwards" });
+    void grow.finished.then(refresh).catch(() => {
+      wipe.remove();
+      refresh();
+    });
   }
 
   return (
     <button
       type="button"
       className="theme-btn"
+      ref={button}
       onClick={flip}
       aria-label={isDark ? labels.light : labels.dark}
     >

@@ -27,3 +27,9 @@ Read in this order when you are new to the project.
 - Safety statements are written as requirements, not aspirations.
 - Legal notes are summaries for planning, not legal advice. The teacher advisor and the school
   administration decide what applies.
+
+- [11 · Interface design](11-interface-design.md)
+
+- [12 · Kinjo identity](12-kinjo-identity.md)
+
+- [13 · Kanji identity and bulletin layout](13-kanji-identity.md)

@@ -4,9 +4,26 @@ import { getLocale, t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
+/** A single export must not materialise an unbounded thread. */
+const EXPORT_MAX_POSTS = 2_000;
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const [{ id }, locale] = await Promise.all([params, getLocale()]);
   const m = t(locale);
+
+  const summary = await prisma.thread.findUnique({
+    where: { id },
+    select: { isDeleted: true, _count: { select: { posts: true } } },
+  });
+  if (!summary || summary.isDeleted) {
+    return new Response("Not found", { status: 404 });
+  }
+  if (summary._count.posts > EXPORT_MAX_POSTS) {
+    return new Response(m.exportThread.tooLarge, {
+      status: 413,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
 
   const thread = await prisma.thread.findUnique({
     where: { id },

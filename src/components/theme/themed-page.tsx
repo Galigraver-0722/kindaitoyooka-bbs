@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { KinjoMark } from "@/components/kinjo-mark";
+import { logoCss } from "@/components/theme/logo-css";
+import { motionCss } from "@/components/theme/motion-css";
+import { ShellInteractions } from "@/components/theme/shell-interactions";
 import type { ReactNode } from "react";
 import { LanguageToggle } from "@/components/theme/language-toggle";
 import { BackButton } from "@/components/theme/nav-buttons";
@@ -18,6 +22,7 @@ import type { HomeThread } from "@/components/home/types";
 import { ToggleAction } from "@/components/theme/actions";
 import { prisma } from "@/lib/db";
 import { getLocale, t } from "@/lib/i18n";
+import { ISSUES_URL, REPOSITORY, REPOSITORY_URL } from "@/lib/site";
 import { timeAgo } from "@/lib/time-ago";
 import type { Locale } from "@/lib/locales";
 import { readableInk } from "@/lib/color";
@@ -132,6 +137,7 @@ export async function ThemedPage({
   const canModerate = me?.role === "MODERATOR" || me?.role === "ADMIN";
   const copy = t(locale).shell;
   const pages = t(locale).pages;
+  const footerCopy = t(locale).footer;
   const inboxCopy = t(locale).notifications;
   const noticeFeed = me ? await getNotifications(me.id) : { items: [], unseen: 0 };
   const inboxItems: InboxItem[] = noticeFeed.items.map((item) => ({
@@ -173,7 +179,7 @@ export async function ThemedPage({
     kinds: annCopy.kinds,
   };
 
-  const css = theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss;
+  const css = (theme === "light" ? homeDCss + pagesDCss : homeBCss + pagesBCss) + logoCss + motionCss;
   const wrap = theme === "light" ? "tw-d" : "tw-b";
 
   return (
@@ -182,6 +188,8 @@ export async function ThemedPage({
       <RouteFreshness />
       <AnchorHighlight />
       <AutoRefresh />
+      <ShellInteractions />
+      <a className="skip-link" href="#page-content">{t(locale).commons.skip}</a>
       {theme === "light" ? (
         <ScrollHeader>
           <header className="top">
@@ -190,8 +198,8 @@ export async function ThemedPage({
               <BackButton label={copy.back} />
               <Link className="nav-btn" href="/" aria-label={copy.home} title={copy.home}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z" /></svg></Link>
             </div>
-            <Link className="brand" href="/">
-              <span className="sq">豊</span>豊岡BBS<small>/TOYOOKA</small>
+            <Link className="brand" href="/" aria-label={`Kinjo · 近所 · ${copy.home}`}>
+              <KinjoMark className="brand-mark" /><span lang="ja">近所</span><small>/KINJO</small>
               <span className="ver" title={`${copy.betaNote} · ${versionTag()}`}>
                 {versionTag()}
               </span>
@@ -242,8 +250,8 @@ export async function ThemedPage({
               <BackButton label={copy.back} />
               <Link className="nav-btn" href="/" aria-label={copy.home} title={copy.home}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z" /></svg></Link>
             </div>
-            <Link className="brand" href="/">
-              <span className="sig"><i /><i /><i /></span>TOYOOKA<span style={{ color: "var(--teal)" }}>{"//"}</span>BBS
+            <Link className="brand" href="/" aria-label={`Kinjo · 近所 · ${copy.home}`}>
+              <KinjoMark className="brand-mark" />KINJO<span style={{ color: "var(--teal)" }}>{"//"}</span><span lang="ja">近所</span>
               <span className="ver" title={`${copy.betaNote} · ${versionTag()}`}>
                 {versionTag()}
               </span>
@@ -289,14 +297,41 @@ export async function ThemedPage({
           </header>
           </ScrollHeader>
           <div className="rail" aria-hidden="true">
-            <span className="v">TOYOOKA STUDENT NETWORK</span>
+            <span className="v">KINJO STUDENT NETWORK</span>
             <span className="ticks"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></span>
             <span className="v">2026 — 10</span>
           </div>
         </>
       )}
 
+      <div id="page-content" tabIndex={-1} />
       {children}
+
+      <footer className="kfoot">
+        <div className="kfoot-in">
+          <div className="kfoot-brand">
+            <p className="kfoot-mark">近所 <small>/KINJO</small></p>
+            <p className="kfoot-disclaimer">{footerCopy.disclaimer}</p>
+          </div>
+          <nav className="kfoot-nav" aria-label={footerCopy.policies}>
+            <Link href="/about">{footerCopy.about}</Link>
+            <Link href="/terms">{footerCopy.terms}</Link>
+            <Link href="/rules">{footerCopy.rules}</Link>
+            <Link href="/privacy">{footerCopy.privacy}</Link>
+            <Link href="/moderation-policy">{footerCopy.moderation}</Link>
+            <Link href="/b/meta">{footerCopy.contact}</Link>
+          </nav>
+          <div className="kfoot-meta">
+            <a href={REPOSITORY_URL} target="_blank" rel="noreferrer noopener" title={footerCopy.source}>
+              GitHub · {REPOSITORY}
+            </a>
+            <a href={ISSUES_URL} target="_blank" rel="noreferrer noopener">{footerCopy.issues}</a>
+            <span>{footerCopy.version} {versionTag()}</span>
+            <span>MIT</span>
+            <span>{footerCopy.copyright}</span>
+          </div>
+        </div>
+      </footer>
 
       <Link
         className="fab"
@@ -425,7 +460,7 @@ export function ThreadRows({ threads, locale, query }: { threads: HomeThread[]; 
             <span className="leader" />
             <span className="bname"><i />{thread.board.name}</span>
             <span className="time">{timeAgo(thread.lastPostAt, locale)}</span>
-            <span className="num"><b>{thread.replyCount}</b></span>
+            <span className="num">{replyIcon}<b>{thread.replyCount}</b></span>
             <ThreadActions thread={thread} likeLabel={copy.actions.like} saveLabel={copy.actions.save} />
           </li>
         ))}
